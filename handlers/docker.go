@@ -11,19 +11,19 @@ import (
 
 // DockerHandler handles Docker-related requests
 type DockerHandler struct {
-	client *docker.Client
+	manager *docker.Manager
 }
 
 // NewDockerHandler creates a new DockerHandler
-func NewDockerHandler(client *docker.Client) *DockerHandler {
+func NewDockerHandler(manager *docker.Manager) *DockerHandler {
 	return &DockerHandler{
-		client: client,
+		manager: manager,
 	}
 }
 
 // ListContainers handles listing all containers
 func (h *DockerHandler) ListContainers(w http.ResponseWriter, r *http.Request) {
-	containers, err := h.client.ListContainers(r.Context())
+	containers, err := h.manager.ListContainers(r.Context())
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Failed to list containers: "+err.Error())
 		return
@@ -45,7 +45,7 @@ func (h *DockerHandler) GetContainer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	container, err := h.client.GetContainerInfo(r.Context(), containerID)
+	container, err := h.manager.GetContainerInfo(r.Context(), containerID)
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, "Container not found: "+err.Error())
 		return
@@ -67,7 +67,7 @@ func (h *DockerHandler) StartContainer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.client.StartContainer(r.Context(), containerID); err != nil {
+	if err := h.manager.StartContainer(r.Context(), containerID); err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Failed to start container: "+err.Error())
 		return
 	}
@@ -88,7 +88,7 @@ func (h *DockerHandler) StopContainer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.client.StopContainer(r.Context(), containerID); err != nil {
+	if err := h.manager.StopContainer(r.Context(), containerID); err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Failed to stop container: "+err.Error())
 		return
 	}
@@ -109,7 +109,7 @@ func (h *DockerHandler) RestartContainer(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if err := h.client.RestartContainer(r.Context(), containerID); err != nil {
+	if err := h.manager.RestartContainer(r.Context(), containerID); err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Failed to restart container: "+err.Error())
 		return
 	}
@@ -122,7 +122,7 @@ func (h *DockerHandler) RestartContainer(w http.ResponseWriter, r *http.Request)
 
 // HealthCheck handles health check requests
 func (h *DockerHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
-	if err := h.client.Ping(r.Context()); err != nil {
+	if err := h.manager.Ping(r.Context()); err != nil {
 		respondWithError(w, http.StatusServiceUnavailable, "Docker daemon not accessible")
 		return
 	}

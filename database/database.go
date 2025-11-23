@@ -31,6 +31,10 @@ func NewDB(dataSourceName string) (*DB, error) {
 	if err := db.createTables(); err != nil {
 		return nil, err
 	}
+	
+	if err := db.InitConfigTable(); err != nil {
+		return nil, err
+	}
 
 	return db, nil
 }

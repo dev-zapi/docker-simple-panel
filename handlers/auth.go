@@ -7,30 +7,31 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 
+	"github.com/dev-zapi/docker-simple-panel/config"
 	"github.com/dev-zapi/docker-simple-panel/database"
 	"github.com/dev-zapi/docker-simple-panel/models"
 )
 
 // AuthHandler handles authentication-related requests
 type AuthHandler struct {
-	db                  *database.DB
-	jwtSecret           string
-	disableRegistration bool
+	db            *database.DB
+	jwtSecret     string
+	configManager *config.Manager
 }
 
 // NewAuthHandler creates a new AuthHandler
-func NewAuthHandler(db *database.DB, jwtSecret string, disableRegistration bool) *AuthHandler {
+func NewAuthHandler(db *database.DB, jwtSecret string, configManager *config.Manager) *AuthHandler {
 	return &AuthHandler{
-		db:                  db,
-		jwtSecret:           jwtSecret,
-		disableRegistration: disableRegistration,
+		db:            db,
+		jwtSecret:     jwtSecret,
+		configManager: configManager,
 	}
 }
 
 // Register handles user registration
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
-	// Check if registration is disabled
-	if h.disableRegistration {
+	// Check if registration is disabled from runtime config
+	if h.configManager.GetDisableRegistration() {
 		respondWithError(w, http.StatusForbidden, "Registration is disabled")
 		return
 	}

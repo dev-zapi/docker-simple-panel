@@ -19,7 +19,7 @@ import (
 )
 
 func main() {
-	// Load configuration
+	// Load configuration from environment
 	cfg := config.LoadConfig()
 
 	// Initialize database
@@ -30,25 +30,47 @@ func main() {
 	defer db.Close()
 	log.Println("Database connected successfully")
 
-	// Initialize Docker client
-	dockerClient, err := docker.NewClient(cfg.DockerSocket)
-	if err != nil {
-		log.Fatalf("Failed to create Docker client: %v", err)
+	// Load persisted configs from database or use environment defaults
+	dockerSocket := cfg.DockerSocket
+	if persistedSocket, err := db.GetConfig("docker_socket"); err == nil && persistedSocket != "" {
+		dockerSocket = persistedSocket
+		log.Printf("Loaded Docker socket from database: %s", dockerSocket)
 	}
-	defer dockerClient.Close()
-	log.Println("Docker client initialized successfully")
+
+	disableRegistration := cfg.DisableRegistration
+	if persistedReg, err := db.GetConfig("disable_registration"); err == nil && persistedReg != "" {
+		disableRegistration = persistedReg == "true"
+		log.Printf("Loaded registration setting from database: %v", disableRegistration)
+	}
+
+	// Initialize configuration manager
+	configManager := config.NewManager(dockerSocket, disableRegistration)
+
+	// Initialize Docker manager
+	dockerManager, err := docker.NewManager(dockerSocket)
+	if err != nil {
+		log.Fatalf("Failed to create Docker manager: %v", err)
+	}
+	defer dockerManager.Close()
+	log.Println("Docker manager initialized successfully")
 
 	// Test Docker connection
 	ctx := context.Background()
-	if err := dockerClient.Ping(ctx); err != nil {
+	if err := dockerManager.Ping(ctx); err != nil {
 		log.Printf("Warning: Docker daemon not accessible: %v", err)
 	} else {
 		log.Println("Docker daemon is accessible")
 	}
 
+	// Set Docker socket change callback
+	configManager.SetDockerSocketChangeCallback(func(newSocket string) error {
+		return dockerManager.RestartWithSocket(newSocket)
+	})
+
 	// Initialize handlers
-	authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret, cfg.DisableRegistration)
-	dockerHandler := handlers.NewDockerHandler(dockerClient)
+	authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret, configManager)
+	dockerHandler := handlers.NewDockerHandler(dockerManager)
+	configHandler := handlers.NewConfigHandler(configManager, db)
 
 	// Setup router
 	router := mux.NewRouter()
@@ -77,6 +99,10 @@ func main() {
 	protected.HandleFunc("/containers/{id}/stop", dockerHandler.StopContainer).Methods("POST")
 	protected.HandleFunc("/containers/{id}/restart", dockerHandler.RestartContainer).Methods("POST")
 	protected.HandleFunc("/docker/health", dockerHandler.HealthCheck).Methods("GET")
+
+	// System configuration routes
+	protected.HandleFunc("/config", configHandler.GetConfig).Methods("GET")
+	protected.HandleFunc("/config", configHandler.UpdateConfig).Methods("PUT", "PATCH")
 
 	// Create HTTP server
 	server := &http.Server{

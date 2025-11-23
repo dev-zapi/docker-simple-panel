@@ -176,6 +176,49 @@ GET /api/docker/health
 
 Checks if the Docker daemon is accessible.
 
+#### Get System Configuration
+```
+GET /api/config
+```
+
+Returns the current system configuration (Docker socket path and registration status).
+
+Response:
+```json
+{
+  "success": true,
+  "data": {
+    "docker_socket": "/var/run/docker.sock",
+    "disable_registration": false
+  }
+}
+```
+
+#### Update System Configuration
+```
+PUT /api/config
+Content-Type: application/json
+
+{
+  "docker_socket": "/custom/path/docker.sock",
+  "disable_registration": true
+}
+```
+
+Updates system configuration. Both fields are optional. When `docker_socket` is changed, the Docker client automatically restarts with the new socket path. Configuration persists across server restarts.
+
+Response:
+```json
+{
+  "success": true,
+  "message": "Configuration updated successfully",
+  "data": {
+    "docker_socket": "/custom/path/docker.sock",
+    "disable_registration": true
+  }
+}
+```
+
 ## Database Schema
 
 ### Users Table
@@ -189,6 +232,18 @@ CREATE TABLE users (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
+
+### Config Table
+```sql
+CREATE TABLE config (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+```
+
+Stores system configuration that can be updated at runtime via API:
+- `docker_socket`: Docker socket path
+- `disable_registration`: Whether user registration is disabled
 
 ## Security Notes
 
