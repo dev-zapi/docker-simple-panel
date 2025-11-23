@@ -17,6 +17,20 @@ This is a Go backend application that provides a REST API for managing Docker co
 - Docker daemon running
 - SQLite3
 
+## Development with Dev Container
+
+For Windows developers or those who prefer containerized development environments, this project includes VS Code Dev Container configuration:
+
+```bash
+# Prerequisites
+# 1. Install VS Code and Docker Desktop
+# 2. Install "Dev Containers" extension in VS Code
+# 3. Open project in VS Code
+# 4. Press F1 -> "Dev Containers: Reopen in Container"
+```
+
+See [.devcontainer/README.md](.devcontainer/README.md) for detailed instructions.
+
 ## Installation
 
 ```bash
