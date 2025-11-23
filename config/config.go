@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strings"
 )
 
 // Config holds application configuration
@@ -33,7 +34,8 @@ func getEnv(key, defaultValue string) string {
 
 func getEnvBool(key string, defaultValue bool) bool {
 	if value := os.Getenv(key); value != "" {
-		return value == "true" || value == "1" || value == "yes"
+		lowerValue := strings.ToLower(value)
+		return lowerValue == "true" || lowerValue == "1" || lowerValue == "yes"
 	}
 	return defaultValue
 }
