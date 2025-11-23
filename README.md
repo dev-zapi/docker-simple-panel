@@ -39,6 +39,7 @@ The application can be configured using environment variables:
 - `DATABASE_PATH`: Path to SQLite database file (default: ./docker-panel.db)
 - `JWT_SECRET`: Secret key for JWT token signing (default: your-secret-key-change-in-production)
 - `DOCKER_SOCKET`: Path to Docker socket (default: /var/run/docker.sock)
+- `DISABLE_REGISTRATION`: Disable user registration endpoint (default: false, set to "true", "1", or "yes" to disable)
 
 ## Running
 
@@ -48,6 +49,12 @@ The application can be configured using environment variables:
 
 # Run with custom configuration
 SERVER_PORT=3000 JWT_SECRET=my-secret-key ./docker-simple-panel
+
+# Run with registration disabled
+DISABLE_REGISTRATION=true ./docker-simple-panel
+
+# Run with custom docker socket path
+DOCKER_SOCKET=/custom/path/docker.sock ./docker-simple-panel
 ```
 
 ## API Endpoints

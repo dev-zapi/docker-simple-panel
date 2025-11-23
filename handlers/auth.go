@@ -13,20 +13,28 @@ import (
 
 // AuthHandler handles authentication-related requests
 type AuthHandler struct {
-	db        *database.DB
-	jwtSecret string
+	db                  *database.DB
+	jwtSecret           string
+	disableRegistration bool
 }
 
 // NewAuthHandler creates a new AuthHandler
-func NewAuthHandler(db *database.DB, jwtSecret string) *AuthHandler {
+func NewAuthHandler(db *database.DB, jwtSecret string, disableRegistration bool) *AuthHandler {
 	return &AuthHandler{
-		db:        db,
-		jwtSecret: jwtSecret,
+		db:                  db,
+		jwtSecret:           jwtSecret,
+		disableRegistration: disableRegistration,
 	}
 }
 
 // Register handles user registration
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	// Check if registration is disabled
+	if h.disableRegistration {
+		respondWithError(w, http.StatusForbidden, "Registration is disabled")
+		return
+	}
+
 	var req models.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request body")

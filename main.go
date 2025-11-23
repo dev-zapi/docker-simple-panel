@@ -47,7 +47,7 @@ func main() {
 	}
 
 	// Initialize handlers
-	authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret)
+	authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret, cfg.DisableRegistration)
 	dockerHandler := handlers.NewDockerHandler(dockerClient)
 
 	// Setup router

@@ -9,7 +9,7 @@ A complete Go backend application for Docker container management with user auth
 ✅ **User Management**
 - SQLite database for user storage
 - User model with username, password (bcrypt hashed), and nickname
-- User registration endpoint
+- User registration endpoint (can be disabled via configuration)
 - User login with JWT token generation
 
 ✅ **Authentication & Security**
@@ -21,7 +21,7 @@ A complete Go backend application for Docker container management with user auth
 - Security vulnerabilities fixed in all dependencies
 
 ✅ **Docker Integration**
-- Docker client connection via `/var/run/docker.sock`
+- Docker client connection via `/var/run/docker.sock` (configurable)
 - Container listing with comprehensive information
 - Container state and health status monitoring
 - Container operations: start, stop, restart
@@ -81,6 +81,7 @@ Environment variables:
 - `DATABASE_PATH` - SQLite database path (default: ./docker-panel.db)
 - `JWT_SECRET` - JWT signing secret (default: your-secret-key-change-in-production)
 - `DOCKER_SOCKET` - Docker socket path (default: /var/run/docker.sock)
+- `DISABLE_REGISTRATION` - Disable user registration (default: false, accepts: "true", "1", "yes")
 
 ## Security
 
