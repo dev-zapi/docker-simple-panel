@@ -1,0 +1,42 @@
+# Git
+.git
+.gitignore
+.github
+
+# Documentation
+README.md
+IMPLEMENTATION.md
+*.md
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+docker-simple-panel
+bin/
+dist/
+
+# Test files
+*.test
+*.out
+test-api.sh
+example-usage.sh
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Config
+config.yaml
+
+# Dev container
+.devcontainer

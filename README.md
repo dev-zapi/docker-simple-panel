@@ -13,9 +13,35 @@ This is a Go backend application that provides a REST API for managing Docker co
 - Docker daemon connectivity via `/var/run/docker.sock`
 
 ## Requirements
-- Go 1.21 or higher
+- Go 1.21 or higher (for building from source)
 - Docker daemon running
-- SQLite3
+- SQLite3 (for building from source)
+
+## Quick Start with Docker
+
+The easiest way to run docker-simple-panel is using the pre-built Docker image:
+
+```bash
+# Pull the image from GitHub Container Registry
+docker pull ghcr.io/dev-zapi/docker-simple-panel:latest
+
+# Run the container
+docker run -d \
+  --name docker-simple-panel \
+  -p 8080:8080 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v ./data:/app/data \
+  -e JWT_SECRET=CHANGE_ME_STRONG_SECRET \
+  ghcr.io/dev-zapi/docker-simple-panel:latest
+
+# Check if the service is running
+curl http://localhost:8080/api/health
+```
+
+**Important Security Notes**:
+- The Docker socket (`/var/run/docker.sock`) must be mounted for the application to manage containers.
+- **Always change the JWT_SECRET** to a strong, random value in production.
+- Consider disabling registration after creating initial users with `-e DISABLE_REGISTRATION=true`.
 
 ## Development with Dev Container
 
@@ -33,6 +59,8 @@ See [.devcontainer/README.md](.devcontainer/README.md) for detailed instructions
 
 ## Installation
 
+### Building from Source
+
 ```bash
 # Clone the repository
 git clone https://github.com/dev-zapi/docker-simple-panel.git
@@ -43,6 +71,22 @@ go mod download
 
 # Build the application
 go build -o docker-simple-panel .
+```
+
+### Building Docker Image Locally
+
+```bash
+# Build the Docker image
+docker build -t docker-simple-panel:local .
+
+# Run the container
+docker run -d \
+  --name docker-simple-panel \
+  -p 8080:8080 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v ./data:/app/data \
+  -e JWT_SECRET=CHANGE_ME_STRONG_SECRET \
+  docker-simple-panel:local
 ```
 
 ## Configuration
@@ -270,6 +314,27 @@ go test ./...
 ├── middleware/          # HTTP middleware (auth, cors)
 └── models/              # Data models
 ```
+
+## Docker Image Building
+
+### Automated Builds with GitHub Actions
+
+The project includes a GitHub Actions workflow for building and pushing Docker images to GitHub Container Registry.
+
+**To trigger a build:**
+1. Go to the "Actions" tab in the GitHub repository
+2. Select "Build and Push Docker Image"
+3. Click "Run workflow"
+4. Optionally specify a custom tag (default: `latest`)
+5. Click "Run workflow"
+
+The workflow will:
+- Build multi-platform images (linux/amd64, linux/arm64)
+- Push to `ghcr.io/dev-zapi/docker-simple-panel`
+- Use build caching for faster builds
+- Generate image attestations
+
+See [.github/workflows/README.md](.github/workflows/README.md) for more details.
 
 ## License
 MIT
