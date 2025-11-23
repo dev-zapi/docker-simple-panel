@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -97,7 +98,13 @@ func main() {
 	// Serve OpenAPI specification
 	router.HandleFunc("/api/openapi.json", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		http.ServeFile(w, r, "openapi.json")
+		file, err := os.Open("openapi.json")
+		if err != nil {
+			http.Error(w, "OpenAPI specification not found", http.StatusNotFound)
+			return
+		}
+		defer file.Close()
+		io.Copy(w, file)
 	}).Methods("GET")
 	
 	router.HandleFunc("/api/auth/register", authHandler.Register).Methods("POST")
