@@ -68,13 +68,32 @@ Dev Container 已预配置以下环境变量：
 
 你可以在 `.devcontainer/docker-compose.yml` 中修改这些变量。
 
+## 安全说明
+
+⚠️ **开发环境安全提示：**
+
+本 Dev Container 配置通过以下方式访问 Docker：
+1. **Docker socket 挂载** - 将宿主机的 `/var/run/docker.sock` 挂载到容器中
+2. **Docker-in-Docker 特性** - 使用官方的 Docker-in-Docker 功能
+
+**注意事项：**
+- 此配置适用于开发和测试环境
+- Docker socket 访问赋予容器完全的 Docker 控制权限
+- 不要在生产环境中使用此配置
+- 建议仅在信任的开发机器上使用
+- 非 root 用户（vscode）运行以降低风险
+
 ## 故障排除
 
 ### 容器无法访问 Docker
 
-确保 Docker Desktop 已启动，并且在设置中启用了 "Expose daemon on tcp://localhost:2375 without TLS"（不推荐生产环境）。
+确保 Docker Desktop 已启动。Dev Container 配置已经通过 Docker socket (`/var/run/docker.sock`) 挂载方式提供 Docker 访问。
 
-或者，确保 `/var/run/docker.sock` 可以被挂载到容器中。
+**Windows 用户：**
+- 确保 Docker Desktop 设置中启用了 "Expose daemon on tcp://localhost:2375 without TLS" 或使用 WSL 2 后端
+- 或者在 Docker Desktop 设置的 "Resources" -> "WSL Integration" 中启用 WSL 集成
+
+**注意：** 本配置使用 Docker socket 挂载和 Docker-in-Docker 特性，已经提供了容器内的 Docker 访问能力，无需额外配置。
 
 ### 端口已被占用
 
