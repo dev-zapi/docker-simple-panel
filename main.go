@@ -98,13 +98,17 @@ func main() {
 	// Serve OpenAPI specification
 	router.HandleFunc("/api/openapi.json", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		file, err := os.Open("openapi.json")
+		file, err := os.Open("./openapi.json")
 		if err != nil {
+			log.Printf("Failed to open OpenAPI specification: %v", err)
 			http.Error(w, "OpenAPI specification not found", http.StatusNotFound)
 			return
 		}
 		defer file.Close()
-		io.Copy(w, file)
+		
+		if _, err := io.Copy(w, file); err != nil {
+			log.Printf("Failed to serve OpenAPI specification: %v", err)
+		}
 	}).Methods("GET")
 	
 	router.HandleFunc("/api/auth/register", authHandler.Register).Methods("POST")
