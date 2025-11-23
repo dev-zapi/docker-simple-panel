@@ -31,14 +31,17 @@ docker run -d \
   -p 8080:8080 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v ./data:/app/data \
-  -e JWT_SECRET=your-secret-key-change-this \
+  -e JWT_SECRET=CHANGE_ME_STRONG_SECRET \
   ghcr.io/dev-zapi/docker-simple-panel:latest
 
 # Check if the service is running
 curl http://localhost:8080/api/health
 ```
 
-**Note**: The Docker socket (`/var/run/docker.sock`) must be mounted for the application to manage containers.
+**Important Security Notes**:
+- The Docker socket (`/var/run/docker.sock`) must be mounted for the application to manage containers.
+- **Always change the JWT_SECRET** to a strong, random value in production.
+- Consider disabling registration after creating initial users with `-e DISABLE_REGISTRATION=true`.
 
 ## Development with Dev Container
 
@@ -82,6 +85,7 @@ docker run -d \
   -p 8080:8080 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v ./data:/app/data \
+  -e JWT_SECRET=CHANGE_ME_STRONG_SECRET \
   docker-simple-panel:local
 ```
 
