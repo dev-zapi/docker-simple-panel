@@ -49,7 +49,10 @@ func (m *Manager) RestartWithSocket(newSocketPath string) error {
 	// Test connection
 	ctx := context.Background()
 	if err := newClient.Ping(ctx); err != nil {
-		newClient.Close()
+		// Close the new client before returning error
+		if closeErr := newClient.Close(); closeErr != nil {
+			log.Printf("Warning: failed to close new Docker client after failed ping: %v", closeErr)
+		}
 		return err
 	}
 

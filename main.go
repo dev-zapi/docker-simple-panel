@@ -30,18 +30,27 @@ func main() {
 	defer db.Close()
 	log.Println("Database connected successfully")
 
-	// Load persisted configs from database or use environment defaults
-	dockerSocket := cfg.DockerSocket
-	if persistedSocket, err := db.GetConfig("docker_socket"); err == nil && persistedSocket != "" {
-		dockerSocket = persistedSocket
-		log.Printf("Loaded Docker socket from database: %s", dockerSocket)
+	// Helper function to load config from database or use default
+	loadConfigString := func(key, defaultValue string) string {
+		if value, err := db.GetConfig(key); err == nil && value != "" {
+			log.Printf("Loaded %s from database: %s", key, value)
+			return value
+		}
+		return defaultValue
 	}
 
-	disableRegistration := cfg.DisableRegistration
-	if persistedReg, err := db.GetConfig("disable_registration"); err == nil && persistedReg != "" {
-		disableRegistration = persistedReg == "true"
-		log.Printf("Loaded registration setting from database: %v", disableRegistration)
+	loadConfigBool := func(key string, defaultValue bool) bool {
+		if value, err := db.GetConfig(key); err == nil && value != "" {
+			result := value == "true"
+			log.Printf("Loaded %s from database: %v", key, result)
+			return result
+		}
+		return defaultValue
 	}
+
+	// Load persisted configs from database or use environment defaults
+	dockerSocket := loadConfigString("docker_socket", cfg.DockerSocket)
+	disableRegistration := loadConfigBool("disable_registration", cfg.DisableRegistration)
 
 	// Initialize configuration manager
 	configManager := config.NewManager(dockerSocket, disableRegistration)

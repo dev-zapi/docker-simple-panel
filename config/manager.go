@@ -30,16 +30,20 @@ func (m *Manager) GetDockerSocket() string {
 // SetDockerSocket updates the Docker socket path and triggers Docker client restart
 func (m *Manager) SetDockerSocket(socketPath string) error {
 	m.mu.Lock()
-	defer m.mu.Unlock()
+	callback := m.onDockerSocketChange
+	m.mu.Unlock()
 	
-	// Call the callback to restart Docker client if set
-	if m.onDockerSocketChange != nil {
-		if err := m.onDockerSocketChange(socketPath); err != nil {
+	// Call the callback outside the lock to avoid deadlocks
+	if callback != nil {
+		if err := callback(socketPath); err != nil {
 			return err
 		}
 	}
 	
+	m.mu.Lock()
 	m.dockerSocket = socketPath
+	m.mu.Unlock()
+	
 	return nil
 }
 
