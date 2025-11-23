@@ -90,10 +90,11 @@ Dev Container 已预配置以下环境变量：
 确保 Docker Desktop 已启动。Dev Container 配置已经通过 Docker socket (`/var/run/docker.sock`) 挂载方式提供 Docker 访问。
 
 **Windows 用户：**
-- 确保 Docker Desktop 设置中启用了 "Expose daemon on tcp://localhost:2375 without TLS" 或使用 WSL 2 后端
-- 或者在 Docker Desktop 设置的 "Resources" -> "WSL Integration" 中启用 WSL 集成
+- 推荐使用 WSL 2 后端（在 Docker Desktop 设置中启用）
+- 在 Docker Desktop 设置的 "Resources" -> "WSL Integration" 中启用 WSL 集成
+- 确保 WSL 2 已安装并设置为默认版本
 
-**注意：** 本配置使用 Docker socket 挂载和 Docker-in-Docker 特性，已经提供了容器内的 Docker 访问能力，无需额外配置。
+**注意：** 本配置使用 Docker socket 挂载和 Docker-in-Docker 特性，已经提供了容器内的 Docker 访问能力，无需额外配置。如果遇到权限问题，确保 Docker Desktop 正在运行且 WSL 集成已启用。
 
 ### 端口已被占用
 
