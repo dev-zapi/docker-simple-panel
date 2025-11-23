@@ -94,6 +94,12 @@ func main() {
 		w.Write([]byte(`{"success":true,"message":"Server is running"}`))
 	}).Methods("GET")
 	
+	// Serve OpenAPI specification
+	router.HandleFunc("/api/openapi.json", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		http.ServeFile(w, r, "openapi.json")
+	}).Methods("GET")
+	
 	router.HandleFunc("/api/auth/register", authHandler.Register).Methods("POST")
 	router.HandleFunc("/api/auth/login", authHandler.Login).Methods("POST")
 

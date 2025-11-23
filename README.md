@@ -117,6 +117,22 @@ DOCKER_SOCKET=/custom/path/docker.sock ./docker-simple-panel
 
 ## API Endpoints
 
+### API Documentation
+
+The API is fully documented using OpenAPI v3 specification. You can access the OpenAPI JSON documentation at:
+
+```
+GET /api/openapi.json
+```
+
+This endpoint returns a complete OpenAPI v3 formatted JSON specification that includes:
+- All API endpoints with detailed descriptions
+- Request/response schemas
+- Authentication requirements
+- Example values
+
+You can use tools like [Swagger UI](https://swagger.io/tools/swagger-ui/) or [Swagger Editor](https://editor.swagger.io/) to visualize and interact with the API documentation. Simply load the OpenAPI JSON from `http://localhost:8080/api/openapi.json`.
+
 ### Public Endpoints
 
 #### Health Check
