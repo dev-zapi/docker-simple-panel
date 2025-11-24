@@ -979,6 +979,16 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "Failed to delete user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }

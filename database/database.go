@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -10,6 +11,9 @@ import (
 
 	"github.com/dev-zapi/docker-simple-panel/models"
 )
+
+// ErrUserNotFound is returned when a user is not found
+var ErrUserNotFound = errors.New("user not found")
 
 // DB wraps the database connection
 type DB struct {
@@ -95,7 +99,7 @@ func (db *DB) GetUserByUsername(username string) (*models.User, error) {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("user not found")
+			return nil, ErrUserNotFound
 		}
 		return nil, err
 	}
@@ -153,7 +157,7 @@ func (db *DB) GetUserByID(id int) (*models.User, error) {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("user not found")
+			return nil, ErrUserNotFound
 		}
 		return nil, err
 	}
@@ -174,7 +178,7 @@ func (db *DB) DeleteUser(id int) error {
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("user not found")
+		return ErrUserNotFound
 	}
 
 	return nil

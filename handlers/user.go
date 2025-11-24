@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -83,7 +84,11 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.db.DeleteUser(id); err != nil {
-		respondWithError(w, http.StatusNotFound, "Failed to delete user: "+err.Error())
+		if errors.Is(err, database.ErrUserNotFound) {
+			respondWithError(w, http.StatusNotFound, "User not found")
+		} else {
+			respondWithError(w, http.StatusInternalServerError, "Failed to delete user: "+err.Error())
+		}
 		return
 	}
 
