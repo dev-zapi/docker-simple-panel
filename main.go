@@ -81,6 +81,7 @@ func main() {
 	authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret, configManager)
 	dockerHandler := handlers.NewDockerHandler(dockerManager)
 	configHandler := handlers.NewConfigHandler(configManager, db)
+	userHandler := handlers.NewUserHandler(db)
 
 	// Setup router
 	router := mux.NewRouter()
@@ -94,7 +95,7 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"success":true,"message":"Server is running"}`))
 	}).Methods("GET")
-	
+
 	// Serve OpenAPI specification
 	router.HandleFunc("/api/openapi.json", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -105,12 +106,12 @@ func main() {
 			return
 		}
 		defer file.Close()
-		
+
 		if _, err := io.Copy(w, file); err != nil {
 			log.Printf("Failed to serve OpenAPI specification: %v", err)
 		}
 	}).Methods("GET")
-	
+
 	router.HandleFunc("/api/auth/register", authHandler.Register).Methods("POST")
 	router.HandleFunc("/api/auth/login", authHandler.Login).Methods("POST")
 
@@ -129,6 +130,11 @@ func main() {
 	// System configuration routes
 	protected.HandleFunc("/config", configHandler.GetConfig).Methods("GET")
 	protected.HandleFunc("/config", configHandler.UpdateConfig).Methods("PUT", "PATCH")
+
+	// User management routes
+	protected.HandleFunc("/users", userHandler.ListUsers).Methods("GET")
+	protected.HandleFunc("/users", userHandler.CreateUser).Methods("POST")
+	protected.HandleFunc("/users/{id}", userHandler.DeleteUser).Methods("DELETE")
 
 	// Create HTTP server
 	server := &http.Server{

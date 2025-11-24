@@ -6,9 +6,9 @@ import (
 
 // Manager handles runtime configuration updates
 type Manager struct {
-	mu                  sync.RWMutex
-	dockerSocket        string
-	disableRegistration bool
+	mu                   sync.RWMutex
+	dockerSocket         string
+	disableRegistration  bool
 	onDockerSocketChange func(string) error
 }
 
@@ -32,18 +32,18 @@ func (m *Manager) SetDockerSocket(socketPath string) error {
 	m.mu.Lock()
 	callback := m.onDockerSocketChange
 	m.mu.Unlock()
-	
+
 	// Call the callback outside the lock to avoid deadlocks
 	if callback != nil {
 		if err := callback(socketPath); err != nil {
 			return err
 		}
 	}
-	
+
 	m.mu.Lock()
 	m.dockerSocket = socketPath
 	m.mu.Unlock()
-	
+
 	return nil
 }
 

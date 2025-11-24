@@ -7,10 +7,10 @@ import (
 
 // Config holds application configuration
 type Config struct {
-	ServerPort         string
-	DatabasePath       string
-	JWTSecret          string
-	DockerSocket       string
+	ServerPort          string
+	DatabasePath        string
+	JWTSecret           string
+	DockerSocket        string
 	DisableRegistration bool
 }
 

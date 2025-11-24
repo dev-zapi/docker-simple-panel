@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -10,6 +11,9 @@ import (
 
 	"github.com/dev-zapi/docker-simple-panel/models"
 )
+
+// ErrUserNotFound is returned when a user is not found
+var ErrUserNotFound = errors.New("user not found")
 
 // DB wraps the database connection
 type DB struct {
@@ -31,7 +35,7 @@ func NewDB(dataSourceName string) (*DB, error) {
 	if err := db.createTables(); err != nil {
 		return nil, err
 	}
-	
+
 	if err := db.InitConfigTable(); err != nil {
 		return nil, err
 	}
@@ -92,10 +96,10 @@ func (db *DB) GetUserByUsername(username string) (*models.User, error) {
 		"SELECT id, username, password, nickname, created_at, updated_at FROM users WHERE username = ?",
 		username,
 	).Scan(&user.ID, &user.Username, &user.Password, &user.Nickname, &user.CreatedAt, &user.UpdatedAt)
-	
+
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("user not found")
+			return nil, ErrUserNotFound
 		}
 		return nil, err
 	}
@@ -115,6 +119,69 @@ func (db *DB) ValidateUser(username, password string) (*models.User, error) {
 	}
 
 	return user, nil
+}
+
+// GetAllUsers retrieves all users
+func (db *DB) GetAllUsers() ([]models.User, error) {
+	rows, err := db.conn.Query(
+		"SELECT id, username, nickname, created_at, updated_at FROM users ORDER BY created_at DESC",
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []models.User
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(&user.ID, &user.Username, &user.Nickname, &user.CreatedAt, &user.UpdatedAt); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+// GetUserByID retrieves a user by ID
+func (db *DB) GetUserByID(id int) (*models.User, error) {
+	user := &models.User{}
+	err := db.conn.QueryRow(
+		"SELECT id, username, nickname, created_at, updated_at FROM users WHERE id = ?",
+		id,
+	).Scan(&user.ID, &user.Username, &user.Nickname, &user.CreatedAt, &user.UpdatedAt)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// DeleteUser deletes a user by ID
+func (db *DB) DeleteUser(id int) error {
+	result, err := db.conn.Exec("DELETE FROM users WHERE id = ?", id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrUserNotFound
+	}
+
+	return nil
 }
 
 // Close closes the database connection
