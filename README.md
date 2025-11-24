@@ -43,6 +43,14 @@ curl http://localhost:8080/api/health
 - **Always change the JWT_SECRET** to a strong, random value in production.
 - Consider disabling registration after creating initial users with `-e DISABLE_REGISTRATION=true`.
 
+**Docker Socket Permissions**:
+- The application runs as a non-root user (UID 1000) for security.
+- The entrypoint script automatically handles docker.sock permission issues by:
+  - Detecting the GID of the mounted docker.sock
+  - Creating/updating the docker group in the container to match the host
+  - Adding the application user to the docker group
+- No additional configuration is needed - it works automatically across different host systems.
+
 ## Development with Dev Container
 
 For Windows developers or those who prefer containerized development environments, this project includes VS Code Dev Container configuration:
