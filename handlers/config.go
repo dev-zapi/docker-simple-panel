@@ -27,7 +27,7 @@ func NewConfigHandler(configManager *config.Manager, db *database.DB) *ConfigHan
 // GetConfig retrieves the current system configuration
 func (h *ConfigHandler) GetConfig(w http.ResponseWriter, r *http.Request) {
 	cfg := h.configManager.GetSystemConfig()
-	
+
 	respondWithJSON(w, http.StatusOK, models.Response{
 		Success: true,
 		Data:    cfg,
@@ -54,7 +54,7 @@ func (h *ConfigHandler) UpdateConfig(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusInternalServerError, "Failed to update Docker socket: "+err.Error())
 			return
 		}
-		
+
 		// Persist to database
 		if err := h.db.SetConfig("docker_socket", *req.DockerSocket); err != nil {
 			respondWithError(w, http.StatusInternalServerError, "Failed to persist Docker socket config: "+err.Error())
@@ -65,7 +65,7 @@ func (h *ConfigHandler) UpdateConfig(w http.ResponseWriter, r *http.Request) {
 	// Update registration switch if provided
 	if req.DisableRegistration != nil {
 		h.configManager.SetDisableRegistration(*req.DisableRegistration)
-		
+
 		// Persist to database
 		disableRegStr := strconv.FormatBool(*req.DisableRegistration)
 		if err := h.db.SetConfig("disable_registration", disableRegStr); err != nil {
