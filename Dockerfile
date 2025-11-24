@@ -23,28 +23,22 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates libsqlite3-0 && \
     rm -rf /var/lib/apt/lists/*
 
-# Create a non-root user
-RUN useradd -m -u 1000 appuser
-
 WORKDIR /app
 
 # Copy binary from builder
 COPY --from=builder /app/docker-simple-panel .
 
-# Create directory for database and set permissions
-RUN mkdir -p /app/data && chown -R appuser:appuser /app
-
-# Switch to non-root user
-USER appuser
-
-# Expose port
-EXPOSE 8080
+# Create directory for database
+RUN mkdir -p /app/data
 
 # Set environment variables with defaults
 ENV SERVER_PORT=8080 \
     DATABASE_PATH=/app/data/docker-panel.db \
     DOCKER_SOCKET=/var/run/docker.sock \
     DISABLE_REGISTRATION=false
+
+# Expose port
+EXPOSE $SERVER_PORT
 
 # Run the application
 CMD ["./docker-simple-panel"]
