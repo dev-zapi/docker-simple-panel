@@ -37,7 +37,8 @@ func (rw *responseWriter) WriteHeader(code int) {
 func (rw *responseWriter) Write(b []byte) (int, error) {
 	rw.bytesWritten += len(b)
 	if rw.captureBody {
-		rw.body.Write(b)
+		// bytes.Buffer.Write never returns an error, but we ignore it explicitly
+		_, _ = rw.body.Write(b)
 	}
 	return rw.ResponseWriter.Write(b)
 }
@@ -59,7 +60,11 @@ func Logging(configManager *config.Manager) func(http.Handler) http.Handler {
 			// Read request body for DEBUG level
 			var requestBody []byte
 			if logLevel == config.LogLevelDebug && r.Body != nil {
-				requestBody, _ = io.ReadAll(r.Body)
+				var err error
+				requestBody, err = io.ReadAll(r.Body)
+				if err != nil {
+					log.Printf("[DEBUG] Failed to read request body: %v", err)
+				}
 				r.Body = io.NopCloser(bytes.NewBuffer(requestBody))
 			}
 
