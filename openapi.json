@@ -1148,6 +1148,12 @@
             "type": "boolean",
             "description": "Whether user registration is disabled",
             "example": false
+          },
+          "log_level": {
+            "type": "string",
+            "description": "Logging verbosity level",
+            "example": "info",
+            "enum": ["error", "warn", "info", "debug"]
           }
         }
       },
@@ -1163,6 +1169,12 @@
             "type": "boolean",
             "description": "Whether to disable user registration (optional)",
             "example": true
+          },
+          "log_level": {
+            "type": "string",
+            "description": "Logging verbosity level (optional). Available levels: error (5xx only), warn (4xx/5xx + slow requests), info (basic request info), debug (detailed info with headers/body)",
+            "example": "info",
+            "enum": ["error", "warn", "info", "debug"]
           }
         }
       },

@@ -38,6 +38,7 @@ func (h *ConfigHandler) GetConfig(w http.ResponseWriter, r *http.Request) {
 type UpdateConfigRequest struct {
 	DockerSocket        *string `json:"docker_socket,omitempty"`
 	DisableRegistration *bool   `json:"disable_registration,omitempty"`
+	LogLevel            *string `json:"log_level,omitempty"`
 }
 
 // UpdateConfig updates system configuration
@@ -70,6 +71,18 @@ func (h *ConfigHandler) UpdateConfig(w http.ResponseWriter, r *http.Request) {
 		disableRegStr := strconv.FormatBool(*req.DisableRegistration)
 		if err := h.db.SetConfig("disable_registration", disableRegStr); err != nil {
 			respondWithError(w, http.StatusInternalServerError, "Failed to persist registration config: "+err.Error())
+			return
+		}
+	}
+
+	// Update log level if provided
+	if req.LogLevel != nil {
+		logLevel := config.ParseLogLevel(*req.LogLevel)
+		h.configManager.SetLogLevel(logLevel)
+
+		// Persist to database
+		if err := h.db.SetConfig("log_level", logLevel.String()); err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to persist log level config: "+err.Error())
 			return
 		}
 	}

@@ -5,6 +5,52 @@ import (
 	"strings"
 )
 
+// LogLevel represents the logging verbosity level
+type LogLevel int
+
+const (
+	// LogLevelError only logs errors
+	LogLevelError LogLevel = iota
+	// LogLevelWarn logs warnings and errors
+	LogLevelWarn
+	// LogLevelInfo logs basic request information
+	LogLevelInfo
+	// LogLevelDebug logs detailed request/response information
+	LogLevelDebug
+)
+
+// String returns the string representation of the log level
+func (l LogLevel) String() string {
+	switch l {
+	case LogLevelError:
+		return "error"
+	case LogLevelWarn:
+		return "warn"
+	case LogLevelInfo:
+		return "info"
+	case LogLevelDebug:
+		return "debug"
+	default:
+		return "info"
+	}
+}
+
+// ParseLogLevel parses a string into a LogLevel
+func ParseLogLevel(level string) LogLevel {
+	switch strings.ToLower(level) {
+	case "error":
+		return LogLevelError
+	case "warn", "warning":
+		return LogLevelWarn
+	case "info":
+		return LogLevelInfo
+	case "debug":
+		return LogLevelDebug
+	default:
+		return LogLevelInfo
+	}
+}
+
 // Config holds application configuration
 type Config struct {
 	ServerPort          string
@@ -12,6 +58,7 @@ type Config struct {
 	JWTSecret           string
 	DockerSocket        string
 	DisableRegistration bool
+	LogLevel            LogLevel
 }
 
 // LoadConfig loads configuration from environment variables with defaults
@@ -22,6 +69,7 @@ func LoadConfig() *Config {
 		JWTSecret:           getEnv("JWT_SECRET", "your-secret-key-change-in-production"),
 		DockerSocket:        getEnv("DOCKER_SOCKET", "/var/run/docker.sock"),
 		DisableRegistration: getEnvBool("DISABLE_REGISTRATION", false),
+		LogLevel:            ParseLogLevel(getEnv("LOG_LEVEL", "info")),
 	}
 }
 
