@@ -52,9 +52,11 @@ func main() {
 	// Load persisted configs from database or use environment defaults
 	dockerSocket := loadConfigString("docker_socket", cfg.DockerSocket)
 	disableRegistration := loadConfigBool("disable_registration", cfg.DisableRegistration)
+	logLevel := config.ParseLogLevel(loadConfigString("log_level", cfg.LogLevel.String()))
 
 	// Initialize configuration manager
-	configManager := config.NewManager(dockerSocket, disableRegistration)
+	configManager := config.NewManager(dockerSocket, disableRegistration, logLevel)
+	log.Printf("Log level set to: %s", logLevel.String())
 
 	// Initialize Docker manager
 	dockerManager, err := docker.NewManager(dockerSocket)
@@ -88,6 +90,9 @@ func main() {
 
 	// Apply CORS middleware
 	router.Use(middleware.CORS)
+
+	// Apply logging middleware
+	router.Use(middleware.Logging(configManager))
 
 	// Public routes
 	router.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {

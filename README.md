@@ -98,6 +98,11 @@ The application can be configured using environment variables:
 - `JWT_SECRET`: Secret key for JWT token signing (default: your-secret-key-change-in-production)
 - `DOCKER_SOCKET`: Path to Docker socket (default: /var/run/docker.sock)
 - `DISABLE_REGISTRATION`: Disable user registration endpoint (default: false, set to "true", "1", or "yes" to disable)
+- `LOG_LEVEL`: Logging verbosity level (default: info). Available levels:
+  - `error`: Only log errors (5xx responses)
+  - `warn`: Log warnings and errors (4xx/5xx responses, slow requests >1s)
+  - `info`: Log basic request information (method, path, status, duration)
+  - `debug`: Log detailed request/response information (headers, body)
 
 ## Running
 
@@ -113,6 +118,9 @@ DISABLE_REGISTRATION=true ./docker-simple-panel
 
 # Run with custom docker socket path
 DOCKER_SOCKET=/custom/path/docker.sock ./docker-simple-panel
+
+# Run with debug logging
+LOG_LEVEL=debug ./docker-simple-panel
 ```
 
 ## API Endpoints
