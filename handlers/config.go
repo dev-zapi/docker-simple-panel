@@ -34,6 +34,24 @@ func (h *ConfigHandler) GetConfig(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// PublicConfig represents the public configuration (no auth required)
+type PublicConfig struct {
+	DisableRegistration bool `json:"disable_registration"`
+}
+
+// GetPublicConfig retrieves public configuration (no auth required)
+// This endpoint only exposes the registration status for unauthenticated users
+func (h *ConfigHandler) GetPublicConfig(w http.ResponseWriter, r *http.Request) {
+	cfg := PublicConfig{
+		DisableRegistration: h.configManager.GetDisableRegistration(),
+	}
+
+	respondWithJSON(w, http.StatusOK, models.Response{
+		Success: true,
+		Data:    cfg,
+	})
+}
+
 // UpdateConfigRequest represents configuration update request
 type UpdateConfigRequest struct {
 	DockerSocket        *string `json:"docker_socket,omitempty"`
