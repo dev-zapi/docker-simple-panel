@@ -585,6 +585,38 @@
         }
       }
     },
+    "/api/config/public": {
+      "get": {
+        "tags": ["config"],
+        "summary": "Get public configuration",
+        "description": "Returns public configuration without requiring authentication. Only exposes the registration status for unauthenticated users to determine if registration is enabled.",
+        "operationId": "getPublicConfig",
+        "responses": {
+          "200": {
+            "description": "Public configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Response"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PublicConfig"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/config": {
       "get": {
         "tags": ["config"],
@@ -1133,6 +1165,17 @@
             "format": "int64",
             "description": "Container creation timestamp (Unix epoch)",
             "example": 1699876543
+          }
+        }
+      },
+      "PublicConfig": {
+        "type": "object",
+        "description": "Public configuration available without authentication",
+        "properties": {
+          "disable_registration": {
+            "type": "boolean",
+            "description": "Whether user registration is disabled",
+            "example": false
           }
         }
       },

@@ -120,6 +120,9 @@ func main() {
 	router.HandleFunc("/api/auth/register", authHandler.Register).Methods("POST")
 	router.HandleFunc("/api/auth/login", authHandler.Login).Methods("POST")
 
+	// Public config endpoint (no auth required) - returns only registration status
+	router.HandleFunc("/api/config/public", configHandler.GetPublicConfig).Methods("GET")
+
 	// Protected routes - require JWT authentication
 	protected := router.PathPrefix("/api").Subrouter()
 	protected.Use(middleware.JWTAuth(cfg.JWTSecret))
