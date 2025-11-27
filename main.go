@@ -144,6 +144,13 @@ func main() {
 	protected.HandleFunc("/users", userHandler.CreateUser).Methods("POST")
 	protected.HandleFunc("/users/{id}", userHandler.DeleteUser).Methods("DELETE")
 
+	// Static file serving (if configured)
+	if cfg.StaticPath != "" {
+		log.Printf("Serving static files from: %s", cfg.StaticPath)
+		fs := http.FileServer(http.Dir(cfg.StaticPath))
+		router.PathPrefix("/").Handler(fs)
+	}
+
 	// Create HTTP server
 	server := &http.Server{
 		Addr:         ":" + cfg.ServerPort,

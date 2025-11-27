@@ -103,6 +103,7 @@ The application can be configured using environment variables:
   - `warn`: Log warnings and errors (4xx/5xx responses, slow requests >1s)
   - `info`: Log basic request information (method, path, status, duration)
   - `debug`: Log detailed request/response information (headers, body)
+- `STATIC_PATH`: Path to static files directory for serving frontend (default: empty, no static serving)
 
 ## Running
 
@@ -121,6 +122,9 @@ DOCKER_SOCKET=/custom/path/docker.sock ./docker-simple-panel
 
 # Run with debug logging
 LOG_LEVEL=debug ./docker-simple-panel
+
+# Run with static file serving
+STATIC_PATH=/path/to/frontend/dist ./docker-simple-panel
 ```
 
 ## API Endpoints

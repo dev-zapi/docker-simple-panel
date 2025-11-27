@@ -35,7 +35,8 @@ RUN mkdir -p /app/data
 ENV SERVER_PORT=8080 \
     DATABASE_PATH=/app/data/docker-panel.db \
     DOCKER_SOCKET=/var/run/docker.sock \
-    DISABLE_REGISTRATION=false
+    DISABLE_REGISTRATION=false \
+    STATIC_PATH=
 
 # Expose port
 EXPOSE $SERVER_PORT
