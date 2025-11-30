@@ -8,22 +8,22 @@ export interface PageHeaderState {
   displayMode: DisplayMode;
   showRefreshButton: boolean;
   refreshing: boolean;
+  onToggleDisplayMode: (() => void) | null;
+  onRefresh: (() => void) | null;
 }
 
-const defaultState: PageHeaderState = {
+const createDefaultState = (): PageHeaderState => ({
   title: '',
   showDisplayModeToggle: false,
   displayMode: 'standard',
   showRefreshButton: false,
   refreshing: false,
-};
+  onToggleDisplayMode: null,
+  onRefresh: null,
+});
 
 const createPageHeaderStore = () => {
-  const { subscribe, set, update } = writable<PageHeaderState>(defaultState);
-
-  // Callbacks for actions
-  let onToggleDisplayMode: (() => void) | null = null;
-  let onRefresh: (() => void) | null = null;
+  const { subscribe, set, update } = writable<PageHeaderState>(createDefaultState());
 
   return {
     subscribe,
@@ -43,25 +43,29 @@ const createPageHeaderStore = () => {
       update(state => ({ ...state, refreshing }));
     },
     setOnToggleDisplayMode: (callback: (() => void) | null) => {
-      onToggleDisplayMode = callback;
+      update(state => ({ ...state, onToggleDisplayMode: callback }));
     },
     setOnRefresh: (callback: (() => void) | null) => {
-      onRefresh = callback;
+      update(state => ({ ...state, onRefresh: callback }));
     },
     triggerToggleDisplayMode: () => {
-      if (onToggleDisplayMode) {
-        onToggleDisplayMode();
-      }
+      update(state => {
+        if (state.onToggleDisplayMode) {
+          state.onToggleDisplayMode();
+        }
+        return state;
+      });
     },
     triggerRefresh: () => {
-      if (onRefresh) {
-        onRefresh();
-      }
+      update(state => {
+        if (state.onRefresh) {
+          state.onRefresh();
+        }
+        return state;
+      });
     },
     reset: () => {
-      set(defaultState);
-      onToggleDisplayMode = null;
-      onRefresh = null;
+      set(createDefaultState());
     },
   };
 };
