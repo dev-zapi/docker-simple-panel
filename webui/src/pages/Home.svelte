@@ -92,7 +92,12 @@
     <div class="content-header">
       <h2>容器列表</h2>
       <div class="header-actions">
-        <button class="mode-toggle" on:click={toggleDisplayMode} title={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}>
+        <button 
+          class="mode-toggle" 
+          on:click={toggleDisplayMode} 
+          title={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}
+          aria-label={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}
+        >
           {#if displayMode === 'compact'}
             <span class="mode-icon">📋</span>
             <span class="mode-text">标准</span>

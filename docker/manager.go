@@ -59,11 +59,11 @@ func (m *Manager) isSelfContainer(containerID string) bool {
 		return false
 	}
 
-	// Normalize both IDs to short form (12 chars) for comparison
+	// Normalize both IDs to short form (12 hex chars) for comparison
 	selfID := m.containerEnvironment.ContainerID
 	targetID := containerID
 
-	// Handle short IDs (12 chars) and full IDs (64 chars)
+	// Handle short IDs (12 hex chars) and full IDs (64 hex chars)
 	if len(selfID) > 12 {
 		selfID = selfID[:12]
 	}
