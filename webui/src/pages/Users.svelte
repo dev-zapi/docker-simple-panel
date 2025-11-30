@@ -204,7 +204,7 @@
 <style>
   .users-container {
     min-height: 100vh;
-    background: #f5f5f5;
+    background: var(--color-background, #f5f5f4);
   }
   
   .main-content {
@@ -223,33 +223,34 @@
   .content-header h2 {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #333;
+    color: var(--color-text, #0a0a0a);
     margin: 0;
+    font-family: var(--font-heading, "Playfair Display", serif);
   }
   
   .add-button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: var(--color-primary, #171717);
+    color: var(--color-background, #f5f5f4);
     border: none;
     padding: 0.625rem 1.25rem;
-    border-radius: 8px;
+    border-radius: var(--radius, 0.25rem);
     cursor: pointer;
     font-size: 0.95rem;
     font-weight: 600;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: background 0.2s;
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .add-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    background: var(--color-secondary, #525252);
   }
   
   .error-banner {
-    background: #fee;
-    border: 1px solid #fcc;
-    color: #c33;
+    background: rgba(153, 27, 27, 0.1);
+    border: 1px solid var(--color-error, #991b1b);
+    color: var(--color-error, #991b1b);
     padding: 1rem;
-    border-radius: 8px;
+    border-radius: var(--radius, 0.25rem);
     margin-bottom: 1.5rem;
   }
   
@@ -259,14 +260,14 @@
     align-items: center;
     justify-content: center;
     padding: 4rem 2rem;
-    color: #666;
+    color: var(--color-muted, #78716c);
   }
   
   .spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #667eea;
+    border: 4px solid var(--color-surface, #e7e5e4);
+    border-top: 4px solid var(--color-primary, #171717);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 1rem;
@@ -280,7 +281,7 @@
   .empty-state {
     text-align: center;
     padding: 4rem 2rem;
-    color: #999;
+    color: var(--color-muted, #78716c);
   }
   
   .empty-icon {
@@ -289,10 +290,10 @@
   }
   
   .users-table {
-    background: white;
-    border-radius: 12px;
+    background: var(--color-surface, #e7e5e4);
+    border-radius: var(--radius, 0.25rem);
     overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   }
   
   table {
@@ -301,20 +302,22 @@
   }
   
   thead {
-    background: #f8f9fa;
+    background: rgba(0, 0, 0, 0.05);
   }
   
   th {
     padding: 1rem;
     text-align: left;
     font-weight: 600;
-    color: #333;
-    border-bottom: 2px solid #e0e0e0;
+    color: var(--color-text, #0a0a0a);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   td {
     padding: 1rem;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   tr:last-child td {
@@ -322,16 +325,16 @@
   }
   
   tbody tr:hover {
-    background: #f8f9fa;
+    background: rgba(0, 0, 0, 0.03);
   }
   
   .username {
     font-weight: 500;
-    color: #333;
+    color: var(--color-text, #0a0a0a);
   }
   
   .nickname {
-    color: #666;
+    color: var(--color-muted, #78716c);
   }
   
   .actions {
@@ -339,18 +342,19 @@
   }
   
   .delete-btn {
-    background: #e74c3c;
+    background: var(--color-error, #991b1b);
     color: white;
     border: none;
     padding: 0.5rem 1rem;
-    border-radius: 6px;
+    border-radius: var(--radius, 0.25rem);
     cursor: pointer;
     font-size: 0.9rem;
     transition: background 0.2s;
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .delete-btn:hover {
-    background: #c0392b;
+    background: #7f1d1d;
   }
   
   /* Modal styles */
@@ -360,7 +364,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -368,12 +372,12 @@
   }
   
   .modal {
-    background: white;
-    border-radius: 12px;
+    background: var(--color-surface, #e7e5e4);
+    border-radius: var(--radius, 0.25rem);
     padding: 2rem;
     width: 90%;
     max-width: 480px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   }
   
   .modal-header {
@@ -386,15 +390,16 @@
   .modal-header h3 {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #333;
+    color: var(--color-text, #0a0a0a);
     margin: 0;
+    font-family: var(--font-heading, "Playfair Display", serif);
   }
   
   .close-btn {
     background: none;
     border: none;
     font-size: 1.5rem;
-    color: #999;
+    color: var(--color-muted, #78716c);
     cursor: pointer;
     padding: 0;
     width: 32px;
@@ -402,12 +407,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
+    border-radius: var(--radius, 0.25rem);
     transition: background 0.2s;
   }
   
   .close-btn:hover {
-    background: #f0f0f0;
+    background: rgba(0, 0, 0, 0.1);
   }
   
   .modal-form {
@@ -424,25 +429,29 @@
   
   .form-group label {
     font-weight: 600;
-    color: #333;
+    color: var(--color-text, #0a0a0a);
     font-size: 0.95rem;
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .form-group input {
     padding: 0.75rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius, 0.25rem);
     font-size: 1rem;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: var(--color-background, #f5f5f4);
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .form-group input:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--color-primary, #171717);
+    box-shadow: 0 0 0 2px rgba(23, 23, 23, 0.2);
   }
   
   .form-group input:disabled {
-    background: #f5f5f5;
+    background: rgba(0, 0, 0, 0.05);
     cursor: not-allowed;
   }
   
@@ -454,17 +463,19 @@
   }
   
   .cancel-btn {
-    background: white;
-    border: 2px solid #e0e0e0;
+    background: transparent;
+    border: 1px solid rgba(0, 0, 0, 0.2);
     padding: 0.625rem 1.25rem;
-    border-radius: 8px;
+    border-radius: var(--radius, 0.25rem);
     cursor: pointer;
     font-size: 0.95rem;
     transition: all 0.2s;
+    color: var(--color-text, #0a0a0a);
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .cancel-btn:hover:not(:disabled) {
-    border-color: #999;
+    background: rgba(0, 0, 0, 0.05);
   }
   
   .cancel-btn:disabled {
@@ -473,20 +484,20 @@
   }
   
   .submit-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: var(--color-primary, #171717);
+    color: var(--color-background, #f5f5f4);
     border: none;
     padding: 0.625rem 1.25rem;
-    border-radius: 8px;
+    border-radius: var(--radius, 0.25rem);
     cursor: pointer;
     font-size: 0.95rem;
     font-weight: 600;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: background 0.2s;
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .submit-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    background: var(--color-secondary, #525252);
   }
   
   .submit-btn:disabled {

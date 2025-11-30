@@ -45,6 +45,7 @@ export interface Container {
   status: string; // Human-readable status like "Up 2 hours"
   health?: 'healthy' | 'unhealthy' | 'starting' | 'none';
   created: number; // Unix timestamp
+  is_self?: boolean; // Whether this container is running the DSP application
 }
 
 export interface ContainerAction {
@@ -56,6 +57,7 @@ export interface ContainerAction {
 export interface SystemConfig {
   docker_socket: string;
   disable_registration: boolean;
+  log_level: string;
 }
 
 export interface PublicConfig {
@@ -65,6 +67,7 @@ export interface PublicConfig {
 export interface UpdateConfigRequest {
   docker_socket?: string;
   disable_registration?: boolean;
+  log_level?: string;
 }
 
 // Auth types

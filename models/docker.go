@@ -9,6 +9,7 @@ type ContainerInfo struct {
 	Status  string `json:"status"`
 	Health  string `json:"health"`
 	Created int64  `json:"created"`
+	IsSelf  bool   `json:"is_self"` // Whether this container is running this application
 }
 
 // ContainerOperation represents an operation to perform on a container

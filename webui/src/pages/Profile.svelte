@@ -140,7 +140,7 @@
 <style>
   .profile-container {
     min-height: 100vh;
-    background: #f5f5f5;
+    background: var(--color-background, #f5f5f4);
   }
   
   .main-content {
@@ -150,35 +150,36 @@
   }
   
   .profile-box {
-    background: white;
-    border-radius: 12px;
+    background: var(--color-surface, #e7e5e4);
+    border-radius: var(--radius, 0.25rem);
     padding: 2rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   }
   
   .profile-box h2 {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #333;
+    color: var(--color-text, #0a0a0a);
     margin: 0 0 1.5rem 0;
+    font-family: var(--font-heading, "Playfair Display", serif);
   }
   
   .error-message {
-    background: #fee;
-    border: 1px solid #fcc;
-    color: #c33;
+    background: rgba(153, 27, 27, 0.1);
+    border: 1px solid var(--color-error, #991b1b);
+    color: var(--color-error, #991b1b);
     padding: 0.75rem;
-    border-radius: 8px;
+    border-radius: var(--radius, 0.25rem);
     margin-bottom: 1rem;
     font-size: 0.9rem;
   }
   
   .success-message {
-    background: #efe;
-    border: 1px solid #cfc;
-    color: #3c3;
+    background: rgba(21, 128, 61, 0.1);
+    border: 1px solid var(--color-success, #15803d);
+    color: var(--color-success, #15803d);
     padding: 0.75rem;
-    border-radius: 8px;
+    border-radius: var(--radius, 0.25rem);
     margin-bottom: 1rem;
     font-size: 0.9rem;
   }
@@ -197,45 +198,50 @@
   
   .form-group label {
     font-weight: 600;
-    color: #333;
+    color: var(--color-text, #0a0a0a);
     font-size: 0.95rem;
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .form-group input {
     padding: 0.75rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius, 0.25rem);
     font-size: 1rem;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: var(--color-background, #f5f5f4);
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .form-group input:focus:not(:disabled) {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--color-primary, #171717);
+    box-shadow: 0 0 0 2px rgba(23, 23, 23, 0.2);
   }
   
   .form-group input:disabled,
   .disabled-input {
-    background: #f5f5f5;
+    background: rgba(0, 0, 0, 0.05);
     cursor: not-allowed;
-    color: #999;
+    color: var(--color-muted, #78716c);
   }
   
   .help-text {
     font-size: 0.85rem;
-    color: #999;
+    color: var(--color-muted, #78716c);
   }
   
   .divider {
     height: 1px;
-    background: #e0e0e0;
+    background: rgba(0, 0, 0, 0.1);
     margin: 0.5rem 0;
   }
   
   .section-title {
     font-weight: 600;
-    color: #666;
+    color: var(--color-secondary, #525252);
     font-size: 0.95rem;
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .form-actions {
@@ -246,17 +252,19 @@
   }
   
   .cancel-btn {
-    background: white;
-    border: 2px solid #e0e0e0;
+    background: transparent;
+    border: 1px solid rgba(0, 0, 0, 0.2);
     padding: 0.625rem 1.5rem;
-    border-radius: 8px;
+    border-radius: var(--radius, 0.25rem);
     cursor: pointer;
     font-size: 0.95rem;
     transition: all 0.2s;
+    color: var(--color-text, #0a0a0a);
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .cancel-btn:hover:not(:disabled) {
-    border-color: #999;
+    background: rgba(0, 0, 0, 0.05);
   }
   
   .cancel-btn:disabled {
@@ -265,20 +273,20 @@
   }
   
   .save-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: var(--color-primary, #171717);
+    color: var(--color-background, #f5f5f4);
     border: none;
     padding: 0.625rem 1.5rem;
-    border-radius: 8px;
+    border-radius: var(--radius, 0.25rem);
     cursor: pointer;
     font-size: 0.95rem;
     font-weight: 600;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: background 0.2s, transform 0.2s;
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .save-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    background: var(--color-secondary, #525252);
   }
   
   .save-btn:disabled {

@@ -23,6 +23,15 @@
     push('/profile');
   }
   
+  function goToSettings() {
+    showMenu = false;
+    push('/settings');
+  }
+  
+  function goToHome() {
+    push('/');
+  }
+  
   // Close menu when clicking outside
   function handleClickOutside(event: MouseEvent) {
     if (showMenu && !(event.target as HTMLElement).closest('.user-menu')) {
@@ -35,14 +44,16 @@
 
 <header class="header">
   <div class="header-left">
-    <svg class="logo-icon" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="4" y="8" width="24" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
-      <rect x="8" y="12" width="4" height="8" fill="currentColor"/>
-      <rect x="14" y="12" width="4" height="8" fill="currentColor"/>
-      <rect x="20" y="12" width="4" height="8" fill="currentColor"/>
-      <circle cx="16" cy="4" r="2" fill="currentColor"/>
-    </svg>
-    <h1 class="title">DSP</h1>
+    <button class="logo-button" on:click={goToHome}>
+      <svg class="logo-icon" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="8" width="24" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+        <rect x="8" y="12" width="4" height="8" fill="currentColor"/>
+        <rect x="14" y="12" width="4" height="8" fill="currentColor"/>
+        <rect x="20" y="12" width="4" height="8" fill="currentColor"/>
+        <circle cx="16" cy="4" r="2" fill="currentColor"/>
+      </svg>
+      <h1 class="title">DSP</h1>
+    </button>
   </div>
   
   {#if $authStore.isAuthenticated && $authStore.user}
@@ -61,6 +72,9 @@
             <button class="menu-item" on:click={goToUserManagement}>
               👥 用户管理
             </button>
+            <button class="menu-item" on:click={goToSettings}>
+              ⚙️ 系统设置
+            </button>
             <button class="menu-item logout" on:click={handleLogout}>
               🚪 登出
             </button>
@@ -77,26 +91,41 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem 2rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: var(--color-primary, #171717);
+    color: var(--color-background, #f5f5f4);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   }
   
   .header-left {
     display: flex;
     align-items: center;
+  }
+  
+  .logo-button {
+    display: flex;
+    align-items: center;
     gap: 0.75rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+    padding: 0;
+  }
+  
+  .logo-button:hover {
+    opacity: 0.9;
   }
   
   .logo-icon {
-    color: white;
+    color: var(--color-background, #f5f5f4);
   }
   
   .title {
     font-size: 1.5rem;
     font-weight: 700;
     margin: 0;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.1em;
+    font-family: var(--font-heading, "Playfair Display", serif);
   }
   
   .header-right {
@@ -112,18 +141,19 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 0.5rem 1rem;
-    border-radius: 8px;
-    color: white;
+    border-radius: var(--radius, 0.25rem);
+    color: var(--color-background, #f5f5f4);
     cursor: pointer;
     font-size: 0.95rem;
     transition: background 0.2s;
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .user-button:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.2);
   }
   
   .user-name {
@@ -139,9 +169,9 @@
     top: 100%;
     right: 0;
     margin-top: 0.5rem;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    background: var(--color-surface, #e7e5e4);
+    border-radius: var(--radius, 0.25rem);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
     min-width: 200px;
     overflow: hidden;
     z-index: 1000;
@@ -152,24 +182,25 @@
     width: 100%;
     padding: 0.75rem 1rem;
     border: none;
-    background: white;
-    color: #333;
+    background: var(--color-surface, #e7e5e4);
+    color: var(--color-text, #0a0a0a);
     text-align: left;
     cursor: pointer;
     font-size: 0.95rem;
     transition: background 0.2s;
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .menu-item:hover {
-    background: #f5f5f5;
+    background: var(--color-background, #f5f5f4);
   }
   
   .menu-item.logout {
-    border-top: 1px solid #eee;
-    color: #e74c3c;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    color: var(--color-error, #991b1b);
   }
   
   .menu-item.logout:hover {
-    background: #fee;
+    background: rgba(153, 27, 27, 0.1);
   }
 </style>
