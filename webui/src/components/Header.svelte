@@ -1,6 +1,6 @@
 <script lang="ts">
   import { authStore } from '../stores/authStore';
-  import { themeStore } from '../stores/themeStore';
+  import { themeStore, getThemeIcon } from '../stores/themeStore';
   import { push } from 'svelte-spa-router';
   
   let showMenu = false;
@@ -41,16 +41,6 @@
   function handleClickOutside(event: MouseEvent) {
     if (showMenu && !(event.target as HTMLElement).closest('.user-menu')) {
       showMenu = false;
-    }
-  }
-  
-  // Get theme icon based on current theme
-  function getThemeIcon(theme: string): string {
-    switch (theme) {
-      case 'light': return '☀️';
-      case 'dark': return '🌙';
-      case 'system': return '💻';
-      default: return '💻';
     }
   }
   

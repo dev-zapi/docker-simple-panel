@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { push } from 'svelte-spa-router';
   import { authStore } from '../stores/authStore';
-  import { themeStore } from '../stores/themeStore';
+  import { themeStore, getThemeIcon } from '../stores/themeStore';
   import { authApi, configApi } from '../services/api';
   
   let username = '';
@@ -47,15 +47,6 @@
   
   function toggleTheme() {
     themeStore.toggle();
-  }
-  
-  function getThemeIcon(theme: string): string {
-    switch (theme) {
-      case 'light': return '☀️';
-      case 'dark': return '🌙';
-      case 'system': return '💻';
-      default: return '💻';
-    }
   }
 </script>
 

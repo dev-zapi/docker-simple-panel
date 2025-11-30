@@ -52,6 +52,8 @@ const createThemeStore = () => {
   applyTheme(initialResolved);
   
   // Listen for system theme changes
+  // Note: This listener is intentionally not cleaned up as the store is a singleton
+  // that lives for the entire application lifetime
   if (typeof window !== 'undefined') {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     mediaQuery.addEventListener('change', () => {
@@ -99,3 +101,13 @@ export const themeStore = createThemeStore();
 // Derived stores for convenience
 export const currentTheme = derived(themeStore, $store => $store.theme);
 export const resolvedTheme = derived(themeStore, $store => $store.resolvedTheme);
+
+// Helper function to get theme icon
+export function getThemeIcon(theme: string): string {
+  switch (theme) {
+    case 'light': return '☀️';
+    case 'dark': return '🌙';
+    case 'system': return '💻';
+    default: return '💻';
+  }
+}
