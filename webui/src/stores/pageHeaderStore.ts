@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 
 export type DisplayMode = 'compact' | 'standard';
 
@@ -23,7 +23,8 @@ const createDefaultState = (): PageHeaderState => ({
 });
 
 const createPageHeaderStore = () => {
-  const { subscribe, set, update } = writable<PageHeaderState>(createDefaultState());
+  const store = writable<PageHeaderState>(createDefaultState());
+  const { subscribe, set, update } = store;
 
   return {
     subscribe,
@@ -49,20 +50,16 @@ const createPageHeaderStore = () => {
       update(state => ({ ...state, onRefresh: callback }));
     },
     triggerToggleDisplayMode: () => {
-      update(state => {
-        if (state.onToggleDisplayMode) {
-          state.onToggleDisplayMode();
-        }
-        return state;
-      });
+      const state = get(store);
+      if (state.onToggleDisplayMode) {
+        state.onToggleDisplayMode();
+      }
     },
     triggerRefresh: () => {
-      update(state => {
-        if (state.onRefresh) {
-          state.onRefresh();
-        }
-        return state;
-      });
+      const state = get(store);
+      if (state.onRefresh) {
+        state.onRefresh();
+      }
     },
     reset: () => {
       set(createDefaultState());
