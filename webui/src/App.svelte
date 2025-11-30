@@ -8,6 +8,7 @@
   import Home from './pages/Home.svelte';
   import Users from './pages/Users.svelte';
   import Profile from './pages/Profile.svelte';
+  import Settings from './pages/Settings.svelte';
   
   // Define routes - using direct component assignment for compatibility
   const routes = {
@@ -15,7 +16,8 @@
     '/login': Login,
     '/register': Register,
     '/users': Users,
-    '/profile': Profile
+    '/profile': Profile,
+    '/settings': Settings
   };
   
   // Public routes that don't require authentication

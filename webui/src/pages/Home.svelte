@@ -8,6 +8,8 @@
   let loading = true;
   let error = '';
   let refreshing = false;
+  let displayMode: 'compact' | 'standard' = 'standard';
+  let actionError = '';
   
   const stateEmojis: Record<string, string> = {
     created: '🆕',
@@ -26,6 +28,20 @@
     none: ''
   };
   
+  // Load display mode from localStorage
+  onMount(() => {
+    const savedMode = localStorage.getItem('displayMode');
+    if (savedMode === 'compact' || savedMode === 'standard') {
+      displayMode = savedMode;
+    }
+    loadContainers();
+  });
+  
+  function toggleDisplayMode() {
+    displayMode = displayMode === 'compact' ? 'standard' : 'compact';
+    localStorage.setItem('displayMode', displayMode);
+  }
+  
   async function loadContainers() {
     try {
       error = '';
@@ -39,13 +55,27 @@
     }
   }
   
-  async function handleAction(containerId: string, action: 'start' | 'stop' | 'restart') {
+  async function handleAction(containerId: string, action: 'start' | 'stop' | 'restart', isSelf: boolean) {
+    // Prevent stop/restart on self container
+    if (isSelf && (action === 'stop' || action === 'restart')) {
+      actionError = '无法停止或重启运行本应用的容器';
+      setTimeout(() => { actionError = ''; }, 3000);
+      return;
+    }
+    
     try {
+      actionError = '';
       await containerApi.controlContainer({ containerId, action });
       await loadContainers();
     } catch (err) {
-      error = `操作失败: ${action}`;
+      const errorMessage = err instanceof Error ? err.message : '未知错误';
+      if (errorMessage.includes('cannot stop or restart')) {
+        actionError = '无法停止或重启运行本应用的容器';
+      } else {
+        actionError = `操作失败: ${action}`;
+      }
       console.error('Container action failed:', err);
+      setTimeout(() => { actionError = ''; }, 3000);
     }
   }
   
@@ -53,10 +83,6 @@
     refreshing = true;
     await loadContainers();
   }
-  
-  onMount(() => {
-    loadContainers();
-  });
 </script>
 
 <div class="home-container">
@@ -65,15 +91,32 @@
   <main class="main-content">
     <div class="content-header">
       <h2>容器列表</h2>
-      <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
-        <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
-        刷新
-      </button>
+      <div class="header-actions">
+        <button class="mode-toggle" on:click={toggleDisplayMode} title={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}>
+          {#if displayMode === 'compact'}
+            <span class="mode-icon">📋</span>
+            <span class="mode-text">标准</span>
+          {:else}
+            <span class="mode-icon">📑</span>
+            <span class="mode-text">紧凑</span>
+          {/if}
+        </button>
+        <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
+          <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
+          刷新
+        </button>
+      </div>
     </div>
     
     {#if error}
       <div class="error-banner">
         {error}
+      </div>
+    {/if}
+    
+    {#if actionError}
+      <div class="error-banner action-error">
+        {actionError}
       </div>
     {/if}
     
@@ -88,46 +131,123 @@
         <p>暂无容器</p>
       </div>
     {:else}
-      <div class="container-list">
+      <div class="container-list" class:compact={displayMode === 'compact'}>
         {#each containers as container (container.id)}
-          <div class="container-item">
-            <div class="container-info">
-              <div class="container-name">
-                <span class="name-text">{container.name}</span>
-              </div>
-              <div class="container-image">{container.image}</div>
-              <div class="container-meta">
-                <span class="status">
+          <div class="container-item" class:is-self={container.is_self}>
+            {#if displayMode === 'compact'}
+              <!-- Compact mode: single line -->
+              <div class="container-compact">
+                <span class="compact-status">
                   <span class="status-emoji">{stateEmojis[container.state] || '⚪'}</span>
-                  {container.status}
-                </span>
-                {#if container.health && container.health !== 'none'}
-                  <span class="health">
+                  {#if container.health && container.health !== 'none'}
                     <span class="health-emoji">{healthEmojis[container.health]}</span>
-                    {container.health}
+                  {/if}
+                </span>
+                <span class="compact-name" title={container.name}>{container.name}</span>
+                {#if container.is_self}
+                  <span class="self-badge">本应用</span>
+                {/if}
+                <span class="compact-image" title={container.image}>{container.image}</span>
+                <span class="compact-state">{container.status}</span>
+                <div class="compact-actions">
+                  {#if container.state === 'running'}
+                    <button 
+                      class="action-btn-compact stop" 
+                      on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
+                      disabled={container.is_self}
+                      title={container.is_self ? '无法停止本应用容器' : '停止'}
+                    >
+                      ⏸️
+                    </button>
+                    <button 
+                      class="action-btn-compact restart" 
+                      on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                      disabled={container.is_self}
+                      title={container.is_self ? '无法重启本应用容器' : '重启'}
+                    >
+                      🔄
+                    </button>
+                  {:else if ['exited', 'created', 'dead'].includes(container.state)}
+                    <button 
+                      class="action-btn-compact start" 
+                      on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                      title="启动"
+                    >
+                      ▶️
+                    </button>
+                  {:else}
+                    <button 
+                      class="action-btn-compact restart" 
+                      on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                      disabled={container.is_self}
+                      title={container.is_self ? '无法重启本应用容器' : '重启'}
+                    >
+                      🔄
+                    </button>
+                  {/if}
+                </div>
+              </div>
+            {:else}
+              <!-- Standard mode: multi-line card -->
+              <div class="container-info">
+                <div class="container-name">
+                  <span class="name-text">{container.name}</span>
+                  {#if container.is_self}
+                    <span class="self-badge">本应用</span>
+                  {/if}
+                </div>
+                <div class="container-image">{container.image}</div>
+                <div class="container-meta">
+                  <span class="status">
+                    <span class="status-emoji">{stateEmojis[container.state] || '⚪'}</span>
+                    {container.status}
                   </span>
+                  {#if container.health && container.health !== 'none'}
+                    <span class="health">
+                      <span class="health-emoji">{healthEmojis[container.health]}</span>
+                      {container.health}
+                    </span>
+                  {/if}
+                </div>
+              </div>
+              
+              <div class="container-actions">
+                {#if container.state === 'running'}
+                  <button 
+                    class="action-btn stop" 
+                    on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
+                    disabled={container.is_self}
+                    title={container.is_self ? '无法停止本应用容器' : ''}
+                  >
+                    ⏸️ 停止
+                  </button>
+                  <button 
+                    class="action-btn restart" 
+                    on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                    disabled={container.is_self}
+                    title={container.is_self ? '无法重启本应用容器' : ''}
+                  >
+                    🔄 重启
+                  </button>
+                {:else if ['exited', 'created', 'dead'].includes(container.state)}
+                  <button 
+                    class="action-btn start" 
+                    on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                  >
+                    ▶️ 启动
+                  </button>
+                {:else}
+                  <button 
+                    class="action-btn restart" 
+                    on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                    disabled={container.is_self}
+                    title={container.is_self ? '无法重启本应用容器' : ''}
+                  >
+                    🔄 重启
+                  </button>
                 {/if}
               </div>
-            </div>
-            
-            <div class="container-actions">
-              {#if container.state === 'running'}
-                <button class="action-btn stop" on:click={() => handleAction(container.id, 'stop')}>
-                  ⏸️ 停止
-                </button>
-                <button class="action-btn restart" on:click={() => handleAction(container.id, 'restart')}>
-                  🔄 重启
-                </button>
-              {:else if ['exited', 'created', 'dead'].includes(container.state)}
-                <button class="action-btn start" on:click={() => handleAction(container.id, 'start')}>
-                  ▶️ 启动
-                </button>
-              {:else}
-                <button class="action-btn restart" on:click={() => handleAction(container.id, 'restart')}>
-                  🔄 重启
-                </button>
-              {/if}
-            </div>
+            {/if}
           </div>
         {/each}
       </div>
@@ -138,7 +258,7 @@
 <style>
   .home-container {
     min-height: 100vh;
-    background: #f5f5f5;
+    background: var(--color-background, #f5f5f4);
   }
   
   .main-content {
@@ -157,26 +277,36 @@
   .content-header h2 {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #333;
+    color: var(--color-text, #0a0a0a);
     margin: 0;
+    font-family: var(--font-heading, "Playfair Display", serif);
   }
   
+  .header-actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+  
+  .mode-toggle,
   .refresh-button {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: white;
-    border: 2px solid #e0e0e0;
+    background: var(--color-surface, #e7e5e4);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     padding: 0.5rem 1rem;
-    border-radius: 8px;
+    border-radius: var(--radius, 0.25rem);
     cursor: pointer;
     font-size: 0.95rem;
     transition: all 0.2s;
+    color: var(--color-text, #0a0a0a);
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
+  .mode-toggle:hover,
   .refresh-button:hover:not(:disabled) {
-    border-color: #667eea;
-    color: #667eea;
+    background: var(--color-background, #f5f5f4);
+    border-color: var(--color-primary, #171717);
   }
   
   .refresh-button:disabled {
@@ -184,6 +314,7 @@
     cursor: not-allowed;
   }
   
+  .mode-icon,
   .refresh-icon {
     display: inline-block;
     transition: transform 0.3s;
@@ -199,12 +330,18 @@
   }
   
   .error-banner {
-    background: #fee;
-    border: 1px solid #fcc;
-    color: #c33;
+    background: rgba(153, 27, 27, 0.1);
+    border: 1px solid var(--color-error, #991b1b);
+    color: var(--color-error, #991b1b);
     padding: 1rem;
-    border-radius: 8px;
+    border-radius: var(--radius, 0.25rem);
     margin-bottom: 1.5rem;
+  }
+  
+  .action-error {
+    background: rgba(180, 83, 9, 0.1);
+    border: 1px solid var(--color-warning, #b45309);
+    color: var(--color-warning, #b45309);
   }
   
   .loading {
@@ -213,14 +350,14 @@
     align-items: center;
     justify-content: center;
     padding: 4rem 2rem;
-    color: #666;
+    color: var(--color-muted, #78716c);
   }
   
   .spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #667eea;
+    border: 4px solid var(--color-surface, #e7e5e4);
+    border-top: 4px solid var(--color-primary, #171717);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 1rem;
@@ -229,7 +366,7 @@
   .empty-state {
     text-align: center;
     padding: 4rem 2rem;
-    color: #999;
+    color: var(--color-muted, #78716c);
   }
   
   .empty-icon {
@@ -243,21 +380,34 @@
     gap: 1rem;
   }
   
+  .container-list.compact {
+    gap: 0.5rem;
+  }
+  
   .container-item {
-    background: white;
-    border-radius: 12px;
+    background: var(--color-surface, #e7e5e4);
+    border-radius: var(--radius, 0.25rem);
     padding: 1.25rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     transition: box-shadow 0.2s;
   }
   
   .container-item:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   }
   
+  .container-item.is-self {
+    border-left: 4px solid var(--color-accent, #991b1b);
+  }
+  
+  .container-list.compact .container-item {
+    padding: 0.5rem 1rem;
+  }
+  
+  /* Standard mode styles */
   .container-info {
     flex: 1;
     display: flex;
@@ -268,12 +418,26 @@
   .container-name {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #333;
+    color: var(--color-text, #0a0a0a);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-heading, "Playfair Display", serif);
+  }
+  
+  .self-badge {
+    background: var(--color-accent, #991b1b);
+    color: white;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius, 0.25rem);
+    font-weight: 500;
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .container-image {
     font-size: 0.9rem;
-    color: #666;
+    color: var(--color-muted, #78716c);
     font-family: monospace;
   }
   
@@ -292,6 +456,7 @@
   .status {
     font-weight: 500;
     text-transform: capitalize;
+    color: var(--color-text, #0a0a0a);
   }
   
   .container-actions {
@@ -303,37 +468,114 @@
   .action-btn {
     padding: 0.5rem 1rem;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius, 0.25rem);
     cursor: pointer;
     font-size: 0.9rem;
     font-weight: 500;
     transition: all 0.2s;
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .action-btn.start {
-    background: #27ae60;
+    background: var(--color-success, #15803d);
     color: white;
   }
   
   .action-btn.start:hover {
-    background: #229954;
+    background: #166534;
   }
   
   .action-btn.stop {
-    background: #e74c3c;
+    background: var(--color-error, #991b1b);
     color: white;
   }
   
-  .action-btn.stop:hover {
-    background: #c0392b;
+  .action-btn.stop:hover:not(:disabled) {
+    background: #7f1d1d;
   }
   
   .action-btn.restart {
-    background: #f39c12;
+    background: var(--color-warning, #b45309);
     color: white;
   }
   
-  .action-btn.restart:hover {
-    background: #e67e22;
+  .action-btn.restart:hover:not(:disabled) {
+    background: #92400e;
+  }
+  
+  .action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  /* Compact mode styles */
+  .container-compact {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    font-size: 0.9rem;
+  }
+  
+  .compact-status {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+    width: 40px;
+  }
+  
+  .compact-name {
+    font-weight: 600;
+    color: var(--color-text, #0a0a0a);
+    flex-shrink: 0;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-heading, "Playfair Display", serif);
+  }
+  
+  .compact-image {
+    flex: 1;
+    color: var(--color-muted, #78716c);
+    font-family: monospace;
+    font-size: 0.85rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .compact-state {
+    flex-shrink: 0;
+    color: var(--color-secondary, #525252);
+    font-size: 0.85rem;
+    min-width: 100px;
+    text-align: right;
+  }
+  
+  .compact-actions {
+    display: flex;
+    gap: 0.25rem;
+    flex-shrink: 0;
+  }
+  
+  .action-btn-compact {
+    padding: 0.25rem 0.5rem;
+    border: none;
+    border-radius: var(--radius, 0.25rem);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    background: transparent;
+  }
+  
+  .action-btn-compact:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.1);
+  }
+  
+  .action-btn-compact:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 </style>

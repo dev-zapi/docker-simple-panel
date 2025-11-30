@@ -2,17 +2,23 @@ package docker
 
 import (
 	"context"
+	"errors"
 	"log"
+	"strings"
 	"sync"
 
 	"github.com/dev-zapi/docker-simple-panel/models"
 )
 
+// ErrSelfOperation is returned when attempting to stop/restart the container running this application
+var ErrSelfOperation = errors.New("cannot stop or restart the container running this application")
+
 // Manager manages Docker client with support for runtime socket path changes
 type Manager struct {
-	mu         sync.RWMutex
-	client     *Client
-	socketPath string
+	mu                   sync.RWMutex
+	client               *Client
+	socketPath           string
+	containerEnvironment ContainerEnvironment
 }
 
 // NewManager creates a new Docker client manager
@@ -22,10 +28,50 @@ func NewManager(socketPath string) (*Manager, error) {
 		return nil, err
 	}
 
+	// Detect container environment at startup
+	env := DetectContainerEnvironment()
+	if env.IsInContainer {
+		log.Printf("Running inside container (ID: %s)", env.ContainerID)
+	} else {
+		log.Println("Running outside container environment")
+	}
+
 	return &Manager{
-		client:     client,
-		socketPath: socketPath,
+		client:               client,
+		socketPath:           socketPath,
+		containerEnvironment: env,
 	}, nil
+}
+
+// IsInContainer returns whether the application is running inside a container
+func (m *Manager) IsInContainer() bool {
+	return m.containerEnvironment.IsInContainer
+}
+
+// GetOwnContainerID returns the container ID of this application if running in a container
+func (m *Manager) GetOwnContainerID() string {
+	return m.containerEnvironment.ContainerID
+}
+
+// isSelfContainer checks if the given container ID matches this application's container
+func (m *Manager) isSelfContainer(containerID string) bool {
+	if !m.containerEnvironment.IsInContainer || m.containerEnvironment.ContainerID == "" {
+		return false
+	}
+
+	// Normalize both IDs to short form (12 chars) for comparison
+	selfID := m.containerEnvironment.ContainerID
+	targetID := containerID
+
+	// Handle short IDs (12 chars) and full IDs (64 chars)
+	if len(selfID) > 12 {
+		selfID = selfID[:12]
+	}
+	if len(targetID) > 12 {
+		targetID = targetID[:12]
+	}
+
+	return strings.EqualFold(selfID, targetID)
 }
 
 // RestartWithSocket restarts the Docker client with a new socket path
@@ -74,14 +120,34 @@ func (m *Manager) GetSocketPath() string {
 func (m *Manager) ListContainers(ctx context.Context) ([]models.ContainerInfo, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	return m.client.ListContainers(ctx)
+
+	containers, err := m.client.ListContainers(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Mark self-container
+	for i := range containers {
+		containers[i].IsSelf = m.isSelfContainer(containers[i].ID)
+	}
+
+	return containers, nil
 }
 
 // GetContainerInfo gets detailed information about a specific container
 func (m *Manager) GetContainerInfo(ctx context.Context, containerID string) (*models.ContainerInfo, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	return m.client.GetContainerInfo(ctx, containerID)
+
+	info, err := m.client.GetContainerInfo(ctx, containerID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Mark self-container
+	info.IsSelf = m.isSelfContainer(info.ID)
+
+	return info, nil
 }
 
 // StartContainer starts a container
@@ -93,6 +159,11 @@ func (m *Manager) StartContainer(ctx context.Context, containerID string) error 
 
 // StopContainer stops a container
 func (m *Manager) StopContainer(ctx context.Context, containerID string) error {
+	// Check if attempting to stop self
+	if m.isSelfContainer(containerID) {
+		return ErrSelfOperation
+	}
+
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.client.StopContainer(ctx, containerID)
@@ -100,6 +171,11 @@ func (m *Manager) StopContainer(ctx context.Context, containerID string) error {
 
 // RestartContainer restarts a container
 func (m *Manager) RestartContainer(ctx context.Context, containerID string) error {
+	// Check if attempting to restart self
+	if m.isSelfContainer(containerID) {
+		return ErrSelfOperation
+	}
+
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.client.RestartContainer(ctx, containerID)

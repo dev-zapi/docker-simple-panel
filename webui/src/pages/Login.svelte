@@ -109,17 +109,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--color-primary, #171717);
     padding: 1rem;
   }
   
   .login-box {
-    background: white;
-    border-radius: 16px;
+    background: var(--color-surface, #e7e5e4);
+    border-radius: var(--radius, 0.25rem);
     padding: 2.5rem;
     width: 100%;
     max-width: 420px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   }
   
   .login-header {
@@ -128,21 +128,23 @@
   }
   
   .logo-icon {
-    color: #667eea;
+    color: var(--color-primary, #171717);
     margin-bottom: 1rem;
   }
   
   .login-header h1 {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #333;
+    color: var(--color-text, #0a0a0a);
     margin: 0 0 0.5rem 0;
+    font-family: var(--font-heading, "Playfair Display", serif);
   }
   
   .login-header p {
-    color: #666;
+    color: var(--color-muted, #78716c);
     margin: 0;
     font-size: 0.95rem;
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .login-form {
@@ -152,11 +154,11 @@
   }
   
   .error-message {
-    background: #fee;
-    border: 1px solid #fcc;
-    color: #c33;
+    background: rgba(153, 27, 27, 0.1);
+    border: 1px solid var(--color-error, #991b1b);
+    color: var(--color-error, #991b1b);
     padding: 0.75rem;
-    border-radius: 8px;
+    border-radius: var(--radius, 0.25rem);
     font-size: 0.9rem;
   }
   
@@ -168,48 +170,52 @@
   
   .form-group label {
     font-weight: 600;
-    color: #333;
+    color: var(--color-text, #0a0a0a);
     font-size: 0.95rem;
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .form-group input {
     padding: 0.75rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius, 0.25rem);
     font-size: 1rem;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: var(--color-background, #f5f5f4);
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .form-group input:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--color-primary, #171717);
+    box-shadow: 0 0 0 2px rgba(23, 23, 23, 0.2);
   }
   
   .form-group input:disabled {
-    background: #f5f5f5;
+    background: rgba(0, 0, 0, 0.05);
     cursor: not-allowed;
   }
   
   .login-button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: var(--color-primary, #171717);
+    color: var(--color-background, #f5f5f4);
     border: none;
     padding: 0.875rem;
-    border-radius: 8px;
+    border-radius: var(--radius, 0.25rem);
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: background 0.2s, transform 0.2s;
     margin-top: 0.5rem;
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .login-button:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    background: var(--color-secondary, #525252);
   }
   
   .login-button:active:not(:disabled) {
-    transform: translateY(0);
+    transform: translateY(1px);
   }
   
   .login-button:disabled {
@@ -219,22 +225,24 @@
   
   .register-link {
     text-align: center;
-    color: #666;
+    color: var(--color-muted, #78716c);
     font-size: 0.9rem;
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .link-button {
     background: none;
     border: none;
-    color: #667eea;
+    color: var(--color-accent, #991b1b);
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     padding: 0;
     text-decoration: underline;
+    font-family: var(--font-body, "Merriweather", serif);
   }
   
   .link-button:hover {
-    color: #764ba2;
+    color: var(--color-primary, #171717);
   }
 </style>
