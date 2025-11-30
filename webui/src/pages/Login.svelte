@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { push } from 'svelte-spa-router';
   import { authStore } from '../stores/authStore';
+  import { themeStore } from '../stores/themeStore';
   import { authApi, configApi } from '../services/api';
   
   let username = '';
@@ -43,9 +44,31 @@
   function goToRegister() {
     push('/register');
   }
+  
+  function toggleTheme() {
+    themeStore.toggle();
+  }
+  
+  function getThemeIcon(theme: string): string {
+    switch (theme) {
+      case 'light': return '☀️';
+      case 'dark': return '🌙';
+      case 'system': return '💻';
+      default: return '💻';
+    }
+  }
 </script>
 
 <div class="login-container">
+  <button 
+    class="theme-toggle" 
+    on:click={toggleTheme}
+    title="切换主题"
+    aria-label="切换主题"
+  >
+    <span class="theme-icon">{getThemeIcon($themeStore.theme)}</span>
+  </button>
+  
   <div class="login-box">
     <div class="login-header">
       <svg class="logo-icon" width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -110,6 +133,7 @@
     align-items: center;
     justify-content: center;
     background: var(--color-primary, #171717);
+    position: relative;
     padding: 1rem;
   }
   
@@ -244,5 +268,31 @@
   
   .link-button:hover {
     color: var(--color-primary, #171717);
+  }
+  
+  .theme-toggle {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.5rem;
+    border-radius: var(--radius, 0.25rem);
+    cursor: pointer;
+    transition: background 0.2s;
+    width: 40px;
+    height: 40px;
+  }
+  
+  .theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  .theme-icon {
+    font-size: 1.25rem;
+    line-height: 1;
   }
 </style>

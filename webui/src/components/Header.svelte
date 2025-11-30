@@ -1,5 +1,6 @@
 <script lang="ts">
   import { authStore } from '../stores/authStore';
+  import { themeStore } from '../stores/themeStore';
   import { push } from 'svelte-spa-router';
   
   let showMenu = false;
@@ -32,10 +33,34 @@
     push('/');
   }
   
+  function toggleTheme() {
+    themeStore.toggle();
+  }
+  
   // Close menu when clicking outside
   function handleClickOutside(event: MouseEvent) {
     if (showMenu && !(event.target as HTMLElement).closest('.user-menu')) {
       showMenu = false;
+    }
+  }
+  
+  // Get theme icon based on current theme
+  function getThemeIcon(theme: string): string {
+    switch (theme) {
+      case 'light': return '☀️';
+      case 'dark': return '🌙';
+      case 'system': return '💻';
+      default: return '💻';
+    }
+  }
+  
+  // Get theme label
+  function getThemeLabel(theme: string): string {
+    switch (theme) {
+      case 'light': return '浅色';
+      case 'dark': return '深色';
+      case 'system': return '系统';
+      default: return '系统';
     }
   }
 </script>
@@ -58,6 +83,15 @@
   
   {#if $authStore.isAuthenticated && $authStore.user}
     <div class="header-right">
+      <button 
+        class="theme-toggle" 
+        on:click={toggleTheme}
+        title="切换主题 ({getThemeLabel($themeStore.theme)})"
+        aria-label="切换主题"
+      >
+        <span class="theme-icon">{getThemeIcon($themeStore.theme)}</span>
+      </button>
+      
       <div class="user-menu">
         <button class="user-button" on:click={toggleMenu}>
           <span class="user-name">{$authStore.user.nickname || $authStore.user.username}</span>
@@ -131,8 +165,32 @@
   .header-right {
     display: flex;
     align-items: center;
+    gap: 0.75rem;
   }
   
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.5rem;
+    border-radius: var(--radius, 0.25rem);
+    cursor: pointer;
+    transition: background 0.2s;
+    width: 36px;
+    height: 36px;
+  }
+  
+  .theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  .theme-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
   .user-menu {
     position: relative;
   }
