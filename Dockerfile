@@ -1,4 +1,24 @@
-# Build stage
+# WebUI build stage
+FROM node:22-slim AS webui-builder
+
+WORKDIR /app/webui
+
+# Copy webui package files
+COPY webui/package.json webui/package-lock.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy webui source code
+COPY webui/ ./
+
+# Create production env file to disable mock API
+RUN echo "VITE_USE_MOCK_API=false" > .env.production
+
+# Build webui
+RUN npm run build
+
+# Go build stage
 FROM golang:1.23 AS builder
 
 WORKDIR /app
@@ -28,6 +48,9 @@ WORKDIR /app
 # Copy binary from builder
 COPY --from=builder /app/docker-simple-panel .
 
+# Copy webui from webui-builder
+COPY --from=webui-builder /app/webui/dist /app/webui
+
 # Create directory for database
 RUN mkdir -p /app/data
 
@@ -35,7 +58,8 @@ RUN mkdir -p /app/data
 ENV SERVER_PORT=8080 \
     DATABASE_PATH=/app/data/docker-panel.db \
     DOCKER_SOCKET=/var/run/docker.sock \
-    DISABLE_REGISTRATION=false
+    DISABLE_REGISTRATION=false \
+    STATIC_PATH=/app/webui
 
 # Expose port
 EXPOSE $SERVER_PORT

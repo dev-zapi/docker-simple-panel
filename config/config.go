@@ -59,6 +59,7 @@ type Config struct {
 	DockerSocket        string
 	DisableRegistration bool
 	LogLevel            LogLevel
+	StaticPath          string
 }
 
 // LoadConfig loads configuration from environment variables with defaults
@@ -70,6 +71,7 @@ func LoadConfig() *Config {
 		DockerSocket:        getEnv("DOCKER_SOCKET", "/var/run/docker.sock"),
 		DisableRegistration: getEnvBool("DISABLE_REGISTRATION", false),
 		LogLevel:            ParseLogLevel(getEnv("LOG_LEVEL", "info")),
+		StaticPath:          getEnv("STATIC_PATH", ""),
 	}
 }
 
