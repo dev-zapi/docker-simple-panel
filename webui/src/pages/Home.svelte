@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import Header from '../components/Header.svelte';
   import { containerApi } from '../services/api';
+  import { pageHeaderStore } from '../stores/pageHeaderStore';
   import type { Container } from '../types';
   
   let containers: Container[] = [];
@@ -34,12 +35,27 @@
     if (savedMode === 'compact' || savedMode === 'standard') {
       displayMode = savedMode;
     }
+    
+    // Set up page header
+    pageHeaderStore.setTitle('容器列表');
+    pageHeaderStore.setShowDisplayModeToggle(true);
+    pageHeaderStore.setShowRefreshButton(true);
+    pageHeaderStore.setDisplayMode(displayMode);
+    pageHeaderStore.setOnToggleDisplayMode(toggleDisplayMode);
+    pageHeaderStore.setOnRefresh(handleRefresh);
+    
     loadContainers();
+  });
+  
+  onDestroy(() => {
+    // Clean up page header when leaving the page
+    pageHeaderStore.reset();
   });
   
   function toggleDisplayMode() {
     displayMode = displayMode === 'compact' ? 'standard' : 'compact';
     localStorage.setItem('displayMode', displayMode);
+    pageHeaderStore.setDisplayMode(displayMode);
   }
   
   async function loadContainers() {
@@ -52,6 +68,7 @@
     } finally {
       loading = false;
       refreshing = false;
+      pageHeaderStore.setRefreshing(false);
     }
   }
   
@@ -81,6 +98,7 @@
   
   async function handleRefresh() {
     refreshing = true;
+    pageHeaderStore.setRefreshing(true);
     await loadContainers();
   }
 </script>
@@ -89,30 +107,6 @@
   <Header />
   
   <main class="main-content">
-    <div class="content-header">
-      <h2>容器列表</h2>
-      <div class="header-actions">
-        <button 
-          class="mode-toggle" 
-          on:click={toggleDisplayMode} 
-          title={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}
-          aria-label={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}
-        >
-          {#if displayMode === 'compact'}
-            <span class="mode-icon">📋</span>
-            <span class="mode-text">标准</span>
-          {:else}
-            <span class="mode-icon">📑</span>
-            <span class="mode-text">紧凑</span>
-          {/if}
-        </button>
-        <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
-          <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
-          刷新
-        </button>
-      </div>
-    </div>
-    
     {#if error}
       <div class="error-banner">
         {error}
@@ -270,68 +264,6 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
-  }
-  
-  .content-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-  }
-  
-  .content-header h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--color-text, #0a0a0a);
-    margin: 0;
-    font-family: var(--font-heading, "Playfair Display", serif);
-  }
-  
-  .header-actions {
-    display: flex;
-    gap: 0.75rem;
-  }
-  
-  .mode-toggle,
-  .refresh-button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--color-surface, #e7e5e4);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius, 0.25rem);
-    cursor: pointer;
-    font-size: 0.95rem;
-    transition: all 0.2s;
-    color: var(--color-text, #0a0a0a);
-    font-family: var(--font-body, "Merriweather", serif);
-  }
-  
-  .mode-toggle:hover,
-  .refresh-button:hover:not(:disabled) {
-    background: var(--color-background, #f5f5f4);
-    border-color: var(--color-primary, #171717);
-  }
-  
-  .refresh-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-  
-  .mode-icon,
-  .refresh-icon {
-    display: inline-block;
-    transition: transform 0.3s;
-  }
-  
-  .refresh-icon.spinning {
-    animation: spin 1s linear infinite;
-  }
-  
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
   }
   
   .error-banner {
