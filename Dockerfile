@@ -12,6 +12,9 @@ RUN npm ci
 # Copy webui source code
 COPY webui/ ./
 
+# Create production env file to disable mock API
+RUN echo "VITE_USE_MOCK_API=false" > .env.production
+
 # Build webui
 RUN npm run build
 
