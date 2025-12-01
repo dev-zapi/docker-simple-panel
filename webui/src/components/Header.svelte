@@ -115,8 +115,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem 2rem;
-    background: var(--color-primary, #171717);
-    color: var(--color-background, #f5f5f4);
+    background: var(--color-background, #f5f5f4);
+    color: var(--color-text, #0a0a0a);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   }
   
@@ -141,7 +141,7 @@
   }
   
   .logo-icon {
-    color: var(--color-background, #f5f5f4);
+    color: var(--color-text, #0a0a0a);
   }
   
   .title {
@@ -162,8 +162,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--color-surface, #e7e5e4);
+    border: var(--border-width, 0px) solid var(--color-muted, #78716c);
     padding: 0.5rem;
     border-radius: var(--radius, 0.25rem);
     cursor: pointer;
@@ -173,7 +173,7 @@
   }
   
   .theme-toggle:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--color-muted, #78716c);
   }
   
   .theme-icon {
@@ -189,11 +189,11 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--color-surface, #e7e5e4);
+    border: var(--border-width, 0px) solid var(--color-muted, #78716c);
     padding: 0.5rem 1rem;
     border-radius: var(--radius, 0.25rem);
-    color: var(--color-background, #f5f5f4);
+    color: var(--color-text, #0a0a0a);
     cursor: pointer;
     font-size: 0.95rem;
     transition: background 0.2s;
@@ -201,7 +201,7 @@
   }
   
   .user-button:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--color-muted, #78716c);
   }
   
   .user-name {

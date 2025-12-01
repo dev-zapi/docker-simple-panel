@@ -185,7 +185,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--color-primary, #171717);
+    background: var(--color-background, #f5f5f4);
     padding: 1rem;
     position: relative;
   }
@@ -365,8 +365,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--color-surface, #e7e5e4);
+    border: var(--border-width, 0px) solid var(--color-muted, #78716c);
     padding: 0.5rem;
     border-radius: var(--radius, 0.25rem);
     cursor: pointer;
@@ -376,7 +376,7 @@
   }
   
   .theme-toggle:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--color-muted, #78716c);
   }
   
   .theme-icon {
