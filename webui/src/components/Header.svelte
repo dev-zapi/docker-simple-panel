@@ -57,8 +57,8 @@
     </button>
   </div>
   
-  {#if $pageHeaderStore.title && $pageHeaderStore.isScrolled}
-    <div class="header-center">
+  {#if $pageHeaderStore.title}
+    <div class="header-center" class:visible={$pageHeaderStore.isScrolled}>
       <h2 class="page-title">{$pageHeaderStore.title}</h2>
       <div class="page-actions">
         {#if $pageHeaderStore.showDisplayModeToggle}
@@ -87,6 +87,15 @@
             刷新
           </button>
         {/if}
+        {#each $pageHeaderStore.customActions as action}
+          <button 
+            class="custom-action-button" 
+            onclick={action.onClick}
+          >
+            <span class="action-icon">{action.icon}</span>
+            {action.label}
+          </button>
+        {/each}
       </div>
     </div>
   {/if}
@@ -173,18 +182,18 @@
     gap: 1.5rem;
     flex: 1;
     justify-content: center;
-    animation: slideIn 0.3s ease-out forwards;
+    /* Position-based animation */
+    position: relative;
+    opacity: 0;
+    transform: translateY(-20px);
+    pointer-events: none;
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
   }
   
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  .header-center.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
   }
   
   .page-title {
@@ -200,7 +209,8 @@
   }
   
   .mode-toggle,
-  .refresh-button {
+  .refresh-button,
+  .custom-action-button {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -216,7 +226,8 @@
   }
   
   .mode-toggle:hover,
-  .refresh-button:hover:not(:disabled) {
+  .refresh-button:hover:not(:disabled),
+  .custom-action-button:hover {
     background: rgba(255, 255, 255, 0.2);
   }
   
@@ -226,7 +237,8 @@
   }
   
   .mode-icon,
-  .refresh-icon {
+  .refresh-icon,
+  .action-icon {
     display: inline-block;
     transition: transform 0.3s;
   }

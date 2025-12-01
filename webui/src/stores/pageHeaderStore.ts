@@ -2,6 +2,12 @@ import { writable, get } from 'svelte/store';
 
 export type DisplayMode = 'compact' | 'standard';
 
+export interface CustomAction {
+  icon: string;
+  label: string;
+  onClick: () => void;
+}
+
 export interface PageHeaderState {
   title: string;
   showDisplayModeToggle: boolean;
@@ -10,6 +16,8 @@ export interface PageHeaderState {
   refreshing: boolean;
   onToggleDisplayMode: (() => void) | null;
   onRefresh: (() => void) | null;
+  // Custom actions (e.g., "Add User" button)
+  customActions: CustomAction[];
   // Scroll-based header state
   isScrolled: boolean;
   contentHeaderVisible: boolean;
@@ -23,6 +31,7 @@ const createDefaultState = (): PageHeaderState => ({
   refreshing: false,
   onToggleDisplayMode: null,
   onRefresh: null,
+  customActions: [],
   isScrolled: false,
   contentHeaderVisible: true,
 });
@@ -53,6 +62,9 @@ const createPageHeaderStore = () => {
     },
     setOnRefresh: (callback: (() => void) | null) => {
       update(state => ({ ...state, onRefresh: callback }));
+    },
+    setCustomActions: (actions: CustomAction[]) => {
+      update(state => ({ ...state, customActions: actions }));
     },
     setIsScrolled: (isScrolled: boolean) => {
       update(state => ({ ...state, isScrolled }));

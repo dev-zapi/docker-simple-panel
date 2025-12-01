@@ -1,19 +1,24 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import Header from '../components/Header.svelte';
   import { userApi, authApi } from '../services/api';
+  import { pageHeaderStore } from '../stores/pageHeaderStore';
   import type { User } from '../types';
   
   let users: User[] = [];
   let loading = true;
   let error = '';
   let showAddModal = false;
+  let contentHeaderRef: HTMLElement;
   
   // Form fields for new user
   let newUsername = '';
   let newPassword = '';
   let newNickname = '';
   let addingUser = false;
+  
+  // Intersection Observer for scroll-based header
+  let observer: IntersectionObserver | null = null;
   
   async function loadUsers() {
     try {
@@ -80,7 +85,46 @@
   }
   
   onMount(() => {
+    // Set up page header
+    pageHeaderStore.setTitle('用户管理');
+    pageHeaderStore.setCustomActions([
+      {
+        icon: '➕',
+        label: '添加用户',
+        onClick: openAddModal
+      }
+    ]);
+    
+    // Set up intersection observer to detect when content header scrolls out of view
+    const HEADER_HEIGHT_OFFSET = 64;
+    if (contentHeaderRef) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const isScrolled = !entry.isIntersecting;
+            pageHeaderStore.setIsScrolled(isScrolled);
+            pageHeaderStore.setContentHeaderVisible(entry.isIntersecting);
+          });
+        },
+        { 
+          threshold: 0,
+          rootMargin: `-${HEADER_HEIGHT_OFFSET}px 0px 0px 0px`
+        }
+      );
+      observer.observe(contentHeaderRef);
+    }
+    
     loadUsers();
+  });
+  
+  onDestroy(() => {
+    // Clean up page header when leaving the page
+    pageHeaderStore.reset();
+    
+    // Clean up observer
+    if (observer) {
+      observer.disconnect();
+    }
   });
 </script>
 
@@ -88,9 +132,9 @@
   <Header />
   
   <main class="main-content">
-    <div class="content-header">
+    <div class="content-header" bind:this={contentHeaderRef}>
       <h2>用户管理</h2>
-      <button class="add-button" on:click={openAddModal}>
+      <button class="add-button" onclick={openAddModal}>
         ➕ 添加用户
       </button>
     </div>
@@ -127,7 +171,7 @@
                 <td class="username">{user.username}</td>
                 <td class="nickname">{user.nickname}</td>
                 <td class="actions">
-                  <button class="delete-btn" on:click={() => handleDeleteUser(user.id, user.username)}>
+                  <button class="delete-btn" onclick={() => handleDeleteUser(user.id, user.username)}>
                     🗑️ 删除
                   </button>
                 </td>
@@ -141,18 +185,18 @@
 </div>
 
 {#if showAddModal}
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div class="modal-overlay" on:click={closeAddModal}>
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div class="modal" on:click|stopPropagation>
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="modal-overlay" onclick={closeAddModal}>
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="modal" onclick={(e) => e.stopPropagation()}>
       <div class="modal-header">
         <h3>添加新用户</h3>
-        <button class="close-btn" on:click={closeAddModal}>✕</button>
+        <button class="close-btn" onclick={closeAddModal}>✕</button>
       </div>
       
-      <form on:submit={handleAddUser} class="modal-form">
+      <form onsubmit={handleAddUser} class="modal-form">
         <div class="form-group">
           <label for="username">用户名 *</label>
           <input
@@ -189,7 +233,7 @@
         </div>
         
         <div class="modal-actions">
-          <button type="button" class="cancel-btn" on:click={closeAddModal} disabled={addingUser}>
+          <button type="button" class="cancel-btn" onclick={closeAddModal} disabled={addingUser}>
             取消
           </button>
           <button type="submit" class="submit-btn" disabled={addingUser}>
