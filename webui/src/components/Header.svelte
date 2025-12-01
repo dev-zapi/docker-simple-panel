@@ -58,7 +58,7 @@
   </div>
   
   {#if $pageHeaderStore.title && $pageHeaderStore.isScrolled}
-    <div class="header-center" class:visible={$pageHeaderStore.isScrolled}>
+    <div class="header-center">
       <h2 class="page-title">{$pageHeaderStore.title}</h2>
       <div class="page-actions">
         {#if $pageHeaderStore.showDisplayModeToggle}
@@ -173,14 +173,7 @@
     gap: 1.5rem;
     flex: 1;
     justify-content: center;
-    opacity: 0;
-    transform: translateY(-10px);
     animation: slideIn 0.3s ease-out forwards;
-  }
-  
-  .header-center.visible {
-    opacity: 1;
-    transform: translateY(0);
   }
   
   @keyframes slideIn {

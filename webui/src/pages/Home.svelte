@@ -49,6 +49,8 @@
     pageHeaderStore.setOnRefresh(handleRefresh);
     
     // Set up intersection observer to detect when content header scrolls out of view
+    // Header height is approximately 68px, using 64px as margin to trigger slightly before fully hidden
+    const HEADER_HEIGHT_OFFSET = 64;
     if (contentHeaderRef) {
       observer = new IntersectionObserver(
         (entries) => {
@@ -61,7 +63,7 @@
         },
         { 
           threshold: 0,
-          rootMargin: '-64px 0px 0px 0px' // Account for sticky header height
+          rootMargin: `-${HEADER_HEIGHT_OFFSET}px 0px 0px 0px`
         }
       );
       observer.observe(contentHeaderRef);
