@@ -11,6 +11,7 @@
   let refreshing = false;
   let displayMode: 'compact' | 'standard' = 'standard';
   let actionError = '';
+  let contentHeaderRef: HTMLElement;
   
   const stateEmojis: Record<string, string> = {
     created: '🆕',
@@ -29,6 +30,9 @@
     none: ''
   };
   
+  // Intersection Observer for scroll-based header
+  let observer: IntersectionObserver | null = null;
+  
   // Load display mode from localStorage
   onMount(() => {
     const savedMode = localStorage.getItem('displayMode');
@@ -44,12 +48,36 @@
     pageHeaderStore.setOnToggleDisplayMode(toggleDisplayMode);
     pageHeaderStore.setOnRefresh(handleRefresh);
     
+    // Set up intersection observer to detect when content header scrolls out of view
+    if (contentHeaderRef) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            // When content header is not visible (scrolled past), show in main header
+            const isScrolled = !entry.isIntersecting;
+            pageHeaderStore.setIsScrolled(isScrolled);
+            pageHeaderStore.setContentHeaderVisible(entry.isIntersecting);
+          });
+        },
+        { 
+          threshold: 0,
+          rootMargin: '-64px 0px 0px 0px' // Account for sticky header height
+        }
+      );
+      observer.observe(contentHeaderRef);
+    }
+    
     loadContainers();
   });
   
   onDestroy(() => {
     // Clean up page header when leaving the page
     pageHeaderStore.reset();
+    
+    // Clean up observer
+    if (observer) {
+      observer.disconnect();
+    }
   });
   
   function toggleDisplayMode() {
@@ -107,6 +135,30 @@
   <Header />
   
   <main class="main-content">
+    <div class="content-header" bind:this={contentHeaderRef}>
+      <h2>容器列表</h2>
+      <div class="header-actions">
+        <button 
+          class="mode-toggle" 
+          onclick={toggleDisplayMode} 
+          title={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}
+          aria-label={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}
+        >
+          {#if displayMode === 'compact'}
+            <span class="mode-icon">📋</span>
+            <span class="mode-text">标准</span>
+          {:else}
+            <span class="mode-icon">📑</span>
+            <span class="mode-text">紧凑</span>
+          {/if}
+        </button>
+        <button class="refresh-button" onclick={handleRefresh} disabled={refreshing}>
+          <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
+          刷新
+        </button>
+      </div>
+    </div>
+    
     {#if error}
       <div class="error-banner">
         {error}
@@ -152,7 +204,7 @@
                   {#if container.state === 'running'}
                     <button 
                       class="action-btn-compact stop" 
-                      on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
+                      onclick={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                       disabled={container.is_self}
                       title={container.is_self ? '无法停止本应用容器' : '停止'}
                     >
@@ -160,7 +212,7 @@
                     </button>
                     <button 
                       class="action-btn-compact restart" 
-                      on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                      onclick={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                       disabled={container.is_self}
                       title={container.is_self ? '无法重启本应用容器' : '重启'}
                     >
@@ -169,7 +221,7 @@
                   {:else if ['exited', 'created', 'dead'].includes(container.state)}
                     <button 
                       class="action-btn-compact start" 
-                      on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                      onclick={() => handleAction(container.id, 'start', container.is_self ?? false)}
                       title="启动"
                     >
                       ▶️
@@ -177,7 +229,7 @@
                   {:else}
                     <button 
                       class="action-btn-compact restart" 
-                      on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                      onclick={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                       disabled={container.is_self}
                       title={container.is_self ? '无法重启本应用容器' : '重启'}
                     >
@@ -214,7 +266,7 @@
                 {#if container.state === 'running'}
                   <button 
                     class="action-btn stop" 
-                    on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
+                    onclick={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                     disabled={container.is_self}
                     title={container.is_self ? '无法停止本应用容器' : ''}
                   >
@@ -222,7 +274,7 @@
                   </button>
                   <button 
                     class="action-btn restart" 
-                    on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                    onclick={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                     disabled={container.is_self}
                     title={container.is_self ? '无法重启本应用容器' : ''}
                   >
@@ -231,14 +283,14 @@
                 {:else if ['exited', 'created', 'dead'].includes(container.state)}
                   <button 
                     class="action-btn start" 
-                    on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                    onclick={() => handleAction(container.id, 'start', container.is_self ?? false)}
                   >
                     ▶️ 启动
                   </button>
                 {:else}
                   <button 
                     class="action-btn restart" 
-                    on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                    onclick={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                     disabled={container.is_self}
                     title={container.is_self ? '无法重启本应用容器' : ''}
                   >
@@ -264,6 +316,68 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
+  }
+  
+  .content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .content-header h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-text, #0a0a0a);
+    margin: 0;
+    font-family: var(--font-heading, "Playfair Display", serif);
+  }
+  
+  .header-actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+  
+  .mode-toggle,
+  .refresh-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--color-surface, #e7e5e4);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius, 0.25rem);
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    color: var(--color-text, #0a0a0a);
+    font-family: var(--font-body, "Merriweather", serif);
+  }
+  
+  .mode-toggle:hover,
+  .refresh-button:hover:not(:disabled) {
+    background: var(--color-background, #f5f5f4);
+    border-color: var(--color-primary, #171717);
+  }
+  
+  .refresh-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .mode-icon,
+  .refresh-icon {
+    display: inline-block;
+    transition: transform 0.3s;
+  }
+  
+  .refresh-icon.spinning {
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
   
   .error-banner {

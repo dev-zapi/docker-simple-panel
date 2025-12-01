@@ -57,8 +57,8 @@
     </button>
   </div>
   
-  {#if $pageHeaderStore.title}
-    <div class="header-center">
+  {#if $pageHeaderStore.title && $pageHeaderStore.isScrolled}
+    <div class="header-center" class:visible={$pageHeaderStore.isScrolled}>
       <h2 class="page-title">{$pageHeaderStore.title}</h2>
       <div class="page-actions">
         {#if $pageHeaderStore.showDisplayModeToggle}
@@ -129,6 +129,9 @@
     background: var(--color-primary, #171717);
     color: var(--color-background, #f5f5f4);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
   
   .header-left {
@@ -170,6 +173,25 @@
     gap: 1.5rem;
     flex: 1;
     justify-content: center;
+    opacity: 0;
+    transform: translateY(-10px);
+    animation: slideIn 0.3s ease-out forwards;
+  }
+  
+  .header-center.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   
   .page-title {

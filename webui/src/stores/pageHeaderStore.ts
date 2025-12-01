@@ -10,6 +10,9 @@ export interface PageHeaderState {
   refreshing: boolean;
   onToggleDisplayMode: (() => void) | null;
   onRefresh: (() => void) | null;
+  // Scroll-based header state
+  isScrolled: boolean;
+  contentHeaderVisible: boolean;
 }
 
 const createDefaultState = (): PageHeaderState => ({
@@ -20,6 +23,8 @@ const createDefaultState = (): PageHeaderState => ({
   refreshing: false,
   onToggleDisplayMode: null,
   onRefresh: null,
+  isScrolled: false,
+  contentHeaderVisible: true,
 });
 
 const createPageHeaderStore = () => {
@@ -48,6 +53,12 @@ const createPageHeaderStore = () => {
     },
     setOnRefresh: (callback: (() => void) | null) => {
       update(state => ({ ...state, onRefresh: callback }));
+    },
+    setIsScrolled: (isScrolled: boolean) => {
+      update(state => ({ ...state, isScrolled }));
+    },
+    setContentHeaderVisible: (visible: boolean) => {
+      update(state => ({ ...state, contentHeaderVisible: visible }));
     },
     triggerToggleDisplayMode: () => {
       const state = get(store);
