@@ -2,7 +2,6 @@
   import { onMount, onDestroy } from 'svelte';
   import Header from '../components/Header.svelte';
   import { containerApi } from '../services/api';
-  import { pageHeaderStore } from '../stores/pageHeaderStore';
   import type { Container } from '../types';
   
   let containers: Container[] = [];
@@ -11,7 +10,11 @@
   let refreshing = false;
   let displayMode: 'compact' | 'standard' = 'standard';
   let actionError = '';
+  
+  // Scroll-based header state
+  let isScrolled = false;
   let contentHeaderRef: HTMLElement;
+  let observer: IntersectionObserver | null = null;
   
   const stateEmojis: Record<string, string> = {
     created: '🆕',
@@ -30,53 +33,33 @@
     none: ''
   };
   
-  // Intersection Observer for scroll-based header
-  let observer: IntersectionObserver | null = null;
-  
   // Load display mode from localStorage
   onMount(() => {
     const savedMode = localStorage.getItem('displayMode');
     if (savedMode === 'compact' || savedMode === 'standard') {
       displayMode = savedMode;
     }
-    
-    // Set up page header
-    pageHeaderStore.setTitle('容器列表');
-    pageHeaderStore.setShowDisplayModeToggle(true);
-    pageHeaderStore.setShowRefreshButton(true);
-    pageHeaderStore.setDisplayMode(displayMode);
-    pageHeaderStore.setOnToggleDisplayMode(toggleDisplayMode);
-    pageHeaderStore.setOnRefresh(handleRefresh);
+    loadContainers();
     
     // Set up intersection observer to detect when content header scrolls out of view
-    // Header height is approximately 68px, using 64px as margin to trigger slightly before fully hidden
-    const HEADER_HEIGHT_OFFSET = 64;
+    const HEADER_HEIGHT = 68; // Header height in pixels
     if (contentHeaderRef) {
       observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
-            // When content header is not visible (scrolled past), show in main header
-            const isScrolled = !entry.isIntersecting;
-            pageHeaderStore.setIsScrolled(isScrolled);
-            pageHeaderStore.setContentHeaderVisible(entry.isIntersecting);
+            isScrolled = !entry.isIntersecting;
           });
         },
         { 
           threshold: 0,
-          rootMargin: `-${HEADER_HEIGHT_OFFSET}px 0px 0px 0px`
+          rootMargin: `-${HEADER_HEIGHT}px 0px 0px 0px`
         }
       );
       observer.observe(contentHeaderRef);
     }
-    
-    loadContainers();
   });
   
   onDestroy(() => {
-    // Clean up page header when leaving the page
-    pageHeaderStore.reset();
-    
-    // Clean up observer
     if (observer) {
       observer.disconnect();
     }
@@ -85,7 +68,6 @@
   function toggleDisplayMode() {
     displayMode = displayMode === 'compact' ? 'standard' : 'compact';
     localStorage.setItem('displayMode', displayMode);
-    pageHeaderStore.setDisplayMode(displayMode);
   }
   
   async function loadContainers() {
@@ -98,7 +80,6 @@
     } finally {
       loading = false;
       refreshing = false;
-      pageHeaderStore.setRefreshing(false);
     }
   }
   
@@ -128,13 +109,37 @@
   
   async function handleRefresh() {
     refreshing = true;
-    pageHeaderStore.setRefreshing(true);
     await loadContainers();
   }
 </script>
 
-<div class="home-container">
+<div class="home-container" class:scrolled={isScrolled}>
   <Header />
+  
+  <!-- Floating header that appears when scrolled -->
+  <div class="floating-header" class:visible={isScrolled}>
+    <h2>容器列表</h2>
+    <div class="header-actions">
+      <button 
+        class="mode-toggle" 
+        on:click={toggleDisplayMode} 
+        title={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}
+        aria-label={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}
+      >
+        {#if displayMode === 'compact'}
+          <span class="mode-icon">📋</span>
+          <span class="mode-text">标准</span>
+        {:else}
+          <span class="mode-icon">📑</span>
+          <span class="mode-text">紧凑</span>
+        {/if}
+      </button>
+      <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
+        <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
+        刷新
+      </button>
+    </div>
+  </div>
   
   <main class="main-content">
     <div class="content-header" bind:this={contentHeaderRef}>
@@ -142,7 +147,7 @@
       <div class="header-actions">
         <button 
           class="mode-toggle" 
-          onclick={toggleDisplayMode} 
+          on:click={toggleDisplayMode} 
           title={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}
           aria-label={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}
         >
@@ -154,7 +159,7 @@
             <span class="mode-text">紧凑</span>
           {/if}
         </button>
-        <button class="refresh-button" onclick={handleRefresh} disabled={refreshing}>
+        <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
           <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
           刷新
         </button>
@@ -206,7 +211,7 @@
                   {#if container.state === 'running'}
                     <button 
                       class="action-btn-compact stop" 
-                      onclick={() => handleAction(container.id, 'stop', container.is_self ?? false)}
+                      on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                       disabled={container.is_self}
                       title={container.is_self ? '无法停止本应用容器' : '停止'}
                     >
@@ -214,7 +219,7 @@
                     </button>
                     <button 
                       class="action-btn-compact restart" 
-                      onclick={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                      on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                       disabled={container.is_self}
                       title={container.is_self ? '无法重启本应用容器' : '重启'}
                     >
@@ -223,7 +228,7 @@
                   {:else if ['exited', 'created', 'dead'].includes(container.state)}
                     <button 
                       class="action-btn-compact start" 
-                      onclick={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                      on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
                       title="启动"
                     >
                       ▶️
@@ -231,7 +236,7 @@
                   {:else}
                     <button 
                       class="action-btn-compact restart" 
-                      onclick={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                      on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                       disabled={container.is_self}
                       title={container.is_self ? '无法重启本应用容器' : '重启'}
                     >
@@ -268,7 +273,7 @@
                 {#if container.state === 'running'}
                   <button 
                     class="action-btn stop" 
-                    onclick={() => handleAction(container.id, 'stop', container.is_self ?? false)}
+                    on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                     disabled={container.is_self}
                     title={container.is_self ? '无法停止本应用容器' : ''}
                   >
@@ -276,7 +281,7 @@
                   </button>
                   <button 
                     class="action-btn restart" 
-                    onclick={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                    on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                     disabled={container.is_self}
                     title={container.is_self ? '无法重启本应用容器' : ''}
                   >
@@ -285,14 +290,14 @@
                 {:else if ['exited', 'created', 'dead'].includes(container.state)}
                   <button 
                     class="action-btn start" 
-                    onclick={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                    on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
                   >
                     ▶️ 启动
                   </button>
                 {:else}
                   <button 
                     class="action-btn restart" 
-                    onclick={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                    on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                     disabled={container.is_self}
                     title={container.is_self ? '无法重启本应用容器' : ''}
                   >
@@ -312,6 +317,59 @@
   .home-container {
     min-height: 100vh;
     background: var(--color-background, #f5f5f4);
+  }
+  
+  /* Floating header that appears when scrolled - positioned inside the main header area */
+  .floating-header {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem 2rem;
+    background: var(--color-primary, #171717);
+    color: var(--color-background, #f5f5f4);
+    z-index: 99;
+    opacity: 0;
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    pointer-events: none;
+    border-radius: 0 0 var(--radius, 0.25rem) var(--radius, 0.25rem);
+  }
+  
+  .floating-header.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+  
+  .floating-header h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    font-family: var(--font-heading, "Playfair Display", serif);
+  }
+  
+  .floating-header .header-actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+  
+  .floating-header .mode-toggle,
+  .floating-header .refresh-button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--color-background, #f5f5f4);
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+  }
+  
+  .floating-header .mode-toggle:hover,
+  .floating-header .refresh-button:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
   }
   
   .main-content {
