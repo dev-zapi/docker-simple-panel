@@ -332,7 +332,7 @@
     padding: 1rem 2rem;
     background: var(--color-primary, #171717);
     color: var(--color-background, #f5f5f4);
-    z-index: 99;
+    z-index: 101;
     opacity: 0;
     transition: opacity 0.3s ease-out, transform 0.3s ease-out;
     pointer-events: none;
