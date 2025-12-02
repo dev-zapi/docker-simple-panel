@@ -210,6 +210,7 @@
     font-size: 1rem;
     transition: border-color 0.2s, box-shadow 0.2s;
     background: var(--color-background, #f5f5f4);
+    color: var(--color-text, #0a0a0a);
     font-family: var(--font-body, "Merriweather", serif);
   }
   

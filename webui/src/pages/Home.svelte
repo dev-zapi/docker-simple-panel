@@ -689,4 +689,62 @@
     opacity: 0.4;
     cursor: not-allowed;
   }
+  
+  /* Mobile responsive styles */
+  @media (max-width: 640px) {
+    .main-content {
+      padding: 1rem;
+    }
+    
+    .content-header {
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    
+    .content-header h2 {
+      font-size: 1.5rem;
+    }
+    
+    /* Standard mode mobile: action buttons wrap to new line */
+    .container-list:not(.compact) .container-item {
+      flex-wrap: wrap;
+    }
+    
+    .container-list:not(.compact) .container-actions {
+      width: 100%;
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      justify-content: flex-start;
+    }
+    
+    /* Compact mode mobile: actions float on right side above content */
+    .container-list.compact .container-item {
+      position: relative;
+      padding-right: 4.5rem;
+    }
+    
+    .container-compact {
+      flex-wrap: nowrap;
+      overflow: hidden;
+    }
+    
+    .compact-image {
+      display: none;
+    }
+    
+    .compact-state {
+      min-width: auto;
+      flex: 1;
+    }
+    
+    .compact-actions {
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: linear-gradient(to right, transparent, var(--color-surface, #e7e5e4) 20%);
+      padding-left: 1rem;
+    }
+  }
 </style>

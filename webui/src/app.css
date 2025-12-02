@@ -1,7 +1,9 @@
 /* Ink Wash (Shui-mo) Theme CSS Variables */
-@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
 
-:root {
+/* Light theme (default) */
+:root,
+[data-theme="light"] {
   --color-primary: #171717;
   --color-secondary: #525252;
   --color-accent: #991b1b;
@@ -17,6 +19,26 @@
   --font-body: "Merriweather", serif;
   --radius: 0.25rem;
   --border-width: 0px;
+}
+
+/* Dark theme - The Starry Night */
+/* Inspired by Vincent van Gogh. Swirling blues and glowing yellows. */
+[data-theme="dark"] {
+  --color-primary: #eab308;
+  --color-secondary: #1e3a8a;
+  --color-accent: #facc15;
+  --color-background: #0f172a;
+  --color-surface: #1e293b;
+  --color-text: #f1f5f9;
+  --color-muted: #64748b;
+  --color-success: #22c55e;
+  --color-warning: #eab308;
+  --color-error: #ef4444;
+  --color-info: #1e3a8a;
+  --font-heading: "Playfair Display", serif;
+  --font-body: "Outfit", sans-serif;
+  --radius: 1rem;
+  --border-width: 1px;
 }
 
 * {

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { authStore } from '../stores/authStore';
+  import { themeStore, getThemeIcon } from '../stores/themeStore';
   import { push } from 'svelte-spa-router';
   
   let showMenu = false;
@@ -32,10 +33,24 @@
     push('/');
   }
   
+  function toggleTheme() {
+    themeStore.toggle();
+  }
+  
   // Close menu when clicking outside
   function handleClickOutside(event: MouseEvent) {
     if (showMenu && !(event.target as HTMLElement).closest('.user-menu')) {
       showMenu = false;
+    }
+  }
+  
+  // Get theme label
+  function getThemeLabel(theme: string): string {
+    switch (theme) {
+      case 'light': return '浅色';
+      case 'dark': return '深色';
+      case 'system': return '系统';
+      default: return '系统';
     }
   }
 </script>
@@ -58,6 +73,15 @@
   
   {#if $authStore.isAuthenticated && $authStore.user}
     <div class="header-right">
+      <button 
+        class="theme-toggle" 
+        on:click={toggleTheme}
+        title="切换主题 ({getThemeLabel($themeStore.theme)})"
+        aria-label="切换主题"
+      >
+        <span class="theme-icon">{getThemeIcon($themeStore.theme)}</span>
+      </button>
+      
       <div class="user-menu">
         <button class="user-button" on:click={toggleMenu}>
           <span class="user-name">{$authStore.user.nickname || $authStore.user.username}</span>
@@ -91,8 +115,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem 2rem;
-    background: var(--color-primary, #171717);
-    color: var(--color-background, #f5f5f4);
+    background: var(--color-surface, #e7e5e4);
+    color: var(--color-text, #0a0a0a);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
     position: sticky;
     top: 0;
@@ -121,7 +145,7 @@
   }
   
   .logo-icon {
-    color: var(--color-background, #f5f5f4);
+    color: var(--color-text, #0a0a0a);
   }
   
   .title {
@@ -136,8 +160,32 @@
     display: flex;
     align-items: center;
     flex-shrink: 0;
+    gap: 0.75rem;
   }
   
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-surface, #e7e5e4);
+    border: var(--border-width, 0px) solid var(--color-muted, #78716c);
+    padding: 0.5rem;
+    border-radius: var(--radius, 0.25rem);
+    cursor: pointer;
+    transition: background 0.2s;
+    width: 36px;
+    height: 36px;
+  }
+  
+  .theme-toggle:hover {
+    background: var(--color-muted, #78716c);
+  }
+  
+  .theme-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
   .user-menu {
     position: relative;
   }
@@ -146,11 +194,11 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--color-surface, #e7e5e4);
+    border: var(--border-width, 0px) solid var(--color-muted, #78716c);
     padding: 0.5rem 1rem;
     border-radius: var(--radius, 0.25rem);
-    color: var(--color-background, #f5f5f4);
+    color: var(--color-text, #0a0a0a);
     cursor: pointer;
     font-size: 0.95rem;
     transition: background 0.2s;
@@ -158,7 +206,7 @@
   }
   
   .user-button:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--color-muted, #78716c);
   }
   
   .user-name {

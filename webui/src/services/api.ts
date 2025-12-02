@@ -96,32 +96,42 @@ export const authApi = USE_MOCK_API ? mockAuthApi : {
   }
 };
 
-// User API - Backend doesn't have user management endpoints
-// Only registration is available via authApi.register()
+// User API - Backend has user management endpoints at /api/users
 export const userApi = USE_MOCK_API ? mockUserApi : {
   async getUsers(): Promise<User[]> {
-    // Backend doesn't support user listing
-    throw new Error('User management not supported by backend');
+    const response = await fetch(`${API_BASE_URL}/users`, {
+      headers: getAuthHeaders()
+    });
+    
+    return handleApiResponse<User[]>(response);
   },
   
   async createUser(user: Omit<User, 'id'> & { password: string }): Promise<User> {
-    // Use register endpoint instead
-    const registerData: RegisterRequest = {
-      username: user.username,
-      password: user.password,
-      nickname: user.nickname
-    };
-    return authApi.register(registerData);
+    const response = await fetch(`${API_BASE_URL}/users`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        username: user.username,
+        password: user.password,
+        nickname: user.nickname
+      })
+    });
+    
+    return handleApiResponse<User>(response);
   },
   
   async deleteUser(userId: string | number): Promise<void> {
-    // Backend doesn't support user deletion
-    throw new Error('User management not supported by backend');
+    const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    
+    await handleApiResponse<void>(response);
   },
   
   async updateUser(userId: string | number, user: Partial<User>): Promise<User> {
-    // Backend doesn't support user updates
-    throw new Error('User management not supported by backend');
+    // Backend doesn't support user updates yet
+    throw new Error('User update not supported by backend');
   }
 };
 
