@@ -118,11 +118,15 @@
     background: var(--color-surface, #e7e5e4);
     color: var(--color-text, #0a0a0a);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
   
   .header-left {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
   }
   
   .logo-button {
@@ -155,6 +159,7 @@
   .header-right {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
     gap: 0.75rem;
   }
   
