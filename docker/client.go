@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -11,6 +12,11 @@ import (
 	"github.com/docker/docker/client"
 
 	"github.com/dev-zapi/docker-simple-panel/models"
+)
+
+const (
+	// shortIDLength is the length of the short container ID (12 hex characters)
+	shortIDLength = 12
 )
 
 // Client wraps the Docker client
@@ -59,7 +65,7 @@ func (c *Client) ListContainers(ctx context.Context) ([]models.ContainerInfo, er
 		}
 
 		result = append(result, models.ContainerInfo{
-			ID:      container.ID[:12], // Short ID
+			ID:      container.ID[:shortIDLength],
 			Name:    name,
 			Image:   container.Image,
 			State:   container.State,
@@ -127,7 +133,7 @@ func (c *Client) GetContainerInfo(ctx context.Context, containerID string) (*mod
 	createdTime, _ := time.Parse(time.RFC3339Nano, created)
 
 	return &models.ContainerInfo{
-		ID:      inspect.ID[:12],
+		ID:      inspect.ID[:shortIDLength],
 		Name:    name,
 		Image:   inspect.Config.Image,
 		State:   inspect.State.Status,
@@ -155,13 +161,14 @@ func (c *Client) ListVolumes(ctx context.Context) ([]models.VolumeInfo, error) {
 	for _, container := range containers {
 		inspect, err := c.cli.ContainerInspect(ctx, container.ID)
 		if err != nil {
+			log.Printf("Warning: failed to inspect container %s for volume mapping: %v", container.ID[:shortIDLength], err)
 			continue
 		}
 
 		// Check mounts for volumes
 		for _, mount := range inspect.Mounts {
 			if mount.Type == "volume" {
-				volumeToContainers[mount.Name] = append(volumeToContainers[mount.Name], container.ID[:12])
+				volumeToContainers[mount.Name] = append(volumeToContainers[mount.Name], container.ID[:shortIDLength])
 			}
 		}
 	}
