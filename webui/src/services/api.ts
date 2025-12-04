@@ -5,6 +5,7 @@ import type {
   RegisterRequest,
   Container, 
   ContainerAction,
+  Volume,
   SystemConfig,
   PublicConfig,
   UpdateConfigRequest,
@@ -160,6 +161,17 @@ export const containerApi = USE_MOCK_API ? mockContainerApi : {
     });
     
     await handleApiResponse<void>(response);
+  }
+};
+
+// Volume API
+export const volumeApi = {
+  async getVolumes(): Promise<Volume[]> {
+    const response = await fetch(`${API_BASE_URL}/volumes`, {
+      headers: getAuthHeaders()
+    });
+    
+    return handleApiResponse<Volume[]>(response);
   }
 };
 
