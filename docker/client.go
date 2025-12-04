@@ -57,14 +57,28 @@ func (c *Client) ListContainers(ctx context.Context) ([]models.ContainerInfo, er
 			}
 		}
 
+		// Extract Docker Compose labels
+		composeProject := ""
+		composeService := ""
+		if container.Labels != nil {
+			if project, ok := container.Labels["com.docker.compose.project"]; ok {
+				composeProject = project
+			}
+			if service, ok := container.Labels["com.docker.compose.service"]; ok {
+				composeService = service
+			}
+		}
+
 		result = append(result, models.ContainerInfo{
-			ID:      container.ID[:12], // Short ID
-			Name:    name,
-			Image:   container.Image,
-			State:   container.State,
-			Status:  container.Status,
-			Health:  health,
-			Created: container.Created,
+			ID:             container.ID[:12], // Short ID
+			Name:           name,
+			Image:          container.Image,
+			State:          container.State,
+			Status:         container.Status,
+			Health:         health,
+			Created:        container.Created,
+			ComposeProject: composeProject,
+			ComposeService: composeService,
 		})
 	}
 
@@ -125,13 +139,27 @@ func (c *Client) GetContainerInfo(ctx context.Context, containerID string) (*mod
 	created := inspect.Created
 	createdTime, _ := time.Parse(time.RFC3339Nano, created)
 
+	// Extract Docker Compose labels
+	composeProject := ""
+	composeService := ""
+	if inspect.Config.Labels != nil {
+		if project, ok := inspect.Config.Labels["com.docker.compose.project"]; ok {
+			composeProject = project
+		}
+		if service, ok := inspect.Config.Labels["com.docker.compose.service"]; ok {
+			composeService = service
+		}
+	}
+
 	return &models.ContainerInfo{
-		ID:      inspect.ID[:12],
-		Name:    name,
-		Image:   inspect.Config.Image,
-		State:   inspect.State.Status,
-		Status:  inspect.State.Status,
-		Health:  health,
-		Created: createdTime.Unix(),
+		ID:             inspect.ID[:12],
+		Name:           name,
+		Image:          inspect.Config.Image,
+		State:          inspect.State.Status,
+		Status:         inspect.State.Status,
+		Health:         health,
+		Created:        createdTime.Unix(),
+		ComposeProject: composeProject,
+		ComposeService: composeService,
 	}, nil
 }

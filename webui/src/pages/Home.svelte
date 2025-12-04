@@ -9,6 +9,7 @@
   let error = '';
   let refreshing = false;
   let displayMode: 'compact' | 'standard' = 'standard';
+  let groupMode: 'none' | 'compose' = 'none';
   let actionError = '';
   
   // Scroll-based header state
@@ -33,11 +34,15 @@
     none: ''
   };
   
-  // Load display mode from localStorage
+  // Load display mode and group mode from localStorage
   onMount(() => {
     const savedMode = localStorage.getItem('displayMode');
     if (savedMode === 'compact' || savedMode === 'standard') {
       displayMode = savedMode;
+    }
+    const savedGroupMode = localStorage.getItem('groupMode');
+    if (savedGroupMode === 'none' || savedGroupMode === 'compose') {
+      groupMode = savedGroupMode;
     }
     loadContainers();
     
@@ -68,6 +73,29 @@
   function toggleDisplayMode() {
     displayMode = displayMode === 'compact' ? 'standard' : 'compact';
     localStorage.setItem('displayMode', displayMode);
+  }
+  
+  function toggleGroupMode() {
+    groupMode = groupMode === 'none' ? 'compose' : 'none';
+    localStorage.setItem('groupMode', groupMode);
+  }
+  
+  // Group containers by compose project
+  function groupContainersByCompose(containers: Container[]) {
+    const grouped = new Map<string, Container[]>();
+    const ungrouped: Container[] = [];
+    
+    for (const container of containers) {
+      if (container.compose_project) {
+        const existing = grouped.get(container.compose_project) || [];
+        existing.push(container);
+        grouped.set(container.compose_project, existing);
+      } else {
+        ungrouped.push(container);
+      }
+    }
+    
+    return { grouped, ungrouped };
   }
   
   async function loadContainers() {
@@ -134,6 +162,20 @@
           <span class="mode-text">紧凑</span>
         {/if}
       </button>
+      <button 
+        class="mode-toggle" 
+        on:click={toggleGroupMode} 
+        title={groupMode === 'none' ? '按 Compose 分组' : '取消分组'}
+        aria-label={groupMode === 'none' ? '按 Compose 分组' : '取消分组'}
+      >
+        {#if groupMode === 'compose'}
+          <span class="mode-icon">📦</span>
+          <span class="mode-text">列表</span>
+        {:else}
+          <span class="mode-icon">📚</span>
+          <span class="mode-text">分组</span>
+        {/if}
+      </button>
       <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
         <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
         刷新
@@ -157,6 +199,20 @@
           {:else}
             <span class="mode-icon">📑</span>
             <span class="mode-text">紧凑</span>
+          {/if}
+        </button>
+        <button 
+          class="mode-toggle" 
+          on:click={toggleGroupMode} 
+          title={groupMode === 'none' ? '按 Compose 分组' : '取消分组'}
+          aria-label={groupMode === 'none' ? '按 Compose 分组' : '取消分组'}
+        >
+          {#if groupMode === 'compose'}
+            <span class="mode-icon">📦</span>
+            <span class="mode-text">列表</span>
+          {:else}
+            <span class="mode-icon">📚</span>
+            <span class="mode-text">分组</span>
           {/if}
         </button>
         <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
@@ -189,8 +245,281 @@
         <p>暂无容器</p>
       </div>
     {:else}
-      <div class="container-list" class:compact={displayMode === 'compact'}>
-        {#each containers as container (container.id)}
+      {#if groupMode === 'compose'}
+        <!-- Grouped by compose project -->
+        {@const { grouped, ungrouped } = groupContainersByCompose(containers)}
+        
+        {#if grouped.size > 0}
+          {#each Array.from(grouped.entries()) as [projectName, projectContainers] (projectName)}
+            <div class="compose-group">
+              <div class="compose-group-header">
+                <span class="compose-icon">📚</span>
+                <h3 class="compose-project-name">{projectName}</h3>
+                <span class="compose-count">{projectContainers.length} 个容器</span>
+              </div>
+              <div class="container-list" class:compact={displayMode === 'compact'}>
+                {#each projectContainers as container (container.id)}
+                  <div class="container-item" class:is-self={container.is_self}>
+                    {#if displayMode === 'compact'}
+                      <!-- Compact mode: single line -->
+                      <div class="container-compact">
+                        <span class="compact-status">
+                          <span class="status-emoji">{stateEmojis[container.state] || '⚪'}</span>
+                          {#if container.health && container.health !== 'none'}
+                            <span class="health-emoji">{healthEmojis[container.health]}</span>
+                          {/if}
+                        </span>
+                        <span class="compact-name" title={container.name}>{container.name}</span>
+                        {#if container.is_self}
+                          <span class="self-badge">本应用</span>
+                        {/if}
+                        {#if container.compose_service}
+                          <span class="compose-service-badge">{container.compose_service}</span>
+                        {/if}
+                        <span class="compact-image" title={container.image}>{container.image}</span>
+                        <span class="compact-state">{container.status}</span>
+                        <div class="compact-actions">
+                          {#if container.state === 'running'}
+                            <button 
+                              class="action-btn-compact stop" 
+                              on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
+                              disabled={container.is_self}
+                              title={container.is_self ? '无法停止本应用容器' : '停止'}
+                            >
+                              ⏸️
+                            </button>
+                            <button 
+                              class="action-btn-compact restart" 
+                              on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                              disabled={container.is_self}
+                              title={container.is_self ? '无法重启本应用容器' : '重启'}
+                            >
+                              🔄
+                            </button>
+                          {:else if ['exited', 'created', 'dead'].includes(container.state)}
+                            <button 
+                              class="action-btn-compact start" 
+                              on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                              title="启动"
+                            >
+                              ▶️
+                            </button>
+                          {:else}
+                            <button 
+                              class="action-btn-compact restart" 
+                              on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                              disabled={container.is_self}
+                              title={container.is_self ? '无法重启本应用容器' : '重启'}
+                            >
+                              🔄
+                            </button>
+                          {/if}
+                        </div>
+                      </div>
+                    {:else}
+                      <!-- Standard mode: multi-line card -->
+                      <div class="container-info">
+                        <div class="container-name">
+                          <span class="name-text">{container.name}</span>
+                          {#if container.is_self}
+                            <span class="self-badge">本应用</span>
+                          {/if}
+                          {#if container.compose_service}
+                            <span class="compose-service-badge">{container.compose_service}</span>
+                          {/if}
+                        </div>
+                        <div class="container-image">{container.image}</div>
+                        <div class="container-meta">
+                          <span class="status">
+                            <span class="status-emoji">{stateEmojis[container.state] || '⚪'}</span>
+                            {container.status}
+                          </span>
+                          {#if container.health && container.health !== 'none'}
+                            <span class="health">
+                              <span class="health-emoji">{healthEmojis[container.health]}</span>
+                              {container.health}
+                            </span>
+                          {/if}
+                        </div>
+                      </div>
+                      
+                      <div class="container-actions">
+                        {#if container.state === 'running'}
+                          <button 
+                            class="action-btn stop" 
+                            on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
+                            disabled={container.is_self}
+                            title={container.is_self ? '无法停止本应用容器' : ''}
+                          >
+                            ⏸️ 停止
+                          </button>
+                          <button 
+                            class="action-btn restart" 
+                            on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                            disabled={container.is_self}
+                            title={container.is_self ? '无法重启本应用容器' : ''}
+                          >
+                            🔄 重启
+                          </button>
+                        {:else if ['exited', 'created', 'dead'].includes(container.state)}
+                          <button 
+                            class="action-btn start" 
+                            on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                          >
+                            ▶️ 启动
+                          </button>
+                        {:else}
+                          <button 
+                            class="action-btn restart" 
+                            on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                            disabled={container.is_self}
+                            title={container.is_self ? '无法重启本应用容器' : ''}
+                          >
+                            🔄 重启
+                          </button>
+                        {/if}
+                      </div>
+                    {/if}
+                  </div>
+                {/each}
+              </div>
+            </div>
+          {/each}
+        {/if}
+        
+        {#if ungrouped.length > 0}
+          <div class="compose-group">
+            <div class="compose-group-header">
+              <span class="compose-icon">📦</span>
+              <h3 class="compose-project-name">独立容器</h3>
+              <span class="compose-count">{ungrouped.length} 个容器</span>
+            </div>
+            <div class="container-list" class:compact={displayMode === 'compact'}>
+              {#each ungrouped as container (container.id)}
+                <div class="container-item" class:is-self={container.is_self}>
+                  {#if displayMode === 'compact'}
+                    <!-- Compact mode: single line -->
+                    <div class="container-compact">
+                      <span class="compact-status">
+                        <span class="status-emoji">{stateEmojis[container.state] || '⚪'}</span>
+                        {#if container.health && container.health !== 'none'}
+                          <span class="health-emoji">{healthEmojis[container.health]}</span>
+                        {/if}
+                      </span>
+                      <span class="compact-name" title={container.name}>{container.name}</span>
+                      {#if container.is_self}
+                        <span class="self-badge">本应用</span>
+                      {/if}
+                      <span class="compact-image" title={container.image}>{container.image}</span>
+                      <span class="compact-state">{container.status}</span>
+                      <div class="compact-actions">
+                        {#if container.state === 'running'}
+                          <button 
+                            class="action-btn-compact stop" 
+                            on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
+                            disabled={container.is_self}
+                            title={container.is_self ? '无法停止本应用容器' : '停止'}
+                          >
+                            ⏸️
+                          </button>
+                          <button 
+                            class="action-btn-compact restart" 
+                            on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                            disabled={container.is_self}
+                            title={container.is_self ? '无法重启本应用容器' : '重启'}
+                          >
+                            🔄
+                          </button>
+                        {:else if ['exited', 'created', 'dead'].includes(container.state)}
+                          <button 
+                            class="action-btn-compact start" 
+                            on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                            title="启动"
+                          >
+                            ▶️
+                          </button>
+                        {:else}
+                          <button 
+                            class="action-btn-compact restart" 
+                            on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                            disabled={container.is_self}
+                            title={container.is_self ? '无法重启本应用容器' : '重启'}
+                          >
+                            🔄
+                          </button>
+                        {/if}
+                      </div>
+                    </div>
+                  {:else}
+                    <!-- Standard mode: multi-line card -->
+                    <div class="container-info">
+                      <div class="container-name">
+                        <span class="name-text">{container.name}</span>
+                        {#if container.is_self}
+                          <span class="self-badge">本应用</span>
+                        {/if}
+                      </div>
+                      <div class="container-image">{container.image}</div>
+                      <div class="container-meta">
+                        <span class="status">
+                          <span class="status-emoji">{stateEmojis[container.state] || '⚪'}</span>
+                          {container.status}
+                        </span>
+                        {#if container.health && container.health !== 'none'}
+                          <span class="health">
+                            <span class="health-emoji">{healthEmojis[container.health]}</span>
+                            {container.health}
+                          </span>
+                        {/if}
+                      </div>
+                    </div>
+                    
+                    <div class="container-actions">
+                      {#if container.state === 'running'}
+                        <button 
+                          class="action-btn stop" 
+                          on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
+                          disabled={container.is_self}
+                          title={container.is_self ? '无法停止本应用容器' : ''}
+                        >
+                          ⏸️ 停止
+                        </button>
+                        <button 
+                          class="action-btn restart" 
+                          on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                          disabled={container.is_self}
+                          title={container.is_self ? '无法重启本应用容器' : ''}
+                        >
+                          🔄 重启
+                        </button>
+                      {:else if ['exited', 'created', 'dead'].includes(container.state)}
+                        <button 
+                          class="action-btn start" 
+                          on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                        >
+                          ▶️ 启动
+                        </button>
+                      {:else}
+                        <button 
+                          class="action-btn restart" 
+                          on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                          disabled={container.is_self}
+                          title={container.is_self ? '无法重启本应用容器' : ''}
+                        >
+                          🔄 重启
+                        </button>
+                      {/if}
+                    </div>
+                  {/if}
+                </div>
+              {/each}
+            </div>
+          </div>
+        {/if}
+      {:else}
+        <!-- Ungrouped list -->
+        <div class="container-list" class:compact={displayMode === 'compact'}>
+          {#each containers as container (container.id)}
           <div class="container-item" class:is-self={container.is_self}>
             {#if displayMode === 'compact'}
               <!-- Compact mode: single line -->
@@ -308,7 +637,8 @@
             {/if}
           </div>
         {/each}
-      </div>
+        </div>
+      {/if}
     {/if}
   </main>
 </div>
@@ -746,5 +1076,70 @@
       background: linear-gradient(to right, transparent, var(--color-surface, #e7e5e4) 20%);
       padding-left: 1rem;
     }
+  }
+  
+  /* Compose group styles */
+  .compose-group {
+    margin-bottom: 2rem;
+  }
+  
+  .compose-group-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-primary, #171717);
+    color: var(--color-background, #f5f5f4);
+    border-radius: var(--radius, 0.25rem) var(--radius, 0.25rem) 0 0;
+    margin-bottom: 0.5rem;
+  }
+  
+  .compose-icon {
+    font-size: 1.25rem;
+  }
+  
+  .compose-project-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+    font-family: var(--font-heading, "Playfair Display", serif);
+  }
+  
+  .compose-count {
+    margin-left: auto;
+    font-size: 0.9rem;
+    opacity: 0.8;
+    font-family: var(--font-body, "Merriweather", serif);
+  }
+  
+  .compose-service-badge {
+    background: var(--color-secondary, #525252);
+    color: white;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius, 0.25rem);
+    font-weight: 500;
+    font-family: var(--font-body, "Merriweather", serif);
+  }
+  
+  .compose-group .container-list {
+    margin-top: 0;
+  }
+  
+  .compose-group .container-item {
+    border-radius: 0;
+    margin-bottom: 0;
+  }
+  
+  .compose-group .container-item:first-child {
+    border-radius: var(--radius, 0.25rem) var(--radius, 0.25rem) 0 0;
+  }
+  
+  .compose-group .container-item:last-child {
+    border-radius: 0 0 var(--radius, 0.25rem) var(--radius, 0.25rem);
+  }
+  
+  .compose-group .container-item:only-child {
+    border-radius: var(--radius, 0.25rem);
   }
 </style>
