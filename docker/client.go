@@ -7,6 +7,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 
 	"github.com/dev-zapi/docker-simple-panel/models"
@@ -134,4 +135,53 @@ func (c *Client) GetContainerInfo(ctx context.Context, containerID string) (*mod
 		Health:  health,
 		Created: createdTime.Unix(),
 	}, nil
+}
+
+// ListVolumes lists all Docker volumes with associated container information
+func (c *Client) ListVolumes(ctx context.Context) ([]models.VolumeInfo, error) {
+	volumes, err := c.cli.VolumeList(ctx, volume.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	// Get all containers to build volume-to-container mapping
+	containers, err := c.cli.ContainerList(ctx, types.ContainerListOptions{All: true})
+	if err != nil {
+		return nil, err
+	}
+
+	// Build a map of volume name to container IDs
+	volumeToContainers := make(map[string][]string)
+	for _, container := range containers {
+		inspect, err := c.cli.ContainerInspect(ctx, container.ID)
+		if err != nil {
+			continue
+		}
+
+		// Check mounts for volumes
+		for _, mount := range inspect.Mounts {
+			if mount.Type == "volume" {
+				volumeToContainers[mount.Name] = append(volumeToContainers[mount.Name], container.ID[:12])
+			}
+		}
+	}
+
+	var result []models.VolumeInfo
+	for _, volume := range volumes.Volumes {
+		containers := volumeToContainers[volume.Name]
+		if containers == nil {
+			containers = []string{}
+		}
+
+		result = append(result, models.VolumeInfo{
+			Name:       volume.Name,
+			Driver:     volume.Driver,
+			Mountpoint: volume.Mountpoint,
+			CreatedAt:  volume.CreatedAt,
+			Scope:      volume.Scope,
+			Containers: containers,
+		})
+	}
+
+	return result, nil
 }

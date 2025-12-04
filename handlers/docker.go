@@ -132,3 +132,17 @@ func (h *DockerHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 		Message: "Docker daemon is accessible",
 	})
 }
+
+// ListVolumes handles listing all Docker volumes
+func (h *DockerHandler) ListVolumes(w http.ResponseWriter, r *http.Request) {
+	volumes, err := h.manager.ListVolumes(r.Context())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to list volumes: "+err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, models.Response{
+		Success: true,
+		Data:    volumes,
+	})
+}

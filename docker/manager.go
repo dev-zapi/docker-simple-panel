@@ -181,6 +181,13 @@ func (m *Manager) RestartContainer(ctx context.Context, containerID string) erro
 	return m.client.RestartContainer(ctx, containerID)
 }
 
+// ListVolumes lists all Docker volumes with container associations
+func (m *Manager) ListVolumes(ctx context.Context) ([]models.VolumeInfo, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.client.ListVolumes(ctx)
+}
+
 // Ping checks if the Docker daemon is accessible
 func (m *Manager) Ping(ctx context.Context) error {
 	m.mu.RLock()
