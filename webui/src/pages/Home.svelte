@@ -1137,11 +1137,12 @@
     cursor: pointer;
     text-align: left;
     font-family: inherit;
-    transition: background 0.2s;
+    transition: background 0.2s, color 0.2s;
   }
   
   .compose-group-header:hover {
     background: #2a2a2a;
+    color: var(--color-text, #0a0a0a);
   }
   
   .compose-group-header.compact {
