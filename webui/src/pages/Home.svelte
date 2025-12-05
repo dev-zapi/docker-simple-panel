@@ -11,6 +11,7 @@
   let displayMode: 'compact' | 'standard' = 'standard';
   let groupMode: 'none' | 'compose' = 'none';
   let actionError = '';
+  let collapsedGroups: Set<string> = new Set();
   
   // Scroll-based header state
   let isScrolled = false;
@@ -43,6 +44,14 @@
     const savedGroupMode = localStorage.getItem('groupMode');
     if (savedGroupMode === 'none' || savedGroupMode === 'compose') {
       groupMode = savedGroupMode;
+    }
+    const savedCollapsedGroups = localStorage.getItem('collapsedGroups');
+    if (savedCollapsedGroups) {
+      try {
+        collapsedGroups = new Set(JSON.parse(savedCollapsedGroups));
+      } catch (e) {
+        collapsedGroups = new Set();
+      }
     }
     loadContainers();
     
@@ -78,6 +87,17 @@
   function toggleGroupMode() {
     groupMode = groupMode === 'none' ? 'compose' : 'none';
     localStorage.setItem('groupMode', groupMode);
+  }
+  
+  function toggleGroupCollapse(groupName: string) {
+    const newCollapsedGroups = new Set(collapsedGroups);
+    if (newCollapsedGroups.has(groupName)) {
+      newCollapsedGroups.delete(groupName);
+    } else {
+      newCollapsedGroups.add(groupName);
+    }
+    collapsedGroups = newCollapsedGroups;
+    localStorage.setItem('collapsedGroups', JSON.stringify(Array.from(collapsedGroups)));
   }
   
   // Group containers by compose project
@@ -252,11 +272,17 @@
         {#if grouped.size > 0}
           {#each Array.from(grouped.entries()) as [projectName, projectContainers] (projectName)}
             <div class="compose-group">
-              <div class="compose-group-header">
+              <button 
+                class="compose-group-header" 
+                class:compact={displayMode === 'compact'}
+                on:click={() => toggleGroupCollapse(projectName)}
+              >
                 <span class="compose-icon">📚</span>
                 <h3 class="compose-project-name">{projectName}</h3>
                 <span class="compose-count">{projectContainers.length} 个容器</span>
-              </div>
+                <span class="collapse-icon">{collapsedGroups.has(projectName) ? '▶' : '▼'}</span>
+              </button>
+              {#if !collapsedGroups.has(projectName)}
               <div class="container-list" class:compact={displayMode === 'compact'}>
                 {#each projectContainers as container (container.id)}
                   <div class="container-item" class:is-self={container.is_self}>
@@ -383,17 +409,24 @@
                   </div>
                 {/each}
               </div>
+              {/if}
             </div>
           {/each}
         {/if}
         
         {#if ungrouped.length > 0}
           <div class="compose-group">
-            <div class="compose-group-header">
+            <button 
+              class="compose-group-header" 
+              class:compact={displayMode === 'compact'}
+              on:click={() => toggleGroupCollapse('_ungrouped_')}
+            >
               <span class="compose-icon">📦</span>
               <h3 class="compose-project-name">独立容器</h3>
               <span class="compose-count">{ungrouped.length} 个容器</span>
-            </div>
+              <span class="collapse-icon">{collapsedGroups.has('_ungrouped_') ? '▶' : '▼'}</span>
+            </button>
+            {#if !collapsedGroups.has('_ungrouped_')}
             <div class="container-list" class:compact={displayMode === 'compact'}>
               {#each ungrouped as container (container.id)}
                 <div class="container-item" class:is-self={container.is_self}>
@@ -514,6 +547,7 @@
                 </div>
               {/each}
             </div>
+            {/if}
           </div>
         {/if}
       {:else}
@@ -660,13 +694,14 @@
     align-items: center;
     gap: 1.5rem;
     padding: 1rem 2rem;
-    background: var(--color-primary, #171717);
-    color: var(--color-background, #f5f5f4);
+    background: var(--color-surface, #e7e5e4);
+    color: var(--color-text, #0a0a0a);
     z-index: 101;
     opacity: 0;
     transition: opacity 0.3s ease-out, transform 0.3s ease-out;
     pointer-events: none;
     border-radius: 0 0 var(--radius, 0.25rem) var(--radius, 0.25rem);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
   
   .floating-header.visible {
@@ -689,17 +724,17 @@
   
   .floating-header .mode-toggle,
   .floating-header .refresh-button {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--color-background, #f5f5f4);
+    background: var(--color-background, #f5f5f4);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: var(--color-text, #0a0a0a);
     padding: 0.4rem 0.75rem;
     font-size: 0.85rem;
   }
   
   .floating-header .mode-toggle:hover,
   .floating-header .refresh-button:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.3);
+    background: var(--color-surface, #e7e5e4);
+    border-color: var(--color-primary, #171717);
   }
   
   .main-content {
@@ -1088,10 +1123,24 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
-    background: var(--color-primary, #171717);
-    color: var(--color-background, #f5f5f4);
+    background: var(--color-surface, #e7e5e4);
+    color: var(--color-text, #0a0a0a);
     border-radius: var(--radius, 0.25rem) var(--radius, 0.25rem) 0 0;
     margin-bottom: 0.5rem;
+    width: 100%;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: background 0.2s;
+  }
+  
+  .compose-group-header:hover {
+    background: var(--color-background, #f5f5f4);
+  }
+  
+  .compose-group-header.compact {
+    padding: 0.5rem 0.75rem;
   }
   
   .compose-icon {
@@ -1105,11 +1154,25 @@
     font-family: var(--font-heading, "Playfair Display", serif);
   }
   
+  .compose-group-header.compact .compose-project-name {
+    font-size: 0.95rem;
+  }
+  
   .compose-count {
     margin-left: auto;
     font-size: 0.9rem;
-    opacity: 0.8;
+    opacity: 0.7;
     font-family: var(--font-body, "Merriweather", serif);
+  }
+  
+  .compose-group-header.compact .compose-count {
+    font-size: 0.8rem;
+  }
+  
+  .collapse-icon {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin-left: 0.5rem;
   }
   
   .compose-service-badge {
