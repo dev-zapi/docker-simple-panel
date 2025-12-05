@@ -189,6 +189,7 @@ export const mockContainers = [
 ];
 
 export const mockVolumes = [
+  // Database volumes
   {
     name: 'mysql-data',
     driver: 'local',
@@ -221,6 +222,8 @@ export const mockVolumes = [
     scope: 'local',
     containers: ['container6']
   },
+  
+  // Message queue and cache volumes
   {
     name: 'rabbitmq-data',
     driver: 'local',
@@ -229,6 +232,8 @@ export const mockVolumes = [
     scope: 'local',
     containers: ['container7']
   },
+  
+  // Monitoring and observability volumes
   {
     name: 'grafana-data',
     driver: 'local',
@@ -251,8 +256,10 @@ export const mockVolumes = [
     mountpoint: '/var/lib/docker/volumes/shared-logs/_data',
     created_at: '2024-01-15T07:00:00Z',
     scope: 'local',
-    containers: ['container1', 'container8', 'container9']
+    containers: ['container1', 'container8', 'container9'] // Multi-container volume
   },
+  
+  // CI/CD and development volumes
   {
     name: 'jenkins-home',
     driver: 'local',
@@ -269,6 +276,16 @@ export const mockVolumes = [
     scope: 'local',
     containers: ['container12']
   },
+  {
+    name: 'gitea-data',
+    driver: 'local',
+    mountpoint: '/var/lib/docker/volumes/gitea-data/_data',
+    created_at: '2024-01-15T11:15:00Z',
+    scope: 'local',
+    containers: ['container19']
+  },
+  
+  // Infrastructure volumes
   {
     name: 'vault-file',
     driver: 'local',
@@ -301,14 +318,8 @@ export const mockVolumes = [
     scope: 'local',
     containers: ['container16']
   },
-  {
-    name: 'gitea-data',
-    driver: 'local',
-    mountpoint: '/var/lib/docker/volumes/gitea-data/_data',
-    created_at: '2024-01-15T11:15:00Z',
-    scope: 'local',
-    containers: ['container19']
-  },
+  
+  // Unused volumes (for testing edge cases)
   {
     name: 'unused-volume',
     driver: 'local',
