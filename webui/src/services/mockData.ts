@@ -204,5 +204,155 @@ export const mockContainers = [
   }
 ];
 
+export const mockVolumes = [
+  // Database volumes
+  {
+    name: 'mysql-data',
+    driver: 'local',
+    mountpoint: '/var/lib/docker/volumes/mysql-data/_data',
+    created_at: '2024-01-15T08:00:00Z',
+    scope: 'local',
+    containers: ['container2']
+  },
+  {
+    name: 'postgres-data',
+    driver: 'local',
+    mountpoint: '/var/lib/docker/volumes/postgres-data/_data',
+    created_at: '2024-01-15T08:15:00Z',
+    scope: 'local',
+    containers: ['container4']
+  },
+  {
+    name: 'mongodb-data',
+    driver: 'local',
+    mountpoint: '/var/lib/docker/volumes/mongodb-data/_data',
+    created_at: '2024-01-15T08:30:00Z',
+    scope: 'local',
+    containers: ['container5']
+  },
+  {
+    name: 'elasticsearch-data',
+    driver: 'local',
+    mountpoint: '/var/lib/docker/volumes/elasticsearch-data/_data',
+    created_at: '2024-01-15T08:45:00Z',
+    scope: 'local',
+    containers: ['container6']
+  },
+  
+  // Message queue and cache volumes
+  {
+    name: 'rabbitmq-data',
+    driver: 'local',
+    mountpoint: '/var/lib/docker/volumes/rabbitmq-data/_data',
+    created_at: '2024-01-15T09:00:00Z',
+    scope: 'local',
+    containers: ['container7']
+  },
+  
+  // Monitoring and observability volumes
+  {
+    name: 'grafana-data',
+    driver: 'local',
+    mountpoint: '/var/lib/docker/volumes/grafana-data/_data',
+    created_at: '2024-01-15T09:15:00Z',
+    scope: 'local',
+    containers: ['container8']
+  },
+  {
+    name: 'prometheus-data',
+    driver: 'local',
+    mountpoint: '/var/lib/docker/volumes/prometheus-data/_data',
+    created_at: '2024-01-15T09:30:00Z',
+    scope: 'local',
+    containers: ['container9']
+  },
+  {
+    name: 'shared-logs',
+    driver: 'local',
+    mountpoint: '/var/lib/docker/volumes/shared-logs/_data',
+    created_at: '2024-01-15T07:00:00Z',
+    scope: 'local',
+    containers: ['container1', 'container8', 'container9'] // Multi-container volume
+  },
+  
+  // CI/CD and development volumes
+  {
+    name: 'jenkins-home',
+    driver: 'local',
+    mountpoint: '/var/lib/docker/volumes/jenkins-home/_data',
+    created_at: '2024-01-15T09:45:00Z',
+    scope: 'local',
+    containers: ['container11']
+  },
+  {
+    name: 'sonarqube-data',
+    driver: 'local',
+    mountpoint: '/var/lib/docker/volumes/sonarqube-data/_data',
+    created_at: '2024-01-15T10:00:00Z',
+    scope: 'local',
+    containers: ['container12']
+  },
+  {
+    name: 'gitea-data',
+    driver: 'local',
+    mountpoint: '/var/lib/docker/volumes/gitea-data/_data',
+    created_at: '2024-01-15T11:15:00Z',
+    scope: 'local',
+    containers: ['container19']
+  },
+  
+  // Infrastructure volumes
+  {
+    name: 'vault-file',
+    driver: 'local',
+    mountpoint: '/var/lib/docker/volumes/vault-file/_data',
+    created_at: '2024-01-15T10:15:00Z',
+    scope: 'local',
+    containers: ['container13']
+  },
+  {
+    name: 'consul-data',
+    driver: 'local',
+    mountpoint: '/var/lib/docker/volumes/consul-data/_data',
+    created_at: '2024-01-15T10:30:00Z',
+    scope: 'local',
+    containers: ['container14']
+  },
+  {
+    name: 'minio-data',
+    driver: 'local',
+    mountpoint: '/var/lib/docker/volumes/minio-data/_data',
+    created_at: '2024-01-15T10:45:00Z',
+    scope: 'local',
+    containers: ['container15']
+  },
+  {
+    name: 'keycloak-data',
+    driver: 'local',
+    mountpoint: '/var/lib/docker/volumes/keycloak-data/_data',
+    created_at: '2024-01-15T11:00:00Z',
+    scope: 'local',
+    containers: ['container16']
+  },
+  
+  // Unused volumes (for testing edge cases)
+  {
+    name: 'unused-volume',
+    driver: 'local',
+    mountpoint: '/var/lib/docker/volumes/unused-volume/_data',
+    created_at: '2024-01-14T15:00:00Z',
+    scope: 'local',
+    containers: []
+  },
+  {
+    name: 'backup-volume',
+    driver: 'local',
+    mountpoint: '/var/lib/docker/volumes/backup-volume/_data',
+    created_at: '2024-01-10T08:00:00Z',
+    scope: 'local',
+    containers: []
+  }
+];
+
 // Mock JWT token
 export const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock.token';

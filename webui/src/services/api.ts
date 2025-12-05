@@ -5,13 +5,14 @@ import type {
   RegisterRequest,
   Container, 
   ContainerAction,
+  Volume,
   SystemConfig,
   PublicConfig,
   UpdateConfigRequest,
   ApiResponse,
   ApiErrorResponse
 } from '../types';
-import { mockAuthApi, mockUserApi, mockContainerApi } from './mockApi';
+import { mockAuthApi, mockUserApi, mockContainerApi, mockVolumeApi } from './mockApi';
 
 // Use relative path for API calls to support reverse proxy
 // In development, Vite will proxy /api to backend server
@@ -160,6 +161,17 @@ export const containerApi = USE_MOCK_API ? mockContainerApi : {
     });
     
     await handleApiResponse<void>(response);
+  }
+};
+
+// Volume API
+export const volumeApi = USE_MOCK_API ? mockVolumeApi : {
+  async getVolumes(): Promise<Volume[]> {
+    const response = await fetch(`${API_BASE_URL}/volumes`, {
+      headers: getAuthHeaders()
+    });
+    
+    return handleApiResponse<Volume[]>(response);
   }
 };
 

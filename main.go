@@ -135,6 +135,9 @@ func main() {
 	protected.HandleFunc("/containers/{id}/restart", dockerHandler.RestartContainer).Methods("POST")
 	protected.HandleFunc("/docker/health", dockerHandler.HealthCheck).Methods("GET")
 
+	// Docker volume routes
+	protected.HandleFunc("/volumes", dockerHandler.ListVolumes).Methods("GET")
+
 	// System configuration routes
 	protected.HandleFunc("/config", configHandler.GetConfig).Methods("GET")
 	protected.HandleFunc("/config", configHandler.UpdateConfig).Methods("PUT", "PATCH")

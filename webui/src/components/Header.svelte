@@ -33,6 +33,11 @@
     push('/');
   }
   
+  function goToVolumes() {
+    showMenu = false;
+    push('/volumes');
+  }
+  
   function toggleTheme() {
     themeStore.toggle();
   }
@@ -90,6 +95,12 @@
         
         {#if showMenu}
           <div class="dropdown-menu">
+            <button class="menu-item" on:click={goToHome}>
+              📦 容器管理
+            </button>
+            <button class="menu-item" on:click={goToVolumes}>
+              💾 卷管理
+            </button>
             <button class="menu-item" on:click={goToProfile}>
               👤 编辑个人信息
             </button>

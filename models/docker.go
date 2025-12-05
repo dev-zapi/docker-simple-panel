@@ -19,6 +19,16 @@ type ContainerOperation struct {
 	ContainerID string `json:"container_id"`
 }
 
+// VolumeInfo represents Docker volume information
+type VolumeInfo struct {
+	Name       string   `json:"name"`
+	Driver     string   `json:"driver"`
+	Mountpoint string   `json:"mountpoint"`
+	CreatedAt  string   `json:"created_at"`
+	Scope      string   `json:"scope"`
+	Containers []string `json:"containers"` // List of container IDs using this volume
+}
+
 // Response represents a generic API response
 type Response struct {
 	Success bool        `json:"success"`

@@ -3,13 +3,20 @@ package docker
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 
 	"github.com/dev-zapi/docker-simple-panel/models"
+)
+
+const (
+	// shortIDLength is the length of the short container ID (12 hex characters)
+	shortIDLength = 12
 )
 
 // Client wraps the Docker client
@@ -70,7 +77,7 @@ func (c *Client) ListContainers(ctx context.Context) ([]models.ContainerInfo, er
 		}
 
 		result = append(result, models.ContainerInfo{
-			ID:             container.ID[:12], // Short ID
+			ID:             container.ID[:shortIDLength],
 			Name:           name,
 			Image:          container.Image,
 			State:          container.State,
@@ -152,7 +159,7 @@ func (c *Client) GetContainerInfo(ctx context.Context, containerID string) (*mod
 	}
 
 	return &models.ContainerInfo{
-		ID:             inspect.ID[:12],
+    ID:             inspect.ID[:shortIDLength],
 		Name:           name,
 		Image:          inspect.Config.Image,
 		State:          inspect.State.Status,
@@ -162,4 +169,54 @@ func (c *Client) GetContainerInfo(ctx context.Context, containerID string) (*mod
 		ComposeProject: composeProject,
 		ComposeService: composeService,
 	}, nil
+}
+
+// ListVolumes lists all Docker volumes with associated container information
+func (c *Client) ListVolumes(ctx context.Context) ([]models.VolumeInfo, error) {
+	volumes, err := c.cli.VolumeList(ctx, volume.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	// Get all containers to build volume-to-container mapping
+	containers, err := c.cli.ContainerList(ctx, types.ContainerListOptions{All: true})
+	if err != nil {
+		return nil, err
+	}
+
+	// Build a map of volume name to container IDs
+	volumeToContainers := make(map[string][]string)
+	for _, container := range containers {
+		inspect, err := c.cli.ContainerInspect(ctx, container.ID)
+		if err != nil {
+			log.Printf("Warning: failed to inspect container %s for volume mapping: %v", container.ID[:shortIDLength], err)
+			continue
+		}
+
+		// Check mounts for volumes
+		for _, mount := range inspect.Mounts {
+			if mount.Type == "volume" {
+				volumeToContainers[mount.Name] = append(volumeToContainers[mount.Name], container.ID[:shortIDLength])
+			}
+		}
+	}
+
+	var result []models.VolumeInfo
+	for _, volume := range volumes.Volumes {
+		containers := volumeToContainers[volume.Name]
+		if containers == nil {
+			containers = []string{}
+		}
+
+		result = append(result, models.VolumeInfo{
+			Name:       volume.Name,
+			Driver:     volume.Driver,
+			Mountpoint: volume.Mountpoint,
+			CreatedAt:  volume.CreatedAt,
+			Scope:      volume.Scope,
+			Containers: containers,
+		})
+	}
+
+	return result, nil
 }
