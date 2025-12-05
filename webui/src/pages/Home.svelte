@@ -1141,7 +1141,7 @@
   }
   
   .compose-group-header:hover {
-    background: rgba(23, 23, 23, 0.9);
+    background: rgba(0, 0, 0, 0.9);
   }
   
   .compose-group-header.compact {
