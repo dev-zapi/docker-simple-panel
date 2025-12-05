@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"time"
 
@@ -219,4 +220,20 @@ func (c *Client) ListVolumes(ctx context.Context) ([]models.VolumeInfo, error) {
 	}
 
 	return result, nil
+}
+
+// ContainerLogs gets container logs starting from 30 minutes ago with follow option
+func (c *Client) ContainerLogs(ctx context.Context, containerID string, follow bool) (io.ReadCloser, error) {
+	// Calculate timestamp for 30 minutes ago
+	since := time.Now().Add(-30 * time.Minute).Format(time.RFC3339)
+	
+	options := types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Follow:     follow,
+		Timestamps: true,
+		Since:      since,
+	}
+	
+	return c.cli.ContainerLogs(ctx, containerID, options)
 }

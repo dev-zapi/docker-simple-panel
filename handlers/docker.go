@@ -1,9 +1,15 @@
 package handlers
 
 import (
+	"bufio"
+	"context"
+	"io"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 
 	"github.com/dev-zapi/docker-simple-panel/docker"
 	"github.com/dev-zapi/docker-simple-panel/models"
@@ -145,4 +151,116 @@ func (h *DockerHandler) ListVolumes(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 		Data:    volumes,
 	})
+}
+
+// WebSocket upgrader
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		// Allow all origins for simplicity. In production, you might want to check origins
+		return true
+	},
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
+
+// StreamContainerLogs handles WebSocket connections for streaming container logs
+func (h *DockerHandler) StreamContainerLogs(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	containerID := vars["id"]
+
+	if containerID == "" {
+		respondWithError(w, http.StatusBadRequest, "Container ID is required")
+		return
+	}
+
+	// Upgrade HTTP connection to WebSocket
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("Failed to upgrade to WebSocket: %v", err)
+		return
+	}
+	defer conn.Close()
+
+	// Create context with cancel for cleanup
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
+	// Get container logs starting from 30 minutes ago with follow enabled
+	logReader, err := h.manager.ContainerLogs(ctx, containerID, true)
+	if err != nil {
+		conn.WriteJSON(map[string]string{
+			"error": "Failed to get container logs: " + err.Error(),
+		})
+		return
+	}
+	defer logReader.Close()
+
+	// Create channels for coordination
+	done := make(chan struct{})
+	
+	// Goroutine to handle WebSocket pings to keep connection alive
+	go func() {
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+				if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+					log.Printf("Failed to send ping: %v", err)
+					cancel()
+					return
+				}
+			}
+		}
+	}()
+
+	// Goroutine to handle client disconnection
+	go func() {
+		for {
+			if _, _, err := conn.ReadMessage(); err != nil {
+				log.Printf("WebSocket read error (client disconnect): %v", err)
+				cancel()
+				close(done)
+				return
+			}
+		}
+	}()
+
+	// Stream logs to WebSocket
+	scanner := bufio.NewScanner(logReader)
+	for scanner.Scan() {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			line := scanner.Text()
+			
+			// Docker log format includes 8-byte header, we need to strip it
+			// The header format: [stream_type(1 byte)][padding(3 bytes)][size(4 bytes)]
+			// We'll handle this by checking if the line starts with unprintable characters
+			if len(line) > 8 {
+				// Check if it looks like it has the Docker log header
+				if line[0] <= 2 { // Stream type is 0, 1, or 2
+					line = line[8:] // Skip the 8-byte header
+				}
+			}
+			
+			if err := conn.WriteMessage(websocket.TextMessage, []byte(line)); err != nil {
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+					log.Printf("WebSocket write error: %v", err)
+				}
+				return
+			}
+		}
+	}
+
+	if err := scanner.Err(); err != nil && err != io.EOF {
+		log.Printf("Error reading logs: %v", err)
+		conn.WriteJSON(map[string]string{
+			"error": "Error reading logs: " + err.Error(),
+		})
+	}
 }
