@@ -700,14 +700,13 @@
     align-items: center;
     gap: 1.5rem;
     padding: 1rem 2rem;
-    background: var(--color-surface, #e7e5e4);
-    color: var(--color-text, #0a0a0a);
+    background: var(--color-primary, #171717);
+    color: var(--color-background, #f5f5f4);
     z-index: 101;
     opacity: 0;
     transition: opacity 0.3s ease-out, transform 0.3s ease-out;
     pointer-events: none;
     border-radius: 0 0 var(--radius, 0.25rem) var(--radius, 0.25rem);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
   
   .floating-header.visible {
@@ -730,17 +729,17 @@
   
   .floating-header .mode-toggle,
   .floating-header .refresh-button {
-    background: var(--color-background, #f5f5f4);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    color: var(--color-text, #0a0a0a);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--color-background, #f5f5f4);
     padding: 0.4rem 0.75rem;
     font-size: 0.85rem;
   }
   
   .floating-header .mode-toggle:hover,
   .floating-header .refresh-button:hover:not(:disabled) {
-    background: var(--color-surface, #e7e5e4);
-    border-color: var(--color-primary, #171717);
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
   }
   
   .main-content {
@@ -1129,8 +1128,8 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
-    background: var(--color-surface, #e7e5e4);
-    color: var(--color-text, #0a0a0a);
+    background: var(--color-primary, #171717);
+    color: var(--color-background, #f5f5f4);
     border-radius: var(--radius, 0.25rem) var(--radius, 0.25rem) 0 0;
     margin-bottom: 0.5rem;
     width: 100%;
@@ -1142,7 +1141,7 @@
   }
   
   .compose-group-header:hover {
-    background: var(--color-background, #f5f5f4);
+    background: rgba(23, 23, 23, 0.9);
   }
   
   .compose-group-header.compact {
