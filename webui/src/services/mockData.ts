@@ -13,7 +13,9 @@ export const mockContainers = [
     status: 'Up 2 hours',
     health: 'healthy' as const,
     image: 'nginx:latest',
-    created: 1705315800 // Unix timestamp for 2024-01-15T10:30:00Z
+    created: 1705315800, // Unix timestamp for 2024-01-15T10:30:00Z
+    compose_project: 'web-stack',
+    compose_service: 'nginx'
   },
   {
     id: 'container2',
@@ -22,7 +24,9 @@ export const mockContainers = [
     status: 'Up 2 hours',
     health: 'healthy' as const,
     image: 'mysql:8.0',
-    created: 1705315500 // Unix timestamp for 2024-01-15T10:25:00Z
+    created: 1705315500, // Unix timestamp for 2024-01-15T10:25:00Z
+    compose_project: 'web-stack',
+    compose_service: 'mysql'
   },
   {
     id: 'container3',
@@ -31,7 +35,9 @@ export const mockContainers = [
     status: 'Exited (0) 10 minutes ago',
     health: 'none' as const,
     image: 'redis:7',
-    created: 1705315200 // Unix timestamp for 2024-01-15T10:20:00Z
+    created: 1705315200, // Unix timestamp for 2024-01-15T10:20:00Z
+    compose_project: 'web-stack',
+    compose_service: 'redis'
   },
   {
     id: 'container4',
@@ -40,7 +46,9 @@ export const mockContainers = [
     status: 'Up 2 hours (health: starting)',
     health: 'starting' as const,
     image: 'postgres:15',
-    created: 1705314900 // Unix timestamp for 2024-01-15T10:15:00Z
+    created: 1705314900, // Unix timestamp for 2024-01-15T10:15:00Z
+    compose_project: 'data-stack',
+    compose_service: 'postgres'
   },
   {
     id: 'container5',
@@ -49,7 +57,9 @@ export const mockContainers = [
     status: 'Up 3 hours',
     health: 'healthy' as const,
     image: 'mongo:6.0',
-    created: 1705314600 // Unix timestamp for 2024-01-15T10:10:00Z
+    created: 1705314600, // Unix timestamp for 2024-01-15T10:10:00Z
+    compose_project: 'data-stack',
+    compose_service: 'mongodb'
   },
   {
     id: 'container6',
@@ -67,7 +77,9 @@ export const mockContainers = [
     status: 'Up 5 hours',
     health: 'healthy' as const,
     image: 'rabbitmq:3-management',
-    created: 1705314000 // Unix timestamp for 2024-01-15T10:00:00Z
+    created: 1705314000, // Unix timestamp for 2024-01-15T10:00:00Z
+    compose_project: 'messaging',
+    compose_service: 'rabbitmq'
   },
   {
     id: 'container8',
@@ -76,7 +88,9 @@ export const mockContainers = [
     status: 'Up 6 hours',
     health: 'healthy' as const,
     image: 'grafana/grafana:10.0',
-    created: 1705313700 // Unix timestamp for 2024-01-15T09:55:00Z
+    created: 1705313700, // Unix timestamp for 2024-01-15T09:55:00Z
+    compose_project: 'monitoring',
+    compose_service: 'grafana'
   },
   {
     id: 'container9',
@@ -85,7 +99,9 @@ export const mockContainers = [
     status: 'Up 6 hours',
     health: 'healthy' as const,
     image: 'prom/prometheus:v2.47',
-    created: 1705313400 // Unix timestamp for 2024-01-15T09:50:00Z
+    created: 1705313400, // Unix timestamp for 2024-01-15T09:50:00Z
+    compose_project: 'monitoring',
+    compose_service: 'prometheus'
   },
   {
     id: 'container10',

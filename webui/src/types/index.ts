@@ -46,6 +46,8 @@ export interface Container {
   health?: 'healthy' | 'unhealthy' | 'starting' | 'none';
   created: number; // Unix timestamp
   is_self?: boolean; // Whether this container is running the DSP application
+  compose_project?: string; // Docker Compose project name
+  compose_service?: string; // Docker Compose service name
 }
 
 // Docker volume types
