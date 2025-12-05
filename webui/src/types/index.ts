@@ -48,6 +48,16 @@ export interface Container {
   is_self?: boolean; // Whether this container is running the DSP application
 }
 
+// Docker volume types
+export interface Volume {
+  name: string;
+  driver: string;
+  mountpoint: string;
+  created_at: string;
+  scope: string;
+  containers: string[]; // List of container IDs using this volume
+}
+
 export interface ContainerAction {
   containerId: string;
   action: 'start' | 'stop' | 'restart';

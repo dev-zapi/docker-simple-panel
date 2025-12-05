@@ -6,6 +6,7 @@
   import Login from './pages/Login.svelte';
   import Register from './pages/Register.svelte';
   import Home from './pages/Home.svelte';
+  import Volumes from './pages/Volumes.svelte';
   import Users from './pages/Users.svelte';
   import Profile from './pages/Profile.svelte';
   import Settings from './pages/Settings.svelte';
@@ -15,6 +16,7 @@
     '/': Home,
     '/login': Login,
     '/register': Register,
+    '/volumes': Volumes,
     '/users': Users,
     '/profile': Profile,
     '/settings': Settings

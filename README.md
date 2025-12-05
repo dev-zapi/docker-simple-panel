@@ -10,6 +10,7 @@ This is a Go backend application that provides a REST API for managing Docker co
 - SQLite database for user management
 - Docker container listing with health status
 - Container operations: start, stop, restart
+- Docker volume management with container associations
 - Docker daemon connectivity via `/var/run/docker.sock`
 
 ## Requirements
@@ -247,6 +248,30 @@ GET /api/docker/health
 ```
 
 Checks if the Docker daemon is accessible.
+
+#### List Volumes
+```
+GET /api/volumes
+```
+
+Returns a list of all Docker volumes with their associated containers.
+
+Response:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "name": "my-volume",
+      "driver": "local",
+      "mountpoint": "/var/lib/docker/volumes/my-volume/_data",
+      "created_at": "2025-12-04T02:48:54Z",
+      "scope": "local",
+      "containers": ["abc123def456"]
+    }
+  ]
+}
+```
 
 #### Get System Configuration
 ```
