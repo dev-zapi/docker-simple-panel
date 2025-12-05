@@ -1,11 +1,12 @@
-import type { User, LoginCredentials, Container, ContainerAction, RegisterRequest } from '../types';
-import { mockUsers, mockContainers, mockToken } from './mockData';
+import type { User, LoginCredentials, Container, ContainerAction, RegisterRequest, Volume } from '../types';
+import { mockUsers, mockContainers, mockVolumes, mockToken } from './mockData';
 
 // Mock API for development (no real backend required)
 // In production, replace with real API calls
 
 let users = [...mockUsers];
 let containers = [...mockContainers];
+let volumes = [...mockVolumes];
 
 // Helper to simulate network delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -137,5 +138,12 @@ export const mockContainerApi = {
         container.status = 'Up 1 second';
         break;
     }
+  }
+};
+
+export const mockVolumeApi = {
+  async getVolumes(): Promise<Volume[]> {
+    await delay(400);
+    return [...volumes];
   }
 };
