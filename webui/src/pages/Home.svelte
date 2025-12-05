@@ -50,6 +50,8 @@
       try {
         collapsedGroups = new Set(JSON.parse(savedCollapsedGroups));
       } catch (e) {
+        // Invalid JSON in localStorage, reset to empty set
+        console.warn('Failed to parse collapsedGroups from localStorage:', e);
         collapsedGroups = new Set();
       }
     }
@@ -276,11 +278,13 @@
                 class="compose-group-header" 
                 class:compact={displayMode === 'compact'}
                 on:click={() => toggleGroupCollapse(projectName)}
+                aria-expanded={!collapsedGroups.has(projectName)}
+                aria-label={`${projectName} compose group, ${projectContainers.length} containers`}
               >
                 <span class="compose-icon">📚</span>
                 <h3 class="compose-project-name">{projectName}</h3>
                 <span class="compose-count">{projectContainers.length} 个容器</span>
-                <span class="collapse-icon">{collapsedGroups.has(projectName) ? '▶' : '▼'}</span>
+                <span class="collapse-icon" aria-hidden="true">{collapsedGroups.has(projectName) ? '▶' : '▼'}</span>
               </button>
               {#if !collapsedGroups.has(projectName)}
               <div class="container-list" class:compact={displayMode === 'compact'}>
@@ -420,11 +424,13 @@
               class="compose-group-header" 
               class:compact={displayMode === 'compact'}
               on:click={() => toggleGroupCollapse('_ungrouped_')}
+              aria-expanded={!collapsedGroups.has('_ungrouped_')}
+              aria-label={`独立容器 group, ${ungrouped.length} containers`}
             >
               <span class="compose-icon">📦</span>
               <h3 class="compose-project-name">独立容器</h3>
               <span class="compose-count">{ungrouped.length} 个容器</span>
-              <span class="collapse-icon">{collapsedGroups.has('_ungrouped_') ? '▶' : '▼'}</span>
+              <span class="collapse-icon" aria-hidden="true">{collapsedGroups.has('_ungrouped_') ? '▶' : '▼'}</span>
             </button>
             {#if !collapsedGroups.has('_ungrouped_')}
             <div class="container-list" class:compact={displayMode === 'compact'}>
