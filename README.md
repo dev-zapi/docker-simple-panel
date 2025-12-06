@@ -10,6 +10,7 @@ This is a Go backend application that provides a REST API for managing Docker co
 - SQLite database for user management
 - Docker container listing with health status
 - Container operations: start, stop, restart
+- Real-time container log streaming via WebSocket (with 30-minute history)
 - Docker volume management with container associations
 - Docker daemon connectivity via `/var/run/docker.sock`
 
@@ -240,6 +241,33 @@ POST /api/containers/{id}/stop
 #### Restart Container
 ```
 POST /api/containers/{id}/restart
+```
+
+#### Stream Container Logs (WebSocket)
+```
+GET /api/containers/{id}/logs/stream
+```
+
+Establishes a WebSocket connection to stream container logs in real-time. The endpoint:
+- Requires JWT authentication via the `Authorization: Bearer <token>` header
+- Starts streaming from logs generated in the past 30 minutes
+- Continues streaming new logs as they are generated
+- Includes timestamps for each log line
+- Automatically handles both stdout and stderr streams
+
+Example using JavaScript:
+```javascript
+const token = "your-jwt-token";
+const containerId = "abc123def456";
+const ws = new WebSocket(
+  `ws://localhost:8080/api/containers/${containerId}/logs/stream`,
+  [],
+  { headers: { Authorization: `Bearer ${token}` } }
+);
+
+ws.onmessage = (event) => {
+  console.log(event.data); // Each log line with timestamp
+};
 ```
 
 #### Docker Health Check
