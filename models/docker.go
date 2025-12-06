@@ -2,16 +2,52 @@ package models
 
 // ContainerInfo represents Docker container information
 type ContainerInfo struct {
-	ID             string `json:"id"`
-	Name           string `json:"name"`
-	Image          string `json:"image"`
-	State          string `json:"state"`
-	Status         string `json:"status"`
-	Health         string `json:"health"`
-	Created        int64  `json:"created"`
-	IsSelf         bool   `json:"is_self"`          // Whether this container is running this application
-	ComposeProject string `json:"compose_project"`  // Docker Compose project name
-	ComposeService string `json:"compose_service"`  // Docker Compose service name
+	ID             string            `json:"id"`
+	Name           string            `json:"name"`
+	Image          string            `json:"image"`
+	State          string            `json:"state"`
+	Status         string            `json:"status"`
+	Health         string            `json:"health"`
+	Created        int64             `json:"created"`
+	IsSelf         bool              `json:"is_self"`          // Whether this container is running this application
+	ComposeProject string            `json:"compose_project"`  // Docker Compose project name
+	ComposeService string            `json:"compose_service"`  // Docker Compose service name
+	RestartPolicy  *RestartPolicy    `json:"restart_policy,omitempty"`
+	Env            []string          `json:"env,omitempty"`
+	Networks       map[string]NetworkInfo `json:"networks,omitempty"`
+	Ports          []PortBinding     `json:"ports,omitempty"`
+	Mounts         []MountInfo       `json:"mounts,omitempty"`
+	Hostname       string            `json:"hostname,omitempty"`
+}
+
+// RestartPolicy represents container restart policy
+type RestartPolicy struct {
+	Name              string `json:"name"`
+	MaximumRetryCount int    `json:"maximum_retry_count,omitempty"`
+}
+
+// NetworkInfo represents container network information
+type NetworkInfo struct {
+	NetworkID   string `json:"network_id"`
+	Gateway     string `json:"gateway,omitempty"`
+	IPAddress   string `json:"ip_address,omitempty"`
+	MacAddress  string `json:"mac_address,omitempty"`
+}
+
+// PortBinding represents port mapping
+type PortBinding struct {
+	ContainerPort string `json:"container_port"`
+	HostIP        string `json:"host_ip,omitempty"`
+	HostPort      string `json:"host_port,omitempty"`
+}
+
+// MountInfo represents volume/bind mount information
+type MountInfo struct {
+	Type        string `json:"type"` // bind, volume, tmpfs
+	Source      string `json:"source"`
+	Destination string `json:"destination"`
+	Mode        string `json:"mode,omitempty"`
+	RW          bool   `json:"rw"`
 }
 
 // ContainerOperation represents an operation to perform on a container

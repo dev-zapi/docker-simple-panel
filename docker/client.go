@@ -159,8 +159,65 @@ func (c *Client) GetContainerInfo(ctx context.Context, containerID string) (*mod
 		}
 	}
 
+	// Extract restart policy
+	var restartPolicy *models.RestartPolicy
+	if inspect.HostConfig != nil && inspect.HostConfig.RestartPolicy.Name != "" {
+		restartPolicy = &models.RestartPolicy{
+			Name:              string(inspect.HostConfig.RestartPolicy.Name),
+			MaximumRetryCount: inspect.HostConfig.RestartPolicy.MaximumRetryCount,
+		}
+	}
+
+	// Extract network information
+	networks := make(map[string]models.NetworkInfo)
+	if inspect.NetworkSettings != nil && inspect.NetworkSettings.Networks != nil {
+		for netName, netConfig := range inspect.NetworkSettings.Networks {
+			networks[netName] = models.NetworkInfo{
+				NetworkID:  netConfig.NetworkID,
+				Gateway:    netConfig.Gateway,
+				IPAddress:  netConfig.IPAddress,
+				MacAddress: netConfig.MacAddress,
+			}
+		}
+	}
+
+	// Extract port bindings
+	var ports []models.PortBinding
+	if inspect.NetworkSettings != nil && inspect.NetworkSettings.Ports != nil {
+		for port, bindings := range inspect.NetworkSettings.Ports {
+			if bindings == nil || len(bindings) == 0 {
+				// Port exposed but not bound
+				ports = append(ports, models.PortBinding{
+					ContainerPort: string(port),
+				})
+			} else {
+				for _, binding := range bindings {
+					ports = append(ports, models.PortBinding{
+						ContainerPort: string(port),
+						HostIP:        binding.HostIP,
+						HostPort:      binding.HostPort,
+					})
+				}
+			}
+		}
+	}
+
+	// Extract mount information
+	var mounts []models.MountInfo
+	if inspect.Mounts != nil {
+		for _, mount := range inspect.Mounts {
+			mounts = append(mounts, models.MountInfo{
+				Type:        string(mount.Type),
+				Source:      mount.Source,
+				Destination: mount.Destination,
+				Mode:        mount.Mode,
+				RW:          mount.RW,
+			})
+		}
+	}
+
 	return &models.ContainerInfo{
-    ID:             inspect.ID[:shortIDLength],
+		ID:             inspect.ID[:shortIDLength],
 		Name:           name,
 		Image:          inspect.Config.Image,
 		State:          inspect.State.Status,
@@ -169,6 +226,12 @@ func (c *Client) GetContainerInfo(ctx context.Context, containerID string) (*mod
 		Created:        createdTime.Unix(),
 		ComposeProject: composeProject,
 		ComposeService: composeService,
+		RestartPolicy:  restartPolicy,
+		Env:            inspect.Config.Env,
+		Networks:       networks,
+		Ports:          ports,
+		Mounts:         mounts,
+		Hostname:       inspect.Config.Hostname,
 	}, nil
 }
 
