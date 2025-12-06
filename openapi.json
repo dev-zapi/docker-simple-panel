@@ -560,6 +560,67 @@
         }
       }
     },
+    "/api/containers/{id}/logs/stream": {
+      "get": {
+        "tags": [
+          "containers"
+        ],
+        "summary": "Stream container logs via WebSocket",
+        "description": "Establishes a WebSocket connection to stream container logs in real-time. Starts from logs from the past 30 minutes and continues streaming new logs as they are generated.",
+        "operationId": "streamContainerLogs",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Container ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "101": {
+            "description": "Switching Protocols - WebSocket connection established. Logs will be streamed as text messages. Each log line includes a timestamp from Docker."
+          },
+          "400": {
+            "description": "Container ID is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Container not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/docker/health": {
       "get": {
         "tags": [

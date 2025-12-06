@@ -1,9 +1,11 @@
 package middleware
 
 import (
+	"bufio"
 	"bytes"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -41,6 +43,15 @@ func (rw *responseWriter) Write(b []byte) (int, error) {
 		_, _ = rw.body.Write(b)
 	}
 	return rw.ResponseWriter.Write(b)
+}
+
+// Hijack implements http.Hijacker interface for WebSocket support
+func (rw *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hijacker, ok := rw.ResponseWriter.(http.Hijacker)
+	if !ok {
+		return nil, nil, http.ErrNotSupported
+	}
+	return hijacker.Hijack()
 }
 
 // Logging creates a logging middleware with configurable log levels
