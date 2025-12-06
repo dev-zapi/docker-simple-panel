@@ -238,27 +238,88 @@ func (h *DockerHandler) StreamContainerLogs(w http.ResponseWriter, r *http.Reque
 	stdoutReader, stdoutWriter := io.Pipe()
 	stderrReader, stderrWriter := io.Pipe()
 	
-	// Start demuxing in a goroutine
+	// Start demuxing in a goroutine with context awareness
+	demuxErr := make(chan error, 1)
 	go func() {
 		defer stdoutWriter.Close()
 		defer stderrWriter.Close()
-		_, err := stdcopy.StdCopy(stdoutWriter, stderrWriter, logReader)
-		if err != nil && err != io.EOF {
-			log.Printf("Error demuxing logs: %v", err)
+		
+		// Monitor context cancellation
+		errChan := make(chan error, 1)
+		go func() {
+			_, err := stdcopy.StdCopy(stdoutWriter, stderrWriter, logReader)
+			errChan <- err
+		}()
+		
+		select {
+		case err := <-errChan:
+			if err != nil && err != io.EOF {
+				log.Printf("Error demuxing logs: %v", err)
+			}
+			demuxErr <- err
+		case <-ctx.Done():
+			// Context cancelled, close pipes to stop demuxing
+			stdoutWriter.Close()
+			stderrWriter.Close()
+			demuxErr <- ctx.Err()
 		}
 	}()
 
-	// Merge stdout and stderr for display
-	mergedReader := io.MultiReader(stdoutReader, stderrReader)
+	// Channel to merge stdout and stderr while preserving order
+	logLines := make(chan string, 100)
+	
+	// Read from stdout
+	go func() {
+		scanner := bufio.NewScanner(stdoutReader)
+		for scanner.Scan() {
+			select {
+			case <-ctx.Done():
+				return
+			case logLines <- scanner.Text():
+			}
+		}
+	}()
+	
+	// Read from stderr
+	go func() {
+		scanner := bufio.NewScanner(stderrReader)
+		for scanner.Scan() {
+			select {
+			case <-ctx.Done():
+				return
+			case logLines <- scanner.Text():
+			}
+		}
+	}()
 	
 	// Stream logs to WebSocket
-	scanner := bufio.NewScanner(mergedReader)
-	for scanner.Scan() {
+	for {
 		select {
 		case <-ctx.Done():
 			return
-		default:
-			line := scanner.Text()
+		case err := <-demuxErr:
+			// Demux completed, drain remaining logs
+			close(logLines)
+			for line := range logLines {
+				if err := conn.WriteMessage(websocket.TextMessage, []byte(line)); err != nil {
+					return
+				}
+			}
+			if err != nil && err != io.EOF && err != context.Canceled {
+				select {
+				case <-ctx.Done():
+					// Don't try to write if context is cancelled
+				default:
+					conn.WriteJSON(map[string]string{
+						"error": "Error reading logs: " + err.Error(),
+					})
+				}
+			}
+			return
+		case line, ok := <-logLines:
+			if !ok {
+				return
+			}
 			if err := conn.WriteMessage(websocket.TextMessage, []byte(line)); err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 					log.Printf("WebSocket write error: %v", err)
@@ -266,12 +327,5 @@ func (h *DockerHandler) StreamContainerLogs(w http.ResponseWriter, r *http.Reque
 				return
 			}
 		}
-	}
-
-	if err := scanner.Err(); err != nil && err != io.EOF {
-		log.Printf("Error reading logs: %v", err)
-		conn.WriteJSON(map[string]string{
-			"error": "Error reading logs: " + err.Error(),
-		})
 	}
 }
