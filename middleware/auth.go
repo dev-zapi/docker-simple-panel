@@ -17,20 +17,27 @@ const UserContextKey contextKey = "user"
 func JWTAuth(jwtSecret string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var tokenString string
+			
+			// Try to get token from Authorization header first
 			authHeader := r.Header.Get("Authorization")
-			if authHeader == "" {
-				http.Error(w, "Authorization header required", http.StatusUnauthorized)
+			if authHeader != "" {
+				// Extract token from "Bearer <token>"
+				parts := strings.Split(authHeader, " ")
+				if len(parts) == 2 && parts[0] == "Bearer" {
+					tokenString = parts[1]
+				}
+			}
+			
+			// If no token in header, try query parameter (for WebSocket connections)
+			if tokenString == "" {
+				tokenString = r.URL.Query().Get("token")
+			}
+			
+			if tokenString == "" {
+				http.Error(w, "Authorization token required", http.StatusUnauthorized)
 				return
 			}
-
-			// Extract token from "Bearer <token>"
-			parts := strings.Split(authHeader, " ")
-			if len(parts) != 2 || parts[0] != "Bearer" {
-				http.Error(w, "Invalid authorization header format", http.StatusUnauthorized)
-				return
-			}
-
-			tokenString := parts[1]
 
 			// Parse and validate token
 			token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
