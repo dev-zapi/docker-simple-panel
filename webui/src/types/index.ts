@@ -48,6 +48,38 @@ export interface Container {
   is_self?: boolean; // Whether this container is running the DSP application
   compose_project?: string; // Docker Compose project name
   compose_service?: string; // Docker Compose service name
+  restart_policy?: RestartPolicy;
+  env?: string[];
+  networks?: Record<string, NetworkInfo>;
+  ports?: PortBinding[];
+  mounts?: MountInfo[];
+  hostname?: string;
+}
+
+export interface RestartPolicy {
+  name: string;
+  maximum_retry_count?: number;
+}
+
+export interface NetworkInfo {
+  network_id: string;
+  gateway?: string;
+  ip_address?: string;
+  mac_address?: string;
+}
+
+export interface PortBinding {
+  container_port: string;
+  host_ip?: string;
+  host_port?: string;
+}
+
+export interface MountInfo {
+  type: string; // bind, volume, tmpfs
+  source: string;
+  destination: string;
+  mode?: string;
+  rw: boolean;
 }
 
 // Docker volume types

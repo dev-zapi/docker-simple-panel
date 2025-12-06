@@ -351,6 +351,13 @@
                           >
                             📋
                           </a>
+                          <a 
+                            class="action-btn-compact details" 
+                            href={`#/container/${container.id}`}
+                            title="查看详情"
+                          >
+                            ℹ️
+                          </a>
                         </div>
                       </div>
                     {:else}
@@ -420,6 +427,12 @@
                           href={`#/logs/${container.id}`}
                         >
                           📋 日志
+                        </a>
+                        <a 
+                          class="action-btn details" 
+                          href={`#/container/${container.id}`}
+                        >
+                          ℹ️ 详情
                         </a>
                       </div>
                     {/if}
@@ -507,6 +520,13 @@
                         >
                           📋
                         </a>
+                        <a 
+                          class="action-btn-compact details" 
+                          href={`#/container/${container.id}`}
+                          title="查看详情"
+                        >
+                          ℹ️
+                        </a>
                       </div>
                     </div>
                   {:else}
@@ -573,6 +593,12 @@
                         href={`#/logs/${container.id}`}
                       >
                         📋 日志
+                      </a>
+                      <a 
+                        class="action-btn details" 
+                        href={`#/container/${container.id}`}
+                      >
+                        ℹ️ 详情
                       </a>
                     </div>
                   {/if}
@@ -645,6 +671,13 @@
                   >
                     📋
                   </a>
+                  <a 
+                    class="action-btn-compact details" 
+                    href={`#/container/${container.id}`}
+                    title="查看详情"
+                  >
+                    ℹ️
+                  </a>
                 </div>
               </div>
             {:else}
@@ -711,6 +744,12 @@
                   href={`#/logs/${container.id}`}
                 >
                   📋 日志
+                </a>
+                <a 
+                  class="action-btn details" 
+                  href={`#/container/${container.id}`}
+                >
+                  ℹ️ 详情
                 </a>
               </div>
             {/if}
@@ -1039,6 +1078,19 @@
   
   .action-btn.logs:hover {
     background: #404040;
+  }
+  
+  .action-btn.details {
+    background: #0284c7;
+    color: white;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .action-btn.details:hover {
+    background: #0369a1;
   }
   
   /* Compact mode styles */
