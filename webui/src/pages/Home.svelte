@@ -344,6 +344,13 @@
                               🔄
                             </button>
                           {/if}
+                          <a 
+                            class="action-btn-compact logs" 
+                            href={`#/logs/${container.id}`}
+                            title="查看日志"
+                          >
+                            📋
+                          </a>
                         </div>
                       </div>
                     {:else}
@@ -408,6 +415,12 @@
                             🔄 重启
                           </button>
                         {/if}
+                        <a 
+                          class="action-btn logs" 
+                          href={`#/logs/${container.id}`}
+                        >
+                          📋 日志
+                        </a>
                       </div>
                     {/if}
                   </div>
@@ -487,6 +500,13 @@
                             🔄
                           </button>
                         {/if}
+                        <a 
+                          class="action-btn-compact logs" 
+                          href={`#/logs/${container.id}`}
+                          title="查看日志"
+                        >
+                          📋
+                        </a>
                       </div>
                     </div>
                   {:else}
@@ -548,6 +568,12 @@
                           🔄 重启
                         </button>
                       {/if}
+                      <a 
+                        class="action-btn logs" 
+                        href={`#/logs/${container.id}`}
+                      >
+                        📋 日志
+                      </a>
                     </div>
                   {/if}
                 </div>
@@ -612,6 +638,13 @@
                       🔄
                     </button>
                   {/if}
+                  <a 
+                    class="action-btn-compact logs" 
+                    href={`#/logs/${container.id}`}
+                    title="查看日志"
+                  >
+                    📋
+                  </a>
                 </div>
               </div>
             {:else}
@@ -673,6 +706,12 @@
                     🔄 重启
                   </button>
                 {/if}
+                <a 
+                  class="action-btn logs" 
+                  href={`#/logs/${container.id}`}
+                >
+                  📋 日志
+                </a>
               </div>
             {/if}
           </div>
@@ -989,6 +1028,19 @@
     cursor: not-allowed;
   }
   
+  .action-btn.logs {
+    background: var(--color-secondary, #525252);
+    color: white;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .action-btn.logs:hover {
+    background: #404040;
+  }
+  
   /* Compact mode styles */
   .container-compact {
     display: flex;
@@ -1058,6 +1110,13 @@
   .action-btn-compact:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+  }
+  
+  .action-btn-compact.logs {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
   
   /* Mobile responsive styles */

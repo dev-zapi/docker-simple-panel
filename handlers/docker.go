@@ -1,9 +1,17 @@
 package handlers
 
 import (
+	"bufio"
+	"context"
+	"io"
+	"log"
 	"net/http"
+	"sync"
+	"time"
 
+	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 
 	"github.com/dev-zapi/docker-simple-panel/docker"
 	"github.com/dev-zapi/docker-simple-panel/models"
@@ -145,4 +153,179 @@ func (h *DockerHandler) ListVolumes(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 		Data:    volumes,
 	})
+}
+
+// WebSocket upgrader
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		// Allow all origins since CORS middleware already handles origin validation
+		// and WebSocket connections are authenticated via JWT
+		return true
+	},
+	ReadBufferSize:  4096,
+	WriteBufferSize: 4096,
+}
+
+// StreamContainerLogs handles WebSocket connections for streaming container logs
+func (h *DockerHandler) StreamContainerLogs(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	containerID := vars["id"]
+
+	if containerID == "" {
+		respondWithError(w, http.StatusBadRequest, "Container ID is required")
+		return
+	}
+
+	// Upgrade HTTP connection to WebSocket
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("Failed to upgrade to WebSocket: %v", err)
+		return
+	}
+	defer conn.Close()
+
+	// Create context with cancel for cleanup
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
+	// Get container logs starting from 30 minutes ago with follow enabled
+	logReader, err := h.manager.ContainerLogs(ctx, containerID, true)
+	if err != nil {
+		conn.WriteJSON(map[string]string{
+			"error": "Failed to get container logs: " + err.Error(),
+		})
+		return
+	}
+	defer logReader.Close()
+
+	// Create channels for coordination
+	done := make(chan struct{})
+	var doneOnce sync.Once
+	
+	// Goroutine to handle WebSocket pings to keep connection alive
+	go func() {
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+				if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+					log.Printf("Failed to send ping: %v", err)
+					cancel()
+					return
+				}
+			}
+		}
+	}()
+
+	// Goroutine to handle client disconnection
+	go func() {
+		for {
+			if _, _, err := conn.ReadMessage(); err != nil {
+				log.Printf("WebSocket read error (client disconnect): %v", err)
+				cancel()
+				doneOnce.Do(func() { close(done) })
+				return
+			}
+		}
+	}()
+
+	// Use Docker's stdcopy to properly demultiplex stdout and stderr streams
+	// Create pipes to separate stdout and stderr
+	stdoutReader, stdoutWriter := io.Pipe()
+	stderrReader, stderrWriter := io.Pipe()
+	
+	// Start demuxing in a goroutine with context awareness
+	demuxErr := make(chan error, 1)
+	go func() {
+		defer stdoutWriter.Close()
+		defer stderrWriter.Close()
+		
+		// Monitor context cancellation
+		errChan := make(chan error, 1)
+		go func() {
+			_, err := stdcopy.StdCopy(stdoutWriter, stderrWriter, logReader)
+			errChan <- err
+		}()
+		
+		select {
+		case err := <-errChan:
+			if err != nil && err != io.EOF {
+				log.Printf("Error demuxing logs: %v", err)
+			}
+			demuxErr <- err
+		case <-ctx.Done():
+			// Context cancelled, close pipes to stop demuxing
+			stdoutWriter.Close()
+			stderrWriter.Close()
+			demuxErr <- ctx.Err()
+		}
+	}()
+
+	// Channel to merge stdout and stderr while preserving order
+	logLines := make(chan string, 100)
+	
+	// Read from stdout
+	go func() {
+		scanner := bufio.NewScanner(stdoutReader)
+		for scanner.Scan() {
+			select {
+			case <-ctx.Done():
+				return
+			case logLines <- scanner.Text():
+			}
+		}
+	}()
+	
+	// Read from stderr
+	go func() {
+		scanner := bufio.NewScanner(stderrReader)
+		for scanner.Scan() {
+			select {
+			case <-ctx.Done():
+				return
+			case logLines <- scanner.Text():
+			}
+		}
+	}()
+	
+	// Stream logs to WebSocket
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case err := <-demuxErr:
+			// Demux completed, drain remaining logs
+			close(logLines)
+			for line := range logLines {
+				if err := conn.WriteMessage(websocket.TextMessage, []byte(line)); err != nil {
+					return
+				}
+			}
+			if err != nil && err != io.EOF && err != context.Canceled {
+				select {
+				case <-ctx.Done():
+					// Don't try to write if context is cancelled
+				default:
+					conn.WriteJSON(map[string]string{
+						"error": "Error reading logs: " + err.Error(),
+					})
+				}
+			}
+			return
+		case line, ok := <-logLines:
+			if !ok {
+				return
+			}
+			if err := conn.WriteMessage(websocket.TextMessage, []byte(line)); err != nil {
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+					log.Printf("WebSocket write error: %v", err)
+				}
+				return
+			}
+		}
+	}
 }

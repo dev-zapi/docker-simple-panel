@@ -10,6 +10,7 @@
   import Users from './pages/Users.svelte';
   import Profile from './pages/Profile.svelte';
   import Settings from './pages/Settings.svelte';
+  import ContainerLogs from './pages/ContainerLogs.svelte';
   
   // Define routes - using direct component assignment for compatibility
   const routes = {
@@ -19,7 +20,8 @@
     '/volumes': Volumes,
     '/users': Users,
     '/profile': Profile,
-    '/settings': Settings
+    '/settings': Settings,
+    '/logs/:id': ContainerLogs
   };
   
   // Public routes that don't require authentication

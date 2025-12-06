@@ -133,6 +133,7 @@ func main() {
 	protected.HandleFunc("/containers/{id}/start", dockerHandler.StartContainer).Methods("POST")
 	protected.HandleFunc("/containers/{id}/stop", dockerHandler.StopContainer).Methods("POST")
 	protected.HandleFunc("/containers/{id}/restart", dockerHandler.RestartContainer).Methods("POST")
+	protected.HandleFunc("/containers/{id}/logs/stream", dockerHandler.StreamContainerLogs).Methods("GET")
 	protected.HandleFunc("/docker/health", dockerHandler.HealthCheck).Methods("GET")
 
 	// Docker volume routes

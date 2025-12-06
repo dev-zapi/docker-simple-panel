@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"errors"
+	"io"
 	"log"
 	"strings"
 	"sync"
@@ -193,6 +194,13 @@ func (m *Manager) Ping(ctx context.Context) error {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.client.Ping(ctx)
+}
+
+// ContainerLogs gets container logs starting from 30 minutes ago
+func (m *Manager) ContainerLogs(ctx context.Context, containerID string, follow bool) (io.ReadCloser, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.client.ContainerLogs(ctx, containerID, follow)
 }
 
 // Close closes the Docker client connection
