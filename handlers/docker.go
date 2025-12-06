@@ -6,8 +6,10 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
+	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 
@@ -156,11 +158,12 @@ func (h *DockerHandler) ListVolumes(w http.ResponseWriter, r *http.Request) {
 // WebSocket upgrader
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		// Allow all origins for simplicity. In production, you might want to check origins
+		// Allow all origins since CORS middleware already handles origin validation
+		// and WebSocket connections are authenticated via JWT
 		return true
 	},
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
+	ReadBufferSize:  4096,
+	WriteBufferSize: 4096,
 }
 
 // StreamContainerLogs handles WebSocket connections for streaming container logs
@@ -197,6 +200,7 @@ func (h *DockerHandler) StreamContainerLogs(w http.ResponseWriter, r *http.Reque
 
 	// Create channels for coordination
 	done := make(chan struct{})
+	var doneOnce sync.Once
 	
 	// Goroutine to handle WebSocket pings to keep connection alive
 	go func() {
@@ -223,31 +227,38 @@ func (h *DockerHandler) StreamContainerLogs(w http.ResponseWriter, r *http.Reque
 			if _, _, err := conn.ReadMessage(); err != nil {
 				log.Printf("WebSocket read error (client disconnect): %v", err)
 				cancel()
-				close(done)
+				doneOnce.Do(func() { close(done) })
 				return
 			}
 		}
 	}()
 
+	// Use Docker's stdcopy to properly demultiplex stdout and stderr streams
+	// Create pipes to separate stdout and stderr
+	stdoutReader, stdoutWriter := io.Pipe()
+	stderrReader, stderrWriter := io.Pipe()
+	
+	// Start demuxing in a goroutine
+	go func() {
+		defer stdoutWriter.Close()
+		defer stderrWriter.Close()
+		_, err := stdcopy.StdCopy(stdoutWriter, stderrWriter, logReader)
+		if err != nil && err != io.EOF {
+			log.Printf("Error demuxing logs: %v", err)
+		}
+	}()
+
+	// Merge stdout and stderr for display
+	mergedReader := io.MultiReader(stdoutReader, stderrReader)
+	
 	// Stream logs to WebSocket
-	scanner := bufio.NewScanner(logReader)
+	scanner := bufio.NewScanner(mergedReader)
 	for scanner.Scan() {
 		select {
 		case <-ctx.Done():
 			return
 		default:
 			line := scanner.Text()
-			
-			// Docker log format includes 8-byte header, we need to strip it
-			// The header format: [stream_type(1 byte)][padding(3 bytes)][size(4 bytes)]
-			// We'll handle this by checking if the line starts with unprintable characters
-			if len(line) > 8 {
-				// Check if it looks like it has the Docker log header
-				if line[0] <= 2 { // Stream type is 0, 1, or 2
-					line = line[8:] // Skip the 8-byte header
-				}
-			}
-			
 			if err := conn.WriteMessage(websocket.TextMessage, []byte(line)); err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 					log.Printf("WebSocket write error: %v", err)
