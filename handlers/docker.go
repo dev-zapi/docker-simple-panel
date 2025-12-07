@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -349,6 +350,12 @@ func (h *DockerHandler) ExploreVolumeFiles(w http.ResponseWriter, r *http.Reques
 		path = "/"
 	}
 	
+	// Validate path to prevent directory traversal attacks
+	if !isValidPath(path) {
+		respondWithError(w, http.StatusBadRequest, "Invalid path")
+		return
+	}
+	
 	// Get the volume explorer image from config
 	explorerImage := h.configManager.GetVolumeExplorerImage()
 	
@@ -381,6 +388,12 @@ func (h *DockerHandler) ReadVolumeFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
+	// Validate path to prevent directory traversal attacks
+	if !isValidPath(filePath) {
+		respondWithError(w, http.StatusBadRequest, "Invalid path")
+		return
+	}
+	
 	// Get the volume explorer image from config
 	explorerImage := h.configManager.GetVolumeExplorerImage()
 	
@@ -394,4 +407,22 @@ func (h *DockerHandler) ReadVolumeFile(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 		Data:    content,
 	})
+}
+
+// isValidPath validates that a path doesn't contain directory traversal sequences
+func isValidPath(path string) bool {
+	// Path must start with /
+	if !strings.HasPrefix(path, "/") {
+		return false
+	}
+	
+	// Check for directory traversal attempts
+	parts := strings.Split(path, "/")
+	for _, part := range parts {
+		if part == ".." || strings.Contains(part, "..") {
+			return false
+		}
+	}
+	
+	return true
 }

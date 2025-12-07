@@ -14,6 +14,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 
 	"github.com/dev-zapi/docker-simple-panel/models"
 )
@@ -353,19 +354,25 @@ func (c *Client) ExploreVolumeFiles(ctx context.Context, volumeName, path, explo
 	}
 	defer logReader.Close()
 	
+	// Use stdcopy to properly demux Docker streams
+	var stdout, stderr strings.Builder
+	if _, err := stdcopy.StdCopy(&stdout, &stderr, logReader); err != nil && err != io.EOF {
+		return nil, fmt.Errorf("failed to read container output: %w", err)
+	}
+	
+	// Check for errors in stderr
+	if stderr.Len() > 0 {
+		return nil, fmt.Errorf("command failed: %s", stderr.String())
+	}
+	
 	// Read and parse the output
 	var files []models.VolumeFileInfo
-	scanner := bufio.NewScanner(logReader)
+	scanner := bufio.NewScanner(strings.NewReader(stdout.String()))
 	
 	// Skip the first line (total)
 	firstLine := true
 	for scanner.Scan() {
 		line := scanner.Text()
-		
-		// Remove Docker log prefix (8 bytes: 4-byte header + 4-byte size)
-		if len(line) > 8 {
-			line = line[8:]
-		}
 		
 		if firstLine {
 			firstLine = false
@@ -467,37 +474,25 @@ func (c *Client) ReadVolumeFile(ctx context.Context, volumeName, filePath, explo
 	// Get container logs (which contains the file content)
 	logReader, err := c.cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
 		ShowStdout: true,
-		ShowStderr: false,
+		ShowStderr: true,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get container logs: %w", err)
 	}
 	defer logReader.Close()
 	
-	// Read the content
-	var content strings.Builder
-	scanner := bufio.NewScanner(logReader)
-	for scanner.Scan() {
-		line := scanner.Text()
-		
-		// Remove Docker log prefix (8 bytes: 4-byte header + 4-byte size)
-		if len(line) > 8 {
-			line = line[8:]
-		}
-		
-		content.WriteString(line)
-		content.WriteString("\n")
+	// Use stdcopy to properly demux Docker streams
+	var stdout, stderr strings.Builder
+	if _, err := stdcopy.StdCopy(&stdout, &stderr, logReader); err != nil && err != io.EOF {
+		return nil, fmt.Errorf("failed to read file content: %w", err)
 	}
 	
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("error reading file content: %w", err)
+	// Check for errors in stderr
+	if stderr.Len() > 0 {
+		return nil, fmt.Errorf("failed to read file: %s", stderr.String())
 	}
 	
-	contentStr := content.String()
-	// Remove trailing newline added by scanner
-	if len(contentStr) > 0 && contentStr[len(contentStr)-1] == '\n' {
-		contentStr = contentStr[:len(contentStr)-1]
-	}
+	contentStr := stdout.String()
 	
 	return &models.VolumeFileContent{
 		Path:    filePath,
