@@ -382,8 +382,11 @@ func (c *Client) ExploreVolumeFiles(ctx context.Context, volumeName, path, explo
 		}
 		
 		// Parse ls -la output
+		// Expected format: mode links owner group size date time timezone filename
+		// Example: -rw-r--r-- 1 root root 12 2025-12-07 14:51:49.123456789 +0000 test.txt
+		const minFieldCount = 9
 		fields := strings.Fields(line)
-		if len(fields) < 9 {
+		if len(fields) < minFieldCount {
 			continue
 		}
 		
@@ -407,10 +410,14 @@ func (c *Client) ExploreVolumeFiles(ctx context.Context, volumeName, path, explo
 		
 		// Build full path
 		fullPath := path
-		if !strings.HasSuffix(fullPath, "/") && fullPath != "" {
+		if fullPath != "/" && !strings.HasSuffix(fullPath, "/") {
 			fullPath += "/"
 		}
-		fullPath += name
+		if fullPath == "/" {
+			fullPath = "/" + name
+		} else {
+			fullPath += name
+		}
 		
 		files = append(files, models.VolumeFileInfo{
 			Name:        name,
@@ -450,9 +457,10 @@ func (c *Client) ReadVolumeFile(ctx context.Context, volumeName, filePath, explo
 		return nil, fmt.Errorf("failed to create temporary container: %w", err)
 	}
 	
-	// Ensure container is removed on exit
+	// Ensure container is removed on exit with timeout
 	defer func() {
-		removeCtx := context.Background()
+		removeCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
 		c.cli.ContainerRemove(removeCtx, resp.ID, types.ContainerRemoveOptions{Force: true})
 	}()
 	

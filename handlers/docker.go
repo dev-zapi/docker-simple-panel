@@ -417,9 +417,10 @@ func isValidPath(path string) bool {
 	}
 	
 	// Check for directory traversal attempts
+	// Only check for exact ".." matches, not substrings (to allow filenames like "file..txt")
 	parts := strings.Split(path, "/")
 	for _, part := range parts {
-		if part == ".." || strings.Contains(part, "..") {
+		if part == ".." {
 			return false
 		}
 	}
