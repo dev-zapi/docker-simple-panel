@@ -6,6 +6,8 @@ import type {
   Container, 
   ContainerAction,
   Volume,
+  VolumeFileInfo,
+  VolumeFileContent,
   SystemConfig,
   PublicConfig,
   UpdateConfigRequest,
@@ -172,6 +174,24 @@ export const volumeApi = USE_MOCK_API ? mockVolumeApi : {
     });
     
     return handleApiResponse<Volume[]>(response);
+  },
+  
+  async exploreVolumeFiles(volumeName: string, path: string = '/'): Promise<VolumeFileInfo[]> {
+    const encodedPath = encodeURIComponent(path);
+    const response = await fetch(`${API_BASE_URL}/volumes/${volumeName}/files?path=${encodedPath}`, {
+      headers: getAuthHeaders()
+    });
+    
+    return handleApiResponse<VolumeFileInfo[]>(response);
+  },
+  
+  async readVolumeFile(volumeName: string, filePath: string): Promise<VolumeFileContent> {
+    const encodedPath = encodeURIComponent(filePath);
+    const response = await fetch(`${API_BASE_URL}/volumes/${volumeName}/file?path=${encodedPath}`, {
+      headers: getAuthHeaders()
+    });
+    
+    return handleApiResponse<VolumeFileContent>(response);
   }
 };
 

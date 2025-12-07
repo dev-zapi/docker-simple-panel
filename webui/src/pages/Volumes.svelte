@@ -174,6 +174,11 @@
                   <span class="empty-text">未被使用</span>
                 </div>
               {/if}
+              <div class="volume-actions">
+                <button class="explore-button" on:click={() => window.location.hash = `/volumes/${volume.name}/explorer`}>
+                  📂 浏览文件
+                </button>
+              </div>
             </div>
           </div>
         {/each}
@@ -444,6 +449,32 @@
     border-radius: var(--radius, 0.25rem);
     font-size: 0.85rem;
     font-family: var(--font-body, "Merriweather", serif);
+  }
+  
+  .volume-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+  }
+  
+  .explore-button {
+    background: var(--color-primary, #171717);
+    color: var(--color-background, #f5f5f4);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius, 0.25rem);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    font-family: var(--font-body, "Merriweather", serif);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .explore-button:hover {
+    background: var(--color-secondary, #525252);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
   
   /* Mobile responsive styles */

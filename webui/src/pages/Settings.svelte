@@ -14,6 +14,7 @@
   let dockerSocket = '';
   let disableRegistration = false;
   let logLevel = 'info';
+  let volumeExplorerImage = 'busybox:latest';
   
   const logLevelOptions = [
     { value: 'error', label: '错误 (Error)' },
@@ -29,6 +30,7 @@
       dockerSocket = config.docker_socket;
       disableRegistration = config.disable_registration;
       logLevel = config.log_level || 'info';
+      volumeExplorerImage = config.volume_explorer_image || 'busybox:latest';
     } catch (err) {
       error = '获取配置失败';
       console.error('Failed to load config:', err);
@@ -46,7 +48,8 @@
       const updatedConfig = await configApi.updateConfig({
         docker_socket: dockerSocket,
         disable_registration: disableRegistration,
-        log_level: logLevel
+        log_level: logLevel,
+        volume_explorer_image: volumeExplorerImage
       });
       
       config = updatedConfig;
@@ -69,6 +72,7 @@
       dockerSocket = config.docker_socket;
       disableRegistration = config.disable_registration;
       logLevel = config.log_level || 'info';
+      volumeExplorerImage = config.volume_explorer_image || 'busybox:latest';
     }
     error = '';
     successMessage = '';
@@ -149,6 +153,22 @@
               {/each}
             </select>
             <p class="form-help">设置系统日志的详细程度</p>
+          </div>
+        </div>
+        
+        <div class="form-section">
+          <h3>卷管理配置</h3>
+          
+          <div class="form-group">
+            <label for="volumeExplorerImage">卷浏览器镜像</label>
+            <input
+              type="text"
+              id="volumeExplorerImage"
+              bind:value={volumeExplorerImage}
+              placeholder="busybox:latest"
+              disabled={saving}
+            />
+            <p class="form-help">用于浏览卷文件的临时容器镜像（推荐：busybox:latest 或 alpine:latest）</p>
           </div>
         </div>
         
