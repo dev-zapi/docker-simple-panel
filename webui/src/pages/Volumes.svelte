@@ -9,6 +9,8 @@
   let loading = true;
   let error = '';
   let refreshing = false;
+  let deletingVolume: string | null = null;
+  let volumeToDelete: string | null = null;
   
   // Scroll-based header state
   let isScrolled = false;
@@ -62,6 +64,39 @@
   async function handleRefresh() {
     refreshing = true;
     await loadData();
+  }
+  
+  async function handleDeleteClick(volumeName: string) {
+    // First click: set the volume to delete (confirmation state)
+    if (volumeToDelete !== volumeName) {
+      volumeToDelete = volumeName;
+      // Reset confirmation after 3 seconds
+      setTimeout(() => {
+        if (volumeToDelete === volumeName) {
+          volumeToDelete = null;
+        }
+      }, 3000);
+      return;
+    }
+    
+    // Second click: actually delete the volume
+    try {
+      deletingVolume = volumeName;
+      error = '';
+      await volumeApi.deleteVolume(volumeName);
+      volumeToDelete = null;
+      // Refresh the volume list
+      await loadData();
+    } catch (err) {
+      error = `删除卷失败: ${err instanceof Error ? err.message : '未知错误'}`;
+      console.error('Failed to delete volume:', err);
+    } finally {
+      deletingVolume = null;
+    }
+  }
+  
+  function cancelDelete() {
+    volumeToDelete = null;
   }
   
   // Get container names from IDs
@@ -173,6 +208,32 @@
                   <span class="meta-label">关联容器:</span>
                   <span class="empty-text">未被使用</span>
                 </div>
+              {/if}
+            </div>
+            <div class="volume-actions">
+              {#if volumeToDelete === volume.name}
+                <button 
+                  class="delete-button confirm" 
+                  on:click={() => handleDeleteClick(volume.name)}
+                  disabled={deletingVolume === volume.name}
+                >
+                  {deletingVolume === volume.name ? '删除中...' : '确认删除'}
+                </button>
+                <button 
+                  class="cancel-button" 
+                  on:click={cancelDelete}
+                  disabled={deletingVolume === volume.name}
+                >
+                  取消
+                </button>
+              {:else}
+                <button 
+                  class="delete-button" 
+                  on:click={() => handleDeleteClick(volume.name)}
+                  disabled={deletingVolume !== null}
+                >
+                  删除卷
+                </button>
               {/if}
             </div>
           </div>
@@ -355,6 +416,9 @@
     padding: 1.25rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     transition: box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
   
   .volume-item:hover {
@@ -365,6 +429,76 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    flex: 1;
+  }
+  
+  .volume-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  .delete-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--color-surface, #e7e5e4);
+    border: 1px solid rgba(153, 27, 27, 0.3);
+    color: var(--color-error, #991b1b);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius, 0.25rem);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    font-family: var(--font-body, "Merriweather", serif);
+  }
+  
+  .delete-button:hover:not(:disabled) {
+    background: rgba(153, 27, 27, 0.1);
+    border-color: var(--color-error, #991b1b);
+  }
+  
+  .delete-button.confirm {
+    background: var(--color-error, #991b1b);
+    color: var(--color-background, #f5f5f4);
+    border-color: var(--color-error, #991b1b);
+  }
+  
+  .delete-button.confirm:hover:not(:disabled) {
+    background: #7f1d1d;
+    border-color: #7f1d1d;
+  }
+  
+  .delete-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .cancel-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--color-surface, #e7e5e4);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius, 0.25rem);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    color: var(--color-text, #0a0a0a);
+    font-family: var(--font-body, "Merriweather", serif);
+  }
+  
+  .cancel-button:hover:not(:disabled) {
+    background: var(--color-background, #f5f5f4);
+    border-color: var(--color-primary, #171717);
+  }
+  
+  .cancel-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
   
   .volume-name {

@@ -145,5 +145,10 @@ export const mockVolumeApi = {
   async getVolumes(): Promise<Volume[]> {
     await delay(400);
     return [...volumes];
+  },
+  
+  async deleteVolume(volumeName: string): Promise<void> {
+    await delay(500);
+    volumes = volumes.filter(v => v.name !== volumeName);
   }
 };

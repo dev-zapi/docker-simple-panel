@@ -138,6 +138,7 @@ func main() {
 
 	// Docker volume routes
 	protected.HandleFunc("/volumes", dockerHandler.ListVolumes).Methods("GET")
+	protected.HandleFunc("/volumes/{name}", dockerHandler.DeleteVolume).Methods("DELETE")
 
 	// System configuration routes
 	protected.HandleFunc("/config", configHandler.GetConfig).Methods("GET")

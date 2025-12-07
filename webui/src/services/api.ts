@@ -172,6 +172,15 @@ export const volumeApi = USE_MOCK_API ? mockVolumeApi : {
     });
     
     return handleApiResponse<Volume[]>(response);
+  },
+  
+  async deleteVolume(volumeName: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/volumes/${encodeURIComponent(volumeName)}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    
+    await handleApiResponse<void>(response);
   }
 };
 
