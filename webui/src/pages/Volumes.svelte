@@ -11,6 +11,7 @@
   let refreshing = false;
   let deletingVolume: string | null = null;
   let volumeToDelete: string | null = null;
+  let deleteTimeoutId: number | null = null;
   
   // Scroll-based header state
   let isScrolled = false;
@@ -69,17 +70,29 @@
   async function handleDeleteClick(volumeName: string) {
     // First click: set the volume to delete (confirmation state)
     if (volumeToDelete !== volumeName) {
+      // Clear any existing timeout
+      if (deleteTimeoutId !== null) {
+        clearTimeout(deleteTimeoutId);
+      }
+      
       volumeToDelete = volumeName;
       // Reset confirmation after 3 seconds
-      setTimeout(() => {
+      deleteTimeoutId = window.setTimeout(() => {
         if (volumeToDelete === volumeName) {
           volumeToDelete = null;
+          deleteTimeoutId = null;
         }
       }, 3000);
       return;
     }
     
     // Second click: actually delete the volume
+    // Clear the timeout since we're confirming
+    if (deleteTimeoutId !== null) {
+      clearTimeout(deleteTimeoutId);
+      deleteTimeoutId = null;
+    }
+    
     try {
       deletingVolume = volumeName;
       error = '';
@@ -96,6 +109,11 @@
   }
   
   function cancelDelete() {
+    // Clear the timeout when cancelling
+    if (deleteTimeoutId !== null) {
+      clearTimeout(deleteTimeoutId);
+      deleteTimeoutId = null;
+    }
     volumeToDelete = null;
   }
   

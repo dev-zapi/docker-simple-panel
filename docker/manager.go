@@ -191,8 +191,8 @@ func (m *Manager) ListVolumes(ctx context.Context) ([]models.VolumeInfo, error) 
 
 // RemoveVolume removes a Docker volume by name
 func (m *Manager) RemoveVolume(ctx context.Context, volumeName string) error {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	return m.client.RemoveVolume(ctx, volumeName)
 }
 
