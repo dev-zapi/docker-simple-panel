@@ -292,7 +292,7 @@ func (c *Client) ContainerLogs(ctx context.Context, containerID string, follow b
 		ShowStderr: true,
 		Follow:     follow,
 		Timestamps: true,
-		Tail:       100,
+		Tail:       "100",
 	}
 	
 	return c.cli.ContainerLogs(ctx, containerID, options)
