@@ -203,6 +203,20 @@ func (m *Manager) ContainerLogs(ctx context.Context, containerID string, follow 
 	return m.client.ContainerLogs(ctx, containerID, follow)
 }
 
+// ExploreVolumeFiles lists files and directories in a volume path
+func (m *Manager) ExploreVolumeFiles(ctx context.Context, volumeName, path, explorerImage string) ([]models.VolumeFileInfo, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.client.ExploreVolumeFiles(ctx, volumeName, path, explorerImage)
+}
+
+// ReadVolumeFile reads the content of a file in a volume
+func (m *Manager) ReadVolumeFile(ctx context.Context, volumeName, filePath, explorerImage string) (*models.VolumeFileContent, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.client.ReadVolumeFile(ctx, volumeName, filePath, explorerImage)
+}
+
 // Close closes the Docker client connection
 func (m *Manager) Close() error {
 	m.mu.Lock()

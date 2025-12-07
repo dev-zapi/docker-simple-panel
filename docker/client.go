@@ -1,10 +1,13 @@
 package docker
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -296,4 +299,211 @@ func (c *Client) ContainerLogs(ctx context.Context, containerID string, follow b
 	}
 	
 	return c.cli.ContainerLogs(ctx, containerID, options)
+}
+
+// ExploreVolumeFiles lists files and directories in a volume path using a temporary container
+func (c *Client) ExploreVolumeFiles(ctx context.Context, volumeName, path, explorerImage string) ([]models.VolumeFileInfo, error) {
+	// Create a temporary container with the volume mounted
+	containerName := fmt.Sprintf("volume-explorer-%s-%d", volumeName, time.Now().Unix())
+	
+	// Create container config
+	config := &container.Config{
+		Image: explorerImage,
+		Cmd:   []string{"ls", "-la", "--full-time", "/volume" + path},
+	}
+	
+	hostConfig := &container.HostConfig{
+		Binds: []string{volumeName + ":/volume:ro"}, // Mount as read-only
+		AutoRemove: true,
+	}
+	
+	// Create the container
+	resp, err := c.cli.ContainerCreate(ctx, config, hostConfig, nil, nil, containerName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temporary container: %w", err)
+	}
+	
+	// Ensure container is removed on exit
+	defer func() {
+		removeCtx := context.Background()
+		c.cli.ContainerRemove(removeCtx, resp.ID, types.ContainerRemoveOptions{Force: true})
+	}()
+	
+	// Start the container
+	if err := c.cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		return nil, fmt.Errorf("failed to start temporary container: %w", err)
+	}
+	
+	// Wait for container to finish
+	statusCh, errCh := c.cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			return nil, fmt.Errorf("error waiting for container: %w", err)
+		}
+	case <-statusCh:
+	}
+	
+	// Get container logs (which contains the ls output)
+	logReader, err := c.cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get container logs: %w", err)
+	}
+	defer logReader.Close()
+	
+	// Read and parse the output
+	var files []models.VolumeFileInfo
+	scanner := bufio.NewScanner(logReader)
+	
+	// Skip the first line (total)
+	firstLine := true
+	for scanner.Scan() {
+		line := scanner.Text()
+		
+		// Remove Docker log prefix (8 bytes: 4-byte header + 4-byte size)
+		if len(line) > 8 {
+			line = line[8:]
+		}
+		
+		if firstLine {
+			firstLine = false
+			if strings.HasPrefix(line, "total") {
+				continue
+			}
+		}
+		
+		// Parse ls -la output
+		fields := strings.Fields(line)
+		if len(fields) < 9 {
+			continue
+		}
+		
+		mode := fields[0]
+		sizeStr := fields[4]
+		dateTime := strings.Join(fields[5:8], " ")
+		name := strings.Join(fields[8:], " ")
+		
+		// Skip . and ..
+		if name == "." || name == ".." {
+			continue
+		}
+		
+		isDir := strings.HasPrefix(mode, "d")
+		size := int64(0)
+		if !isDir {
+			if s, err := strconv.ParseInt(sizeStr, 10, 64); err == nil {
+				size = s
+			}
+		}
+		
+		// Build full path
+		fullPath := path
+		if !strings.HasSuffix(fullPath, "/") && fullPath != "" {
+			fullPath += "/"
+		}
+		fullPath += name
+		
+		files = append(files, models.VolumeFileInfo{
+			Name:        name,
+			Path:        fullPath,
+			IsDirectory: isDir,
+			Size:        size,
+			Mode:        mode,
+			ModTime:     dateTime,
+		})
+	}
+	
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("error reading container output: %w", err)
+	}
+	
+	return files, nil
+}
+
+// ReadVolumeFile reads the content of a file in a volume using a temporary container
+func (c *Client) ReadVolumeFile(ctx context.Context, volumeName, filePath, explorerImage string) (*models.VolumeFileContent, error) {
+	// Create a temporary container with the volume mounted
+	containerName := fmt.Sprintf("volume-reader-%s-%d", volumeName, time.Now().Unix())
+	
+	// Create container config to read the file
+	config := &container.Config{
+		Image: explorerImage,
+		Cmd:   []string{"cat", "/volume" + filePath},
+	}
+	
+	hostConfig := &container.HostConfig{
+		Binds: []string{volumeName + ":/volume:ro"}, // Mount as read-only
+		AutoRemove: true,
+	}
+	
+	// Create the container
+	resp, err := c.cli.ContainerCreate(ctx, config, hostConfig, nil, nil, containerName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temporary container: %w", err)
+	}
+	
+	// Ensure container is removed on exit
+	defer func() {
+		removeCtx := context.Background()
+		c.cli.ContainerRemove(removeCtx, resp.ID, types.ContainerRemoveOptions{Force: true})
+	}()
+	
+	// Start the container
+	if err := c.cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		return nil, fmt.Errorf("failed to start temporary container: %w", err)
+	}
+	
+	// Wait for container to finish
+	statusCh, errCh := c.cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			return nil, fmt.Errorf("error waiting for container: %w", err)
+		}
+	case <-statusCh:
+	}
+	
+	// Get container logs (which contains the file content)
+	logReader, err := c.cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: false,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get container logs: %w", err)
+	}
+	defer logReader.Close()
+	
+	// Read the content
+	var content strings.Builder
+	scanner := bufio.NewScanner(logReader)
+	for scanner.Scan() {
+		line := scanner.Text()
+		
+		// Remove Docker log prefix (8 bytes: 4-byte header + 4-byte size)
+		if len(line) > 8 {
+			line = line[8:]
+		}
+		
+		content.WriteString(line)
+		content.WriteString("\n")
+	}
+	
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("error reading file content: %w", err)
+	}
+	
+	contentStr := content.String()
+	// Remove trailing newline added by scanner
+	if len(contentStr) > 0 && contentStr[len(contentStr)-1] == '\n' {
+		contentStr = contentStr[:len(contentStr)-1]
+	}
+	
+	return &models.VolumeFileContent{
+		Path:    filePath,
+		Content: contentStr,
+		Size:    int64(len(contentStr)),
+	}, nil
 }

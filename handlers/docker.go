@@ -13,19 +13,22 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 
+	"github.com/dev-zapi/docker-simple-panel/config"
 	"github.com/dev-zapi/docker-simple-panel/docker"
 	"github.com/dev-zapi/docker-simple-panel/models"
 )
 
 // DockerHandler handles Docker-related requests
 type DockerHandler struct {
-	manager *docker.Manager
+	manager       *docker.Manager
+	configManager *config.Manager
 }
 
 // NewDockerHandler creates a new DockerHandler
-func NewDockerHandler(manager *docker.Manager) *DockerHandler {
+func NewDockerHandler(manager *docker.Manager, configManager *config.Manager) *DockerHandler {
 	return &DockerHandler{
-		manager: manager,
+		manager:       manager,
+		configManager: configManager,
 	}
 }
 
@@ -328,4 +331,67 @@ func (h *DockerHandler) StreamContainerLogs(w http.ResponseWriter, r *http.Reque
 			}
 		}
 	}
+}
+
+// ExploreVolumeFiles handles listing files in a volume
+func (h *DockerHandler) ExploreVolumeFiles(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	volumeName := vars["name"]
+	
+	if volumeName == "" {
+		respondWithError(w, http.StatusBadRequest, "Volume name is required")
+		return
+	}
+	
+	// Get path from query parameter, default to root
+	path := r.URL.Query().Get("path")
+	if path == "" {
+		path = "/"
+	}
+	
+	// Get the volume explorer image from config
+	explorerImage := h.configManager.GetVolumeExplorerImage()
+	
+	files, err := h.manager.ExploreVolumeFiles(r.Context(), volumeName, path, explorerImage)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to explore volume: "+err.Error())
+		return
+	}
+	
+	respondWithJSON(w, http.StatusOK, models.Response{
+		Success: true,
+		Data:    files,
+	})
+}
+
+// ReadVolumeFile handles reading a file from a volume
+func (h *DockerHandler) ReadVolumeFile(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	volumeName := vars["name"]
+	
+	if volumeName == "" {
+		respondWithError(w, http.StatusBadRequest, "Volume name is required")
+		return
+	}
+	
+	// Get file path from query parameter
+	filePath := r.URL.Query().Get("path")
+	if filePath == "" {
+		respondWithError(w, http.StatusBadRequest, "File path is required")
+		return
+	}
+	
+	// Get the volume explorer image from config
+	explorerImage := h.configManager.GetVolumeExplorerImage()
+	
+	content, err := h.manager.ReadVolumeFile(r.Context(), volumeName, filePath, explorerImage)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to read file: "+err.Error())
+		return
+	}
+	
+	respondWithJSON(w, http.StatusOK, models.Response{
+		Success: true,
+		Data:    content,
+	})
 }

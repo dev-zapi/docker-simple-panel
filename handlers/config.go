@@ -57,6 +57,7 @@ type UpdateConfigRequest struct {
 	DockerSocket        *string `json:"docker_socket,omitempty"`
 	DisableRegistration *bool   `json:"disable_registration,omitempty"`
 	LogLevel            *string `json:"log_level,omitempty"`
+	VolumeExplorerImage *string `json:"volume_explorer_image,omitempty"`
 }
 
 // UpdateConfig updates system configuration
@@ -101,6 +102,17 @@ func (h *ConfigHandler) UpdateConfig(w http.ResponseWriter, r *http.Request) {
 		// Persist to database
 		if err := h.db.SetConfig("log_level", logLevel.String()); err != nil {
 			respondWithError(w, http.StatusInternalServerError, "Failed to persist log level config: "+err.Error())
+			return
+		}
+	}
+
+	// Update volume explorer image if provided
+	if req.VolumeExplorerImage != nil {
+		h.configManager.SetVolumeExplorerImage(*req.VolumeExplorerImage)
+
+		// Persist to database
+		if err := h.db.SetConfig("volume_explorer_image", *req.VolumeExplorerImage); err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to persist volume explorer image config: "+err.Error())
 			return
 		}
 	}

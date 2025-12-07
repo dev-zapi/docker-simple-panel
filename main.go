@@ -53,9 +53,10 @@ func main() {
 	dockerSocket := loadConfigString("docker_socket", cfg.DockerSocket)
 	disableRegistration := loadConfigBool("disable_registration", cfg.DisableRegistration)
 	logLevel := config.ParseLogLevel(loadConfigString("log_level", cfg.LogLevel.String()))
+	volumeExplorerImage := loadConfigString("volume_explorer_image", "busybox:latest")
 
 	// Initialize configuration manager
-	configManager := config.NewManager(dockerSocket, disableRegistration, logLevel)
+	configManager := config.NewManager(dockerSocket, disableRegistration, logLevel, volumeExplorerImage)
 	log.Printf("Log level set to: %s", logLevel.String())
 
 	// Initialize Docker manager
@@ -81,7 +82,7 @@ func main() {
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret, configManager)
-	dockerHandler := handlers.NewDockerHandler(dockerManager)
+	dockerHandler := handlers.NewDockerHandler(dockerManager, configManager)
 	configHandler := handlers.NewConfigHandler(configManager, db)
 	userHandler := handlers.NewUserHandler(db)
 
@@ -138,6 +139,8 @@ func main() {
 
 	// Docker volume routes
 	protected.HandleFunc("/volumes", dockerHandler.ListVolumes).Methods("GET")
+	protected.HandleFunc("/volumes/{name}/files", dockerHandler.ExploreVolumeFiles).Methods("GET")
+	protected.HandleFunc("/volumes/{name}/file", dockerHandler.ReadVolumeFile).Methods("GET")
 
 	// System configuration routes
 	protected.HandleFunc("/config", configHandler.GetConfig).Methods("GET")
