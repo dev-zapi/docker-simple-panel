@@ -77,12 +77,12 @@
       
       volumeToDelete = volumeName;
       // Reset confirmation after 3 seconds
-      deleteTimeoutId = window.setTimeout(() => {
+      deleteTimeoutId = setTimeout(() => {
         if (volumeToDelete === volumeName) {
           volumeToDelete = null;
           deleteTimeoutId = null;
         }
-      }, 3000);
+      }, 3000) as unknown as number;
       return;
     }
     
