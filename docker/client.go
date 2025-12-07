@@ -314,7 +314,6 @@ func (c *Client) ExploreVolumeFiles(ctx context.Context, volumeName, path, explo
 	
 	hostConfig := &container.HostConfig{
 		Binds: []string{volumeName + ":/volume:ro"}, // Mount as read-only
-		AutoRemove: true,
 	}
 	
 	// Create the container
@@ -436,7 +435,6 @@ func (c *Client) ReadVolumeFile(ctx context.Context, volumeName, filePath, explo
 	
 	hostConfig := &container.HostConfig{
 		Binds: []string{volumeName + ":/volume:ro"}, // Mount as read-only
-		AutoRemove: true,
 	}
 	
 	// Create the container
