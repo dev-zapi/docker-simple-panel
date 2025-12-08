@@ -14,7 +14,7 @@
   let dockerSocket = '';
   let disableRegistration = false;
   let logLevel = 'info';
-  let volumeExplorerImage = 'busybox:latest';
+  let volumeExplorerImage = 'ghcr.io/dev-zapi/docker-simple-panel:latest';
   
   const logLevelOptions = [
     { value: 'error', label: '错误 (Error)' },
@@ -30,7 +30,7 @@
       dockerSocket = config.docker_socket;
       disableRegistration = config.disable_registration;
       logLevel = config.log_level || 'info';
-      volumeExplorerImage = config.volume_explorer_image || 'busybox:latest';
+      volumeExplorerImage = config.volume_explorer_image || 'ghcr.io/dev-zapi/docker-simple-panel:latest';
     } catch (err) {
       error = '获取配置失败';
       console.error('Failed to load config:', err);
@@ -72,7 +72,7 @@
       dockerSocket = config.docker_socket;
       disableRegistration = config.disable_registration;
       logLevel = config.log_level || 'info';
-      volumeExplorerImage = config.volume_explorer_image || 'busybox:latest';
+      volumeExplorerImage = config.volume_explorer_image || 'ghcr.io/dev-zapi/docker-simple-panel:latest';
     }
     error = '';
     successMessage = '';
@@ -165,10 +165,10 @@
               type="text"
               id="volumeExplorerImage"
               bind:value={volumeExplorerImage}
-              placeholder="busybox:latest"
+              placeholder="ghcr.io/dev-zapi/docker-simple-panel:latest"
               disabled={saving}
             />
-            <p class="form-help">用于浏览卷文件的临时容器镜像（推荐：busybox:latest 或 alpine:latest）</p>
+            <p class="form-help">用于浏览卷文件的临时容器镜像（默认使用本项目镜像，也可使用 busybox:latest 或 alpine:latest）</p>
           </div>
         </div>
         
