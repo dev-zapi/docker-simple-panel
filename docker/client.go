@@ -297,3 +297,8 @@ func (c *Client) ContainerLogs(ctx context.Context, containerID string, follow b
 	
 	return c.cli.ContainerLogs(ctx, containerID, options)
 }
+
+// RemoveVolume removes a Docker volume by name
+func (c *Client) RemoveVolume(ctx context.Context, volumeName string) error {
+	return c.cli.VolumeRemove(ctx, volumeName, false)
+}

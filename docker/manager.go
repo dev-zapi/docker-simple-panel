@@ -189,6 +189,13 @@ func (m *Manager) ListVolumes(ctx context.Context) ([]models.VolumeInfo, error) 
 	return m.client.ListVolumes(ctx)
 }
 
+// RemoveVolume removes a Docker volume by name
+func (m *Manager) RemoveVolume(ctx context.Context, volumeName string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.client.RemoveVolume(ctx, volumeName)
+}
+
 // Ping checks if the Docker daemon is accessible
 func (m *Manager) Ping(ctx context.Context) error {
 	m.mu.RLock()
