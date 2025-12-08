@@ -86,13 +86,23 @@
       return;
     }
     
-    // Second click: actually delete the volume
-    // Clear the timeout since we're confirming
+    // Second click: show confirmation dialog before actually deleting
+    // Clear the timeout since we're showing the dialog
     if (deleteTimeoutId !== null) {
       clearTimeout(deleteTimeoutId);
       deleteTimeoutId = null;
     }
     
+    // Show native confirmation dialog
+    const confirmed = confirm(`确定要删除卷 "${volumeName}" 吗？\n\n此操作无法撤销。`);
+    
+    if (!confirmed) {
+      // User cancelled, reset state
+      volumeToDelete = null;
+      return;
+    }
+    
+    // User confirmed, proceed with deletion
     try {
       deletingVolume = volumeName;
       error = '';
