@@ -53,7 +53,7 @@ func main() {
 	dockerSocket := loadConfigString("docker_socket", cfg.DockerSocket)
 	disableRegistration := loadConfigBool("disable_registration", cfg.DisableRegistration)
 	logLevel := config.ParseLogLevel(loadConfigString("log_level", cfg.LogLevel.String()))
-	volumeExplorerImage := loadConfigString("volume_explorer_image", "ghcr.io/dev-zapi/docker-simple-panel:latest")
+	volumeExplorerImage := loadConfigString("volume_explorer_image", cfg.VolumeExplorerImage)
 
 	// Initialize configuration manager
 	configManager := config.NewManager(dockerSocket, disableRegistration, logLevel, volumeExplorerImage)

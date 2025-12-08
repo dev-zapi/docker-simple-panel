@@ -105,6 +105,7 @@ The application can be configured using environment variables:
   - `warn`: Log warnings and errors (4xx/5xx responses, slow requests >1s)
   - `info`: Log basic request information (method, path, status, duration)
   - `debug`: Log detailed request/response information (headers, body)
+- `VOLUME_EXPLORER_IMAGE`: Docker image used for volume file exploration (default: ghcr.io/dev-zapi/docker-simple-panel:latest)
 - `STATIC_PATH`: Path to static files directory for serving frontend (default: empty for local development; `/app/webui` in Docker image)
 
 ## Running
