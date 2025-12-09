@@ -159,6 +159,27 @@ func (h *DockerHandler) ListVolumes(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// DeleteVolume handles deleting a Docker volume by name
+func (h *DockerHandler) DeleteVolume(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	volumeName := vars["name"]
+
+	if volumeName == "" {
+		respondWithError(w, http.StatusBadRequest, "Volume name is required")
+		return
+	}
+
+	if err := h.manager.RemoveVolume(r.Context(), volumeName); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to delete volume: "+err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, models.Response{
+		Success: true,
+		Message: "Volume deleted successfully",
+	})
+}
+
 // WebSocket upgrader
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {

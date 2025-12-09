@@ -288,5 +288,10 @@ You can see the file structure and read file contents.`;
       content: content,
       size: content.length
     };
+  },
+  
+  async deleteVolume(volumeName: string): Promise<void> {
+    await delay(500);
+    volumes = volumes.filter(v => v.name !== volumeName);
   }
 };

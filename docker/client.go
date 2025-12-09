@@ -508,3 +508,7 @@ func (c *Client) ReadVolumeFile(ctx context.Context, volumeName, filePath, explo
 		Size:    int64(len(contentStr)),
 	}, nil
 }
+
+func (c *Client) RemoveVolume(ctx context.Context, volumeName string) error {
+	return c.cli.VolumeRemove(ctx, volumeName, false)
+}
