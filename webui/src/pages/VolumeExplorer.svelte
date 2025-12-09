@@ -130,12 +130,12 @@
       
       fileToDelete = file.path;
       // Reset confirmation after 3 seconds
-      deleteTimeoutId = setTimeout(() => {
+      deleteTimeoutId = window.setTimeout(() => {
         if (fileToDelete === file.path) {
           fileToDelete = null;
           deleteTimeoutId = null;
         }
-      }, 3000) as unknown as number;
+      }, 3000);
       return;
     }
     

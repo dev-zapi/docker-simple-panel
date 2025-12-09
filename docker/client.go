@@ -549,12 +549,13 @@ func (c *Client) ReadVolumeFile(ctx context.Context, volumeName, filePath, explo
 	}, nil
 }
 
-// DeleteVolumeFile deletes a file from a volume using a temporary container
+// DeleteVolumeFile deletes a file or directory from a volume using a temporary container
 func (c *Client) DeleteVolumeFile(ctx context.Context, volumeName, filePath, explorerImage string) error {
 	// Create a temporary container with the volume mounted
 	containerName := fmt.Sprintf("volume-deleter-%s-%d", volumeName, time.Now().Unix())
 	
-	// Create container config to delete the file
+	// Use rm -rf to handle both files and directories
+	// The user must confirm the deletion in the UI before this is called
 	config := &container.Config{
 		Image: explorerImage,
 		Cmd:   []string{"rm", "-rf", "/volume" + filePath},
@@ -570,11 +571,12 @@ func (c *Client) DeleteVolumeFile(ctx context.Context, volumeName, filePath, exp
 		return fmt.Errorf("failed to create temporary container: %w", err)
 	}
 	
-	// Ensure container is removed on exit with timeout
+	// Ensure container is removed on exit
 	defer func() {
-		removeCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		// Use a fresh context with timeout for cleanup, not the potentially cancelled request context
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
-		c.cli.ContainerRemove(removeCtx, resp.ID, types.ContainerRemoveOptions{Force: true})
+		c.cli.ContainerRemove(cleanupCtx, resp.ID, types.ContainerRemoveOptions{Force: true})
 	}()
 	
 	// Start the container
