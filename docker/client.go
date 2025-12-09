@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -285,6 +286,26 @@ func (c *Client) ListVolumes(ctx context.Context) ([]models.VolumeInfo, error) {
 			Containers: containers,
 		})
 	}
+
+	// Sort volumes by creation time in descending order (newest first)
+	sort.Slice(result, func(i, j int) bool {
+		timeI, errI := time.Parse(time.RFC3339Nano, result[i].CreatedAt)
+		timeJ, errJ := time.Parse(time.RFC3339Nano, result[j].CreatedAt)
+		
+		// If parsing fails, put the item with invalid time at the end
+		if errI != nil && errJ != nil {
+			return result[i].Name < result[j].Name // fallback to name sorting
+		}
+		if errI != nil {
+			return false
+		}
+		if errJ != nil {
+			return true
+		}
+		
+		// Sort in descending order (newest first)
+		return timeI.After(timeJ)
+	})
 
 	return result, nil
 }
