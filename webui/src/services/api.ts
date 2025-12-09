@@ -194,6 +194,16 @@ export const volumeApi = USE_MOCK_API ? mockVolumeApi : {
     return handleApiResponse<VolumeFileContent>(response);
   },
   
+  async deleteVolumeFile(volumeName: string, filePath: string): Promise<void> {
+    const encodedPath = encodeURIComponent(filePath);
+    const response = await fetch(`${API_BASE_URL}/volumes/${volumeName}/file?path=${encodedPath}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    
+    await handleApiResponse<void>(response);
+  },
+  
   async deleteVolume(volumeName: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/volumes/${encodeURIComponent(volumeName)}`, {
       method: 'DELETE',

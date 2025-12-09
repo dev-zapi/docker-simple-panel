@@ -224,6 +224,13 @@ func (m *Manager) ReadVolumeFile(ctx context.Context, volumeName, filePath, expl
 	return m.client.ReadVolumeFile(ctx, volumeName, filePath, explorerImage)
 }
 
+// DeleteVolumeFile deletes a file from a volume
+func (m *Manager) DeleteVolumeFile(ctx context.Context, volumeName, filePath, explorerImage string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.client.DeleteVolumeFile(ctx, volumeName, filePath, explorerImage)
+}
+
 // Close closes the Docker client connection
 func (m *Manager) Close() error {
 	m.mu.Lock()
