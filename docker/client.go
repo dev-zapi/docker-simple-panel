@@ -23,6 +23,8 @@ import (
 const (
 	// shortIDLength is the length of the short container ID (12 hex characters)
 	shortIDLength = 12
+	// containerCleanupTimeout is the timeout for removing temporary containers
+	containerCleanupTimeout = 30 * time.Second
 )
 
 // Client wraps the Docker client
@@ -499,7 +501,7 @@ func (c *Client) ReadVolumeFile(ctx context.Context, volumeName, filePath, explo
 	
 	// Ensure container is removed on exit with timeout
 	defer func() {
-		removeCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		removeCtx, cancel := context.WithTimeout(context.Background(), containerCleanupTimeout)
 		defer cancel()
 		c.cli.ContainerRemove(removeCtx, resp.ID, types.ContainerRemoveOptions{Force: true})
 	}()
@@ -574,7 +576,7 @@ func (c *Client) DeleteVolumeFile(ctx context.Context, volumeName, filePath, exp
 	// Ensure container is removed on exit
 	defer func() {
 		// Use a fresh context with timeout for cleanup, not the potentially cancelled request context
-		cleanupCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), containerCleanupTimeout)
 		defer cancel()
 		c.cli.ContainerRemove(cleanupCtx, resp.ID, types.ContainerRemoveOptions{Force: true})
 	}()
