@@ -1,16 +1,20 @@
 package docker
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 
 	"github.com/dev-zapi/docker-simple-panel/models"
 )
@@ -298,7 +302,213 @@ func (c *Client) ContainerLogs(ctx context.Context, containerID string, follow b
 	return c.cli.ContainerLogs(ctx, containerID, options)
 }
 
-// RemoveVolume removes a Docker volume by name
+// ExploreVolumeFiles lists files and directories in a volume path using a temporary container
+func (c *Client) ExploreVolumeFiles(ctx context.Context, volumeName, path, explorerImage string) ([]models.VolumeFileInfo, error) {
+	// Create a temporary container with the volume mounted
+	containerName := fmt.Sprintf("volume-explorer-%s-%d", volumeName, time.Now().Unix())
+	
+	// Create container config
+	config := &container.Config{
+		Image: explorerImage,
+		Cmd:   []string{"ls", "-la", "--full-time", "/volume" + path},
+	}
+	
+	hostConfig := &container.HostConfig{
+		Binds: []string{volumeName + ":/volume:ro"}, // Mount as read-only
+	}
+	
+	// Create the container
+	resp, err := c.cli.ContainerCreate(ctx, config, hostConfig, nil, nil, containerName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temporary container: %w", err)
+	}
+	
+	// Ensure container is removed on exit
+	defer func() {
+		removeCtx := context.Background()
+		c.cli.ContainerRemove(removeCtx, resp.ID, types.ContainerRemoveOptions{Force: true})
+	}()
+	
+	// Start the container
+	if err := c.cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		return nil, fmt.Errorf("failed to start temporary container: %w", err)
+	}
+	
+	// Wait for container to finish
+	statusCh, errCh := c.cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			return nil, fmt.Errorf("error waiting for container: %w", err)
+		}
+	case <-statusCh:
+	}
+	
+	// Get container logs (which contains the ls output)
+	logReader, err := c.cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get container logs: %w", err)
+	}
+	defer logReader.Close()
+	
+	// Use stdcopy to properly demux Docker streams
+	var stdout, stderr strings.Builder
+	if _, err := stdcopy.StdCopy(&stdout, &stderr, logReader); err != nil && err != io.EOF {
+		return nil, fmt.Errorf("failed to read container output: %w", err)
+	}
+	
+	// Check for errors in stderr
+	if stderr.Len() > 0 {
+		return nil, fmt.Errorf("command failed: %s", stderr.String())
+	}
+	
+	// Read and parse the output
+	var files []models.VolumeFileInfo
+	scanner := bufio.NewScanner(strings.NewReader(stdout.String()))
+	
+	// Skip the first line (total)
+	firstLine := true
+	for scanner.Scan() {
+		line := scanner.Text()
+		
+		if firstLine {
+			firstLine = false
+			if strings.HasPrefix(line, "total") {
+				continue
+			}
+		}
+		
+		// Parse ls -la output
+		// Expected format: mode links owner group size date time timezone filename
+		// Example: -rw-r--r-- 1 root root 12 2025-12-07 14:51:49.123456789 +0000 test.txt
+		const minFieldCount = 9
+		fields := strings.Fields(line)
+		if len(fields) < minFieldCount {
+			continue
+		}
+		
+		mode := fields[0]
+		sizeStr := fields[4]
+		dateTime := strings.Join(fields[5:8], " ")
+		name := strings.Join(fields[8:], " ")
+		
+		// Skip . and ..
+		if name == "." || name == ".." {
+			continue
+		}
+		
+		isDir := strings.HasPrefix(mode, "d")
+		size := int64(0)
+		if !isDir {
+			if s, err := strconv.ParseInt(sizeStr, 10, 64); err == nil {
+				size = s
+			}
+		}
+		
+		// Build full path
+		fullPath := path
+		if fullPath != "/" && !strings.HasSuffix(fullPath, "/") {
+			fullPath += "/"
+		}
+		if fullPath == "/" {
+			fullPath = "/" + name
+		} else {
+			fullPath += name
+		}
+		
+		files = append(files, models.VolumeFileInfo{
+			Name:        name,
+			Path:        fullPath,
+			IsDirectory: isDir,
+			Size:        size,
+			Mode:        mode,
+			ModTime:     dateTime,
+		})
+	}
+	
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("error reading container output: %w", err)
+	}
+	
+	return files, nil
+}
+
+// ReadVolumeFile reads the content of a file in a volume using a temporary container
+func (c *Client) ReadVolumeFile(ctx context.Context, volumeName, filePath, explorerImage string) (*models.VolumeFileContent, error) {
+	// Create a temporary container with the volume mounted
+	containerName := fmt.Sprintf("volume-reader-%s-%d", volumeName, time.Now().Unix())
+	
+	// Create container config to read the file
+	config := &container.Config{
+		Image: explorerImage,
+		Cmd:   []string{"cat", "/volume" + filePath},
+	}
+	
+	hostConfig := &container.HostConfig{
+		Binds: []string{volumeName + ":/volume:ro"}, // Mount as read-only
+	}
+	
+	// Create the container
+	resp, err := c.cli.ContainerCreate(ctx, config, hostConfig, nil, nil, containerName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temporary container: %w", err)
+	}
+	
+	// Ensure container is removed on exit with timeout
+	defer func() {
+		removeCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		c.cli.ContainerRemove(removeCtx, resp.ID, types.ContainerRemoveOptions{Force: true})
+	}()
+	
+	// Start the container
+	if err := c.cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		return nil, fmt.Errorf("failed to start temporary container: %w", err)
+	}
+	
+	// Wait for container to finish
+	statusCh, errCh := c.cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			return nil, fmt.Errorf("error waiting for container: %w", err)
+		}
+	case <-statusCh:
+	}
+	
+	// Get container logs (which contains the file content)
+	logReader, err := c.cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get container logs: %w", err)
+	}
+	defer logReader.Close()
+	
+	// Use stdcopy to properly demux Docker streams
+	var stdout, stderr strings.Builder
+	if _, err := stdcopy.StdCopy(&stdout, &stderr, logReader); err != nil && err != io.EOF {
+		return nil, fmt.Errorf("failed to read file content: %w", err)
+	}
+	
+	// Check for errors in stderr
+	if stderr.Len() > 0 {
+		return nil, fmt.Errorf("failed to read file: %s", stderr.String())
+	}
+	
+	contentStr := stdout.String()
+	
+	return &models.VolumeFileContent{
+		Path:    filePath,
+		Content: contentStr,
+		Size:    int64(len(contentStr)),
+	}, nil
+}
+
 func (c *Client) RemoveVolume(ctx context.Context, volumeName string) error {
 	return c.cli.VolumeRemove(ctx, volumeName, false)
 }

@@ -60,6 +60,7 @@ type Config struct {
 	DisableRegistration bool
 	LogLevel            LogLevel
 	StaticPath          string
+	VolumeExplorerImage string
 }
 
 // LoadConfig loads configuration from environment variables with defaults
@@ -72,6 +73,7 @@ func LoadConfig() *Config {
 		DisableRegistration: getEnvBool("DISABLE_REGISTRATION", false),
 		LogLevel:            ParseLogLevel(getEnv("LOG_LEVEL", "info")),
 		StaticPath:          getEnv("STATIC_PATH", ""),
+		VolumeExplorerImage: getEnv("VOLUME_EXPLORER_IMAGE", "ghcr.io/dev-zapi/docker-simple-panel:latest"),
 	}
 }
 

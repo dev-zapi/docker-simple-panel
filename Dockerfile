@@ -59,7 +59,8 @@ ENV SERVER_PORT=8080 \
     DATABASE_PATH=/app/data/docker-panel.db \
     DOCKER_SOCKET=/var/run/docker.sock \
     DISABLE_REGISTRATION=false \
-    STATIC_PATH=/app/webui
+    STATIC_PATH=/app/webui \
+    VOLUME_EXPLORER_IMAGE=ghcr.io/dev-zapi/docker-simple-panel:latest
 
 # Expose port
 EXPOSE $SERVER_PORT

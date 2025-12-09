@@ -71,3 +71,20 @@ type Response struct {
 	Message string      `json:"message,omitempty"`
 	Data    interface{} `json:"data,omitempty"`
 }
+
+// VolumeFileInfo represents a file or directory in a volume
+type VolumeFileInfo struct {
+	Name        string `json:"name"`
+	Path        string `json:"path"`
+	IsDirectory bool   `json:"is_directory"`
+	Size        int64  `json:"size"`
+	Mode        string `json:"mode"`
+	ModTime     string `json:"mod_time"`
+}
+
+// VolumeFileContent represents file content from a volume
+type VolumeFileContent struct {
+	Path    string `json:"path"`
+	Content string `json:"content"`
+	Size    int64  `json:"size"`
+}

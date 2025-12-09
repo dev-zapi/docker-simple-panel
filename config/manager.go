@@ -10,15 +10,17 @@ type Manager struct {
 	dockerSocket         string
 	disableRegistration  bool
 	logLevel             LogLevel
+	volumeExplorerImage  string
 	onDockerSocketChange func(string) error
 }
 
 // NewManager creates a new configuration manager
-func NewManager(dockerSocket string, disableRegistration bool, logLevel LogLevel) *Manager {
+func NewManager(dockerSocket string, disableRegistration bool, logLevel LogLevel, volumeExplorerImage string) *Manager {
 	return &Manager{
 		dockerSocket:        dockerSocket,
 		disableRegistration: disableRegistration,
 		logLevel:            logLevel,
+		volumeExplorerImage: volumeExplorerImage,
 	}
 }
 
@@ -77,6 +79,20 @@ func (m *Manager) SetLogLevel(level LogLevel) {
 	m.logLevel = level
 }
 
+// GetVolumeExplorerImage returns the volume explorer image
+func (m *Manager) GetVolumeExplorerImage() string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.volumeExplorerImage
+}
+
+// SetVolumeExplorerImage updates the volume explorer image
+func (m *Manager) SetVolumeExplorerImage(image string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.volumeExplorerImage = image
+}
+
 // SetDockerSocketChangeCallback sets the callback for Docker socket changes
 func (m *Manager) SetDockerSocketChangeCallback(callback func(string) error) {
 	m.mu.Lock()
@@ -89,6 +105,7 @@ type SystemConfig struct {
 	DockerSocket        string `json:"docker_socket"`
 	DisableRegistration bool   `json:"disable_registration"`
 	LogLevel            string `json:"log_level"`
+	VolumeExplorerImage string `json:"volume_explorer_image"`
 }
 
 // GetSystemConfig returns the current system configuration
@@ -99,5 +116,6 @@ func (m *Manager) GetSystemConfig() SystemConfig {
 		DockerSocket:        m.dockerSocket,
 		DisableRegistration: m.disableRegistration,
 		LogLevel:            m.logLevel.String(),
+		VolumeExplorerImage: m.volumeExplorerImage,
 	}
 }

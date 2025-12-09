@@ -7,6 +7,7 @@
   import Register from './pages/Register.svelte';
   import Home from './pages/Home.svelte';
   import Volumes from './pages/Volumes.svelte';
+  import VolumeExplorer from './pages/VolumeExplorer.svelte';
   import Users from './pages/Users.svelte';
   import Profile from './pages/Profile.svelte';
   import Settings from './pages/Settings.svelte';
@@ -19,6 +20,7 @@
     '/login': Login,
     '/register': Register,
     '/volumes': Volumes,
+    '/volumes/:name/explorer': VolumeExplorer,
     '/users': Users,
     '/profile': Profile,
     '/settings': Settings,

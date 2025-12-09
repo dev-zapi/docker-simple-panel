@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -13,19 +14,22 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 
+	"github.com/dev-zapi/docker-simple-panel/config"
 	"github.com/dev-zapi/docker-simple-panel/docker"
 	"github.com/dev-zapi/docker-simple-panel/models"
 )
 
 // DockerHandler handles Docker-related requests
 type DockerHandler struct {
-	manager *docker.Manager
+	manager       *docker.Manager
+	configManager *config.Manager
 }
 
 // NewDockerHandler creates a new DockerHandler
-func NewDockerHandler(manager *docker.Manager) *DockerHandler {
+func NewDockerHandler(manager *docker.Manager, configManager *config.Manager) *DockerHandler {
 	return &DockerHandler{
-		manager: manager,
+		manager:       manager,
+		configManager: configManager,
 	}
 }
 
@@ -349,4 +353,98 @@ func (h *DockerHandler) StreamContainerLogs(w http.ResponseWriter, r *http.Reque
 			}
 		}
 	}
+}
+
+// ExploreVolumeFiles handles listing files in a volume
+func (h *DockerHandler) ExploreVolumeFiles(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	volumeName := vars["name"]
+	
+	if volumeName == "" {
+		respondWithError(w, http.StatusBadRequest, "Volume name is required")
+		return
+	}
+	
+	// Get path from query parameter, default to root
+	path := r.URL.Query().Get("path")
+	if path == "" {
+		path = "/"
+	}
+	
+	// Validate path to prevent directory traversal attacks
+	if !isValidPath(path) {
+		respondWithError(w, http.StatusBadRequest, "Invalid path")
+		return
+	}
+	
+	// Get the volume explorer image from config
+	explorerImage := h.configManager.GetVolumeExplorerImage()
+	
+	files, err := h.manager.ExploreVolumeFiles(r.Context(), volumeName, path, explorerImage)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to explore volume: "+err.Error())
+		return
+	}
+	
+	respondWithJSON(w, http.StatusOK, models.Response{
+		Success: true,
+		Data:    files,
+	})
+}
+
+// ReadVolumeFile handles reading a file from a volume
+func (h *DockerHandler) ReadVolumeFile(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	volumeName := vars["name"]
+	
+	if volumeName == "" {
+		respondWithError(w, http.StatusBadRequest, "Volume name is required")
+		return
+	}
+	
+	// Get file path from query parameter
+	filePath := r.URL.Query().Get("path")
+	if filePath == "" {
+		respondWithError(w, http.StatusBadRequest, "File path is required")
+		return
+	}
+	
+	// Validate path to prevent directory traversal attacks
+	if !isValidPath(filePath) {
+		respondWithError(w, http.StatusBadRequest, "Invalid path")
+		return
+	}
+	
+	// Get the volume explorer image from config
+	explorerImage := h.configManager.GetVolumeExplorerImage()
+	
+	content, err := h.manager.ReadVolumeFile(r.Context(), volumeName, filePath, explorerImage)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to read file: "+err.Error())
+		return
+	}
+	
+	respondWithJSON(w, http.StatusOK, models.Response{
+		Success: true,
+		Data:    content,
+	})
+}
+
+// isValidPath validates that a path doesn't contain directory traversal sequences
+func isValidPath(path string) bool {
+	// Path must start with /
+	if !strings.HasPrefix(path, "/") {
+		return false
+	}
+	
+	// Check for directory traversal attempts
+	// Only check for exact ".." matches, not substrings (to allow filenames like "file..txt")
+	parts := strings.Split(path, "/")
+	for _, part := range parts {
+		if part == ".." {
+			return false
+		}
+	}
+	
+	return true
 }

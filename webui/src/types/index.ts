@@ -92,6 +92,21 @@ export interface Volume {
   containers: string[]; // List of container IDs using this volume
 }
 
+export interface VolumeFileInfo {
+  name: string;
+  path: string;
+  is_directory: boolean;
+  size: number;
+  mode: string;
+  mod_time: string;
+}
+
+export interface VolumeFileContent {
+  path: string;
+  content: string;
+  size: number;
+}
+
 export interface ContainerAction {
   containerId: string;
   action: 'start' | 'stop' | 'restart';
@@ -102,6 +117,7 @@ export interface SystemConfig {
   docker_socket: string;
   disable_registration: boolean;
   log_level: string;
+  volume_explorer_image: string;
 }
 
 export interface PublicConfig {
@@ -112,6 +128,7 @@ export interface UpdateConfigRequest {
   docker_socket?: string;
   disable_registration?: boolean;
   log_level?: string;
+  volume_explorer_image?: string;
 }
 
 // Auth types

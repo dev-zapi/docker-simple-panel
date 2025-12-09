@@ -1,4 +1,4 @@
-import type { User, LoginCredentials, Container, ContainerAction, RegisterRequest, Volume } from '../types';
+import type { User, LoginCredentials, Container, ContainerAction, RegisterRequest, Volume, VolumeFileInfo, VolumeFileContent } from '../types';
 import { mockUsers, mockContainers, mockVolumes, mockToken } from './mockData';
 
 // Mock API for development (no real backend required)
@@ -145,6 +145,149 @@ export const mockVolumeApi = {
   async getVolumes(): Promise<Volume[]> {
     await delay(400);
     return [...volumes];
+  },
+  
+  async exploreVolumeFiles(volumeName: string, path: string = '/'): Promise<VolumeFileInfo[]> {
+    await delay(500);
+    
+    // Mock file structure for different volumes and paths
+    const mockFileStructure: Record<string, Record<string, VolumeFileInfo[]>> = {
+      'mysql-data': {
+        '/': [
+          { name: 'ibdata1', path: '/ibdata1', is_directory: false, size: 12582912, mode: '-rw-r-----', mod_time: '2024-01-15 10:30:00 +0000' },
+          { name: 'mysql', path: '/mysql', is_directory: true, size: 0, mode: 'drwxr-x---', mod_time: '2024-01-15 10:30:00 +0000' },
+          { name: 'performance_schema', path: '/performance_schema', is_directory: true, size: 0, mode: 'drwxr-x---', mod_time: '2024-01-15 10:30:00 +0000' },
+          { name: 'appdb', path: '/appdb', is_directory: true, size: 0, mode: 'drwxr-x---', mod_time: '2024-01-15 10:30:00 +0000' }
+        ],
+        '/mysql': [
+          { name: 'user.frm', path: '/mysql/user.frm', is_directory: false, size: 10816, mode: '-rw-r-----', mod_time: '2024-01-15 10:30:00 +0000' },
+          { name: 'db.frm', path: '/mysql/db.frm', is_directory: false, size: 9582, mode: '-rw-r-----', mod_time: '2024-01-15 10:30:00 +0000' }
+        ],
+        '/appdb': [
+          { name: 'users.ibd', path: '/appdb/users.ibd', is_directory: false, size: 98304, mode: '-rw-r-----', mod_time: '2024-01-15 10:30:00 +0000' },
+          { name: 'posts.ibd', path: '/appdb/posts.ibd', is_directory: false, size: 131072, mode: '-rw-r-----', mod_time: '2024-01-15 10:30:00 +0000' }
+        ]
+      },
+      'nginx-config': {
+        '/': [
+          { name: 'default.conf', path: '/default.conf', is_directory: false, size: 1024, mode: '-rw-r--r--', mod_time: '2024-01-15 09:00:00 +0000' },
+          { name: 'ssl', path: '/ssl', is_directory: true, size: 0, mode: 'drwxr-xr-x', mod_time: '2024-01-15 09:00:00 +0000' },
+          { name: 'sites-enabled', path: '/sites-enabled', is_directory: true, size: 0, mode: 'drwxr-xr-x', mod_time: '2024-01-15 09:00:00 +0000' }
+        ],
+        '/ssl': [
+          { name: 'server.crt', path: '/ssl/server.crt', is_directory: false, size: 2048, mode: '-rw-r--r--', mod_time: '2024-01-15 09:00:00 +0000' },
+          { name: 'server.key', path: '/ssl/server.key', is_directory: false, size: 1704, mode: '-rw-------', mod_time: '2024-01-15 09:00:00 +0000' }
+        ]
+      },
+      'unused-volume': {
+        '/': [
+          { name: 'README.txt', path: '/README.txt', is_directory: false, size: 256, mode: '-rw-r--r--', mod_time: '2024-01-14 15:00:00 +0000' },
+          { name: 'data', path: '/data', is_directory: true, size: 0, mode: 'drwxr-xr-x', mod_time: '2024-01-14 15:00:00 +0000' },
+          { name: 'config.json', path: '/config.json', is_directory: false, size: 512, mode: '-rw-r--r--', mod_time: '2024-01-14 15:00:00 +0000' }
+        ],
+        '/data': [
+          { name: 'sample.txt', path: '/data/sample.txt', is_directory: false, size: 128, mode: '-rw-r--r--', mod_time: '2024-01-14 15:00:00 +0000' },
+          { name: 'backup.tar.gz', path: '/data/backup.tar.gz', is_directory: false, size: 1048576, mode: '-rw-r--r--', mod_time: '2024-01-14 15:00:00 +0000' }
+        ]
+      }
+    };
+    
+    // Return default structure if volume not in mock data
+    const volumeFiles = mockFileStructure[volumeName] || {
+      '/': [
+        { name: 'data', path: '/data', is_directory: true, size: 0, mode: 'drwxr-xr-x', mod_time: '2024-01-15 12:00:00 +0000' },
+        { name: 'config', path: '/config', is_directory: true, size: 0, mode: 'drwxr-xr-x', mod_time: '2024-01-15 12:00:00 +0000' },
+        { name: 'README.md', path: '/README.md', is_directory: false, size: 1024, mode: '-rw-r--r--', mod_time: '2024-01-15 12:00:00 +0000' }
+      ],
+      '/data': [
+        { name: 'file1.txt', path: '/data/file1.txt', is_directory: false, size: 256, mode: '-rw-r--r--', mod_time: '2024-01-15 12:00:00 +0000' }
+      ],
+      '/config': [
+        { name: 'settings.json', path: '/config/settings.json', is_directory: false, size: 512, mode: '-rw-r--r--', mod_time: '2024-01-15 12:00:00 +0000' }
+      ]
+    };
+    
+    const files = volumeFiles[path] || [];
+    
+    if (files.length === 0) {
+      throw new Error('Directory not found or empty');
+    }
+    
+    return files;
+  },
+  
+  async readVolumeFile(volumeName: string, filePath: string): Promise<VolumeFileContent> {
+    await delay(400);
+    
+    // Mock file contents
+    const mockFileContents: Record<string, Record<string, string>> = {
+      'mysql-data': {
+        '/mysql/user.frm': '-- MySQL User table schema\n-- Binary data (not readable as text)',
+        '/appdb/users.ibd': '-- MySQL InnoDB data file\n-- Binary data (not readable as text)'
+      },
+      'nginx-config': {
+        '/default.conf': `server {
+    listen 80;
+    server_name localhost;
+    
+    location / {
+        root /usr/share/nginx/html;
+        index index.html index.htm;
+    }
+    
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+        root /usr/share/nginx/html;
+    }
+}`,
+        '/ssl/server.crt': `-----BEGIN CERTIFICATE-----
+MIIDXTCCAkWgAwIBAgIJAKL0UG+mRzKhMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
+BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX
+aWRnaXRzIFB0eSBMdGQwHhcNMjQwMTE1MDAwMDAwWhcNMjUwMTE1MDAwMDAwWjBF
+...
+-----END CERTIFICATE-----`
+      },
+      'unused-volume': {
+        '/README.txt': `This is an unused Docker volume for testing purposes.
+
+You can use this volume to test the volume explorer feature.
+It contains sample files and directories.`,
+        '/config.json': `{
+  "version": "1.0.0",
+  "name": "test-app",
+  "database": {
+    "host": "localhost",
+    "port": 3306,
+    "name": "testdb"
+  },
+  "features": {
+    "logging": true,
+    "monitoring": true,
+    "caching": false
+  }
+}`,
+        '/data/sample.txt': `Sample text file content.
+This is line 2.
+This is line 3.
+
+End of file.`,
+        '/data/backup.tar.gz': '-- Binary file (gzip compressed tar archive)\n-- Not readable as text'
+      }
+    };
+    
+    // Default content for unknown files
+    const volumeContents = mockFileContents[volumeName] || {};
+    const content = volumeContents[filePath] || `This is a sample file from ${volumeName}.
+Path: ${filePath}
+
+This is mock content for testing the volume file explorer.
+You can see the file structure and read file contents.`;
+    
+    return {
+      path: filePath,
+      content: content,
+      size: content.length
+    };
   },
   
   async deleteVolume(volumeName: string): Promise<void> {
