@@ -287,25 +287,44 @@ func (c *Client) ListVolumes(ctx context.Context) ([]models.VolumeInfo, error) {
 		})
 	}
 
-	// Sort volumes by creation time in descending order (newest first)
-	sort.Slice(result, func(i, j int) bool {
-		timeI, errI := time.Parse(time.RFC3339Nano, result[i].CreatedAt)
-		timeJ, errJ := time.Parse(time.RFC3339Nano, result[j].CreatedAt)
-		
-		// If parsing fails, put the item with invalid time at the end
-		if errI != nil && errJ != nil {
-			return result[i].Name < result[j].Name // fallback to name sorting
+	// Parse timestamps once for efficient sorting
+	type volumeWithTime struct {
+		volume models.VolumeInfo
+		time   time.Time
+		hasErr bool
+	}
+	
+	volumesWithTime := make([]volumeWithTime, len(result))
+	for i, vol := range result {
+		t, err := time.Parse(time.RFC3339Nano, vol.CreatedAt)
+		volumesWithTime[i] = volumeWithTime{
+			volume: vol,
+			time:   t,
+			hasErr: err != nil,
 		}
-		if errI != nil {
+	}
+
+	// Sort volumes by creation time in descending order (newest first)
+	sort.Slice(volumesWithTime, func(i, j int) bool {
+		// If parsing fails, put the item with invalid time at the end
+		if volumesWithTime[i].hasErr && volumesWithTime[j].hasErr {
+			return volumesWithTime[i].volume.Name < volumesWithTime[j].volume.Name // fallback to name sorting
+		}
+		if volumesWithTime[i].hasErr {
 			return false
 		}
-		if errJ != nil {
+		if volumesWithTime[j].hasErr {
 			return true
 		}
 		
 		// Sort in descending order (newest first)
-		return timeI.After(timeJ)
+		return volumesWithTime[i].time.After(volumesWithTime[j].time)
 	})
+
+	// Extract sorted volumes
+	for i, vwt := range volumesWithTime {
+		result[i] = vwt.volume
+	}
 
 	return result, nil
 }
