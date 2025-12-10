@@ -406,7 +406,8 @@ func (c *Client) ExploreVolumeFiles(ctx context.Context, volumeName, path, explo
 	}
 	
 	// Read and parse the output
-	var files []models.VolumeFileInfo
+	// Initialize as empty slice to ensure JSON marshals to [] instead of null
+	files := []models.VolumeFileInfo{}
 	scanner := bufio.NewScanner(strings.NewReader(stdout.String()))
 	
 	// Skip the first line (total)
