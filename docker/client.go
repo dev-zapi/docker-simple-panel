@@ -50,7 +50,8 @@ func (c *Client) ListContainers(ctx context.Context) ([]models.ContainerInfo, er
 		return nil, err
 	}
 
-	var result []models.ContainerInfo
+	// Initialize as empty slice to ensure JSON marshals to [] instead of null
+	result := []models.ContainerInfo{}
 	for _, container := range containers {
 		// Get health status
 		health := "none"
@@ -187,7 +188,8 @@ func (c *Client) GetContainerInfo(ctx context.Context, containerID string) (*mod
 	}
 
 	// Extract port bindings
-	var ports []models.PortBinding
+	// Initialize as empty slice to ensure JSON marshals to [] instead of null
+	ports := []models.PortBinding{}
 	if inspect.NetworkSettings != nil && inspect.NetworkSettings.Ports != nil {
 		for port, bindings := range inspect.NetworkSettings.Ports {
 			if bindings == nil || len(bindings) == 0 {
@@ -208,7 +210,8 @@ func (c *Client) GetContainerInfo(ctx context.Context, containerID string) (*mod
 	}
 
 	// Extract mount information
-	var mounts []models.MountInfo
+	// Initialize as empty slice to ensure JSON marshals to [] instead of null
+	mounts := []models.MountInfo{}
 	if inspect.Mounts != nil {
 		for _, mount := range inspect.Mounts {
 			mounts = append(mounts, models.MountInfo{
@@ -270,7 +273,8 @@ func (c *Client) ListVolumes(ctx context.Context) ([]models.VolumeInfo, error) {
 		}
 	}
 
-	var result []models.VolumeInfo
+	// Initialize as empty slice to ensure JSON marshals to [] instead of null
+	result := []models.VolumeInfo{}
 	for _, volume := range volumes.Volumes {
 		containers := volumeToContainers[volume.Name]
 		if containers == nil {
@@ -406,7 +410,8 @@ func (c *Client) ExploreVolumeFiles(ctx context.Context, volumeName, path, explo
 	}
 	
 	// Read and parse the output
-	var files []models.VolumeFileInfo
+	// Initialize as empty slice to ensure JSON marshals to [] instead of null
+	files := []models.VolumeFileInfo{}
 	scanner := bufio.NewScanner(strings.NewReader(stdout.String()))
 	
 	// Skip the first line (total)
