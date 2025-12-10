@@ -430,44 +430,6 @@ func (h *DockerHandler) ReadVolumeFile(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// DeleteVolumeFile handles deleting a file from a volume
-func (h *DockerHandler) DeleteVolumeFile(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	volumeName := vars["name"]
-	
-	if volumeName == "" {
-		respondWithError(w, http.StatusBadRequest, "Volume name is required")
-		return
-	}
-	
-	// Get file path from query parameter
-	filePath := r.URL.Query().Get("path")
-	if filePath == "" {
-		respondWithError(w, http.StatusBadRequest, "File path is required")
-		return
-	}
-	
-	// Validate path to prevent directory traversal attacks
-	if !isValidPath(filePath) {
-		respondWithError(w, http.StatusBadRequest, "Invalid path")
-		return
-	}
-	
-	// Get the volume explorer image from config
-	explorerImage := h.configManager.GetVolumeExplorerImage()
-	
-	err := h.manager.DeleteVolumeFile(r.Context(), volumeName, filePath, explorerImage)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Failed to delete file: "+err.Error())
-		return
-	}
-	
-	respondWithJSON(w, http.StatusOK, models.Response{
-		Success: true,
-		Message: "File deleted successfully",
-	})
-}
-
 // isValidPath validates that a path doesn't contain directory traversal sequences
 func isValidPath(path string) bool {
 	// Path must start with /

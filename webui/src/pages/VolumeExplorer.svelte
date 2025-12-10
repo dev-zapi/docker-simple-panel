@@ -15,8 +15,8 @@
   let loadingFile = false;
   let error = '';
   let fileError = '';
-  let deletingFile: string | null = null;
-  let fileToDelete: string | null = null;
+  let deletingVolume = false;
+  let showDeleteConfirm = false;
   let deleteTimeoutId: number | null = null;
   
   // Scroll-based header state
@@ -120,70 +120,53 @@
     fileError = '';
   }
   
-  async function handleDeleteFileClick(file: VolumeFileInfo) {
-    // First click: set the file to delete (confirmation state)
-    if (fileToDelete !== file.path) {
-      // Clear any existing timeout
-      if (deleteTimeoutId !== null) {
-        clearTimeout(deleteTimeoutId);
-      }
-      
-      fileToDelete = file.path;
+  async function handleDeleteVolumeClick() {
+    // First click: show confirmation
+    if (!showDeleteConfirm) {
+      showDeleteConfirm = true;
       // Reset confirmation after 3 seconds
       deleteTimeoutId = window.setTimeout(() => {
-        if (fileToDelete === file.path) {
-          fileToDelete = null;
-          deleteTimeoutId = null;
-        }
+        showDeleteConfirm = false;
+        deleteTimeoutId = null;
       }, 3000);
       return;
     }
     
-    // Second click: show confirmation dialog before actually deleting
-    // Clear the timeout since we're showing the dialog
+    // Second click: show native confirmation dialog
     if (deleteTimeoutId !== null) {
       clearTimeout(deleteTimeoutId);
       deleteTimeoutId = null;
     }
     
-    // Show native confirmation dialog
-    const confirmed = confirm(`确定要删除 "${file.name}" 吗？\n\n此操作无法撤销。`);
+    const confirmed = confirm(`确定要删除卷 "${volumeName}" 吗？\n\n此操作无法撤销。`);
     
     if (!confirmed) {
-      // User cancelled, reset state
-      fileToDelete = null;
+      showDeleteConfirm = false;
       return;
     }
     
     // User confirmed, proceed with deletion
     try {
-      deletingFile = file.path;
+      deletingVolume = true;
       error = '';
-      await volumeApi.deleteVolumeFile(volumeName, file.path);
-      fileToDelete = null;
-      
-      // If the deleted file was being viewed, close the viewer
-      if (selectedFile && selectedFile.path === file.path) {
-        closeFileViewer();
-      }
-      
-      // Refresh the file list
-      await loadFiles();
+      await volumeApi.deleteVolume(volumeName);
+      // Navigate back to volumes page
+      push('/volumes');
     } catch (err) {
-      error = `删除失败: ${err instanceof Error ? err.message : '未知错误'}`;
-      console.error('Failed to delete file:', err);
+      error = `删除卷失败: ${err instanceof Error ? err.message : '未知错误'}`;
+      console.error('Failed to delete volume:', err);
+      showDeleteConfirm = false;
     } finally {
-      deletingFile = null;
+      deletingVolume = false;
     }
   }
   
-  function cancelDeleteFile() {
-    // Clear the timeout when cancelling
+  function cancelDeleteVolume() {
     if (deleteTimeoutId !== null) {
       clearTimeout(deleteTimeoutId);
       deleteTimeoutId = null;
     }
-    fileToDelete = null;
+    showDeleteConfirm = false;
   }
 </script>
 
@@ -206,9 +189,35 @@
     <div class="content-header" bind:this={contentHeaderRef}>
       <div class="header-top">
         <h2>📦 {volumeName}</h2>
-        <button class="back-button" on:click={() => push('/volumes')}>
-          ← 返回卷列表
-        </button>
+        <div class="header-actions">
+          {#if showDeleteConfirm}
+            <button 
+              class="delete-volume-button confirm" 
+              on:click={handleDeleteVolumeClick}
+              disabled={deletingVolume}
+            >
+              {deletingVolume ? '删除中...' : '确认删除卷'}
+            </button>
+            <button 
+              class="cancel-button" 
+              on:click={cancelDeleteVolume}
+              disabled={deletingVolume}
+            >
+              取消
+            </button>
+          {:else}
+            <button 
+              class="delete-volume-button" 
+              on:click={handleDeleteVolumeClick}
+              disabled={deletingVolume}
+            >
+              🗑️ 删除卷
+            </button>
+          {/if}
+          <button class="back-button" on:click={() => push('/volumes')}>
+            ← 返回卷列表
+          </button>
+        </div>
       </div>
       <div class="breadcrumb">
         <button class="breadcrumb-btn" on:click={handleGoToRoot} title="根目录">🏠</button>
@@ -249,48 +258,19 @@
             {/if}
             
             {#each files as file (file.path)}
-              <div class="file-item-wrapper">
-                <button class="file-item" class:directory={file.is_directory} on:click={() => handleNavigate(file)}>
-                  <span class="file-icon">{file.is_directory ? '📁' : '📄'}</span>
-                  <div class="file-info">
-                    <span class="file-name">{file.name}</span>
-                    <div class="file-meta">
-                      <span class="file-mode">{file.mode}</span>
-                      {#if !file.is_directory}
-                        <span class="file-size">{formatFileSize(file.size)}</span>
-                      {/if}
-                      <span class="file-time">{file.mod_time}</span>
-                    </div>
+              <button class="file-item" class:directory={file.is_directory} on:click={() => handleNavigate(file)}>
+                <span class="file-icon">{file.is_directory ? '📁' : '📄'}</span>
+                <div class="file-info">
+                  <span class="file-name">{file.name}</span>
+                  <div class="file-meta">
+                    <span class="file-mode">{file.mode}</span>
+                    {#if !file.is_directory}
+                      <span class="file-size">{formatFileSize(file.size)}</span>
+                    {/if}
+                    <span class="file-time">{file.mod_time}</span>
                   </div>
-                </button>
-                <div class="file-actions">
-                  {#if fileToDelete === file.path}
-                    <button 
-                      class="delete-file-button confirm" 
-                      on:click|stopPropagation={() => handleDeleteFileClick(file)}
-                      disabled={deletingFile === file.path}
-                    >
-                      {deletingFile === file.path ? '删除中' : '确认'}
-                    </button>
-                    <button 
-                      class="cancel-delete-button" 
-                      on:click|stopPropagation={cancelDeleteFile}
-                      disabled={deletingFile === file.path}
-                    >
-                      取消
-                    </button>
-                  {:else}
-                    <button 
-                      class="delete-file-button" 
-                      on:click|stopPropagation={() => handleDeleteFileClick(file)}
-                      disabled={deletingFile !== null}
-                      title="删除文件"
-                    >
-                      🗑️
-                    </button>
-                  {/if}
                 </div>
-              </div>
+              </button>
             {/each}
           </div>
         {/if}
@@ -387,12 +367,79 @@
     margin-bottom: 1rem;
   }
   
+  .header-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+  
   .content-header h2 {
     font-size: 1.75rem;
     font-weight: 700;
     color: var(--color-text, #0a0a0a);
     margin: 0;
     font-family: var(--font-heading, "Playfair Display", serif);
+  }
+  
+  .delete-volume-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--color-surface, #e7e5e4);
+    border: 1px solid rgba(153, 27, 27, 0.3);
+    color: var(--color-error, #991b1b);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius, 0.25rem);
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    font-family: var(--font-body, "Merriweather", serif);
+  }
+  
+  .delete-volume-button:hover:not(:disabled) {
+    background: rgba(153, 27, 27, 0.1);
+    border-color: var(--color-error, #991b1b);
+  }
+  
+  .delete-volume-button.confirm {
+    background: var(--color-error, #991b1b);
+    color: var(--color-background, #f5f5f4);
+    border-color: var(--color-error, #991b1b);
+  }
+  
+  .delete-volume-button.confirm:hover:not(:disabled) {
+    background: #7f1d1d;
+    border-color: #7f1d1d;
+  }
+  
+  .delete-volume-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .cancel-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--color-surface, #e7e5e4);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius, 0.25rem);
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    color: var(--color-text, #0a0a0a);
+    font-family: var(--font-body, "Merriweather", serif);
+  }
+  
+  .cancel-button:hover:not(:disabled) {
+    background: var(--color-background, #f5f5f4);
+    border-color: var(--color-primary, #171717);
+  }
+  
+  .cancel-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
   
   .back-button {
@@ -517,102 +564,28 @@
     gap: 0.5rem;
   }
   
-  .file-item-wrapper {
+  .file-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    padding: 0.75rem;
     background: var(--color-background, #f5f5f4);
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: var(--radius, 0.25rem);
-    padding: 0.75rem;
+    cursor: pointer;
     transition: all 0.2s;
+    text-align: left;
+    width: 100%;
   }
   
-  .file-item-wrapper:hover {
+  .file-item:hover {
     background: var(--color-surface, #e7e5e4);
     border-color: var(--color-primary, #171717);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
   
-  .file-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    text-align: left;
-    flex: 1;
-    padding: 0;
-  }
-  
   .file-item.directory {
     font-weight: 500;
-  }
-  
-  .file-actions {
-    display: flex;
-    gap: 0.5rem;
-    flex-shrink: 0;
-  }
-  
-  .delete-file-button {
-    background: var(--color-surface, #e7e5e4);
-    border: 1px solid rgba(153, 27, 27, 0.3);
-    color: var(--color-error, #991b1b);
-    padding: 0.25rem 0.5rem;
-    border-radius: var(--radius, 0.25rem);
-    cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.2s;
-    min-width: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .delete-file-button:hover:not(:disabled) {
-    background: rgba(153, 27, 27, 0.1);
-    border-color: var(--color-error, #991b1b);
-  }
-  
-  .delete-file-button.confirm {
-    background: var(--color-error, #991b1b);
-    color: var(--color-background, #f5f5f4);
-    border-color: var(--color-error, #991b1b);
-    font-size: 0.85rem;
-    padding: 0.25rem 0.75rem;
-  }
-  
-  .delete-file-button.confirm:hover:not(:disabled) {
-    background: #7f1d1d;
-    border-color: #7f1d1d;
-  }
-  
-  .delete-file-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-  
-  .cancel-delete-button {
-    background: var(--color-surface, #e7e5e4);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    padding: 0.25rem 0.75rem;
-    border-radius: var(--radius, 0.25rem);
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.2s;
-    color: var(--color-text, #0a0a0a);
-  }
-  
-  .cancel-delete-button:hover:not(:disabled) {
-    background: var(--color-background, #f5f5f4);
-    border-color: var(--color-primary, #171717);
-  }
-  
-  .cancel-delete-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
   }
   
   .file-icon {

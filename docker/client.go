@@ -23,8 +23,6 @@ import (
 const (
 	// shortIDLength is the length of the short container ID (12 hex characters)
 	shortIDLength = 12
-	// containerCleanupTimeout is the timeout for removing temporary containers
-	containerCleanupTimeout = 30 * time.Second
 )
 
 // Client wraps the Docker client
@@ -501,7 +499,7 @@ func (c *Client) ReadVolumeFile(ctx context.Context, volumeName, filePath, explo
 	
 	// Ensure container is removed on exit with timeout
 	defer func() {
-		removeCtx, cancel := context.WithTimeout(context.Background(), containerCleanupTimeout)
+		removeCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 		c.cli.ContainerRemove(removeCtx, resp.ID, types.ContainerRemoveOptions{Force: true})
 	}()
@@ -549,73 +547,6 @@ func (c *Client) ReadVolumeFile(ctx context.Context, volumeName, filePath, explo
 		Content: contentStr,
 		Size:    int64(len(contentStr)),
 	}, nil
-}
-
-// DeleteVolumeFile deletes a file or directory from a volume using a temporary container
-func (c *Client) DeleteVolumeFile(ctx context.Context, volumeName, filePath, explorerImage string) error {
-	// Create a temporary container with the volume mounted
-	containerName := fmt.Sprintf("volume-deleter-%s-%d", volumeName, time.Now().Unix())
-	
-	// Use rm -rf to handle both files and directories
-	// The user must confirm the deletion in the UI before this is called
-	config := &container.Config{
-		Image: explorerImage,
-		Cmd:   []string{"rm", "-rf", "/volume" + filePath},
-	}
-	
-	hostConfig := &container.HostConfig{
-		Binds: []string{volumeName + ":/volume"}, // Mount as read-write to allow deletion
-	}
-	
-	// Create the container
-	resp, err := c.cli.ContainerCreate(ctx, config, hostConfig, nil, nil, containerName)
-	if err != nil {
-		return fmt.Errorf("failed to create temporary container: %w", err)
-	}
-	
-	// Ensure container is removed on exit
-	defer func() {
-		// Use a fresh context with timeout for cleanup, not the potentially cancelled request context
-		cleanupCtx, cancel := context.WithTimeout(context.Background(), containerCleanupTimeout)
-		defer cancel()
-		c.cli.ContainerRemove(cleanupCtx, resp.ID, types.ContainerRemoveOptions{Force: true})
-	}()
-	
-	// Start the container
-	if err := c.cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		return fmt.Errorf("failed to start temporary container: %w", err)
-	}
-	
-	// Wait for container to finish
-	statusCh, errCh := c.cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
-	select {
-	case err := <-errCh:
-		if err != nil {
-			return fmt.Errorf("error waiting for container: %w", err)
-		}
-	case status := <-statusCh:
-		if status.StatusCode != 0 {
-			// Get container logs to see what went wrong
-			logReader, err := c.cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
-				ShowStdout: true,
-				ShowStderr: true,
-			})
-			if err != nil {
-				return fmt.Errorf("failed to delete file (exit code %d)", status.StatusCode)
-			}
-			defer logReader.Close()
-			
-			var stderr strings.Builder
-			stdcopy.StdCopy(io.Discard, &stderr, logReader)
-			
-			if stderr.Len() > 0 {
-				return fmt.Errorf("failed to delete file: %s", stderr.String())
-			}
-			return fmt.Errorf("failed to delete file (exit code %d)", status.StatusCode)
-		}
-	}
-	
-	return nil
 }
 
 func (c *Client) RemoveVolume(ctx context.Context, volumeName string) error {
