@@ -9,9 +9,11 @@
   let error = '';
   let refreshing = false;
   let displayMode: 'compact' | 'standard' = 'standard';
-  let groupMode: 'none' | 'compose' = 'none';
+  let groupMode: 'none' | 'compose' | 'label' = 'none';
   let actionError = '';
   let collapsedGroups: Set<string> = new Set();
+  let selectedLabelKey: string = '';
+  let availableLabelKeys: string[] = [];
   
   // Scroll-based header state
   let isScrolled = false;
@@ -42,8 +44,12 @@
       displayMode = savedMode;
     }
     const savedGroupMode = localStorage.getItem('groupMode');
-    if (savedGroupMode === 'none' || savedGroupMode === 'compose') {
+    if (savedGroupMode === 'none' || savedGroupMode === 'compose' || savedGroupMode === 'label') {
       groupMode = savedGroupMode;
+    }
+    const savedSelectedLabelKey = localStorage.getItem('selectedLabelKey');
+    if (savedSelectedLabelKey) {
+      selectedLabelKey = savedSelectedLabelKey;
     }
     const savedCollapsedGroups = localStorage.getItem('collapsedGroups');
     if (savedCollapsedGroups) {
@@ -87,7 +93,13 @@
   }
   
   function toggleGroupMode() {
-    groupMode = groupMode === 'none' ? 'compose' : 'none';
+    if (groupMode === 'none') {
+      groupMode = 'compose';
+    } else if (groupMode === 'compose') {
+      groupMode = 'label';
+    } else {
+      groupMode = 'none';
+    }
     localStorage.setItem('groupMode', groupMode);
   }
   
@@ -118,6 +130,66 @@
     }
     
     return { grouped, ungrouped };
+  }
+  
+  // Group containers by selected label
+  function groupContainersByLabel(containers: Container[], labelKey: string) {
+    const grouped = new Map<string, Container[]>();
+    const ungrouped: Container[] = [];
+    
+    for (const container of containers) {
+      const labelValue = container.labels?.[labelKey];
+      if (labelValue) {
+        const existing = grouped.get(labelValue) || [];
+        existing.push(container);
+        grouped.set(labelValue, existing);
+      } else {
+        ungrouped.push(container);
+      }
+    }
+    
+    return { grouped, ungrouped };
+  }
+  
+  // Extract all unique label keys from containers
+  function extractLabelKeys(containers: Container[]): string[] {
+    const keysSet = new Set<string>();
+    for (const container of containers) {
+      if (container.labels) {
+        for (const key of Object.keys(container.labels)) {
+          keysSet.add(key);
+        }
+      }
+    }
+    return Array.from(keysSet).sort();
+  }
+  
+  // Update available label keys when containers change
+  $: {
+    availableLabelKeys = extractLabelKeys(containers);
+    // If selected label key is not available anymore, reset it
+    if (selectedLabelKey && !availableLabelKeys.includes(selectedLabelKey)) {
+      selectedLabelKey = availableLabelKeys[0] || '';
+      localStorage.setItem('selectedLabelKey', selectedLabelKey);
+    }
+    // If no label key is selected and label grouping is active, select the first one
+    if (groupMode === 'label' && !selectedLabelKey && availableLabelKeys.length > 0) {
+      selectedLabelKey = availableLabelKeys[0];
+      localStorage.setItem('selectedLabelKey', selectedLabelKey);
+    }
+  }
+  
+  function handleLabelKeyChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    selectedLabelKey = target.value;
+    localStorage.setItem('selectedLabelKey', selectedLabelKey);
+  }
+  
+  function scrollToGroup(groupName: string) {
+    const element = document.getElementById(`group-${groupName}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
   
   async function loadContainers() {
@@ -187,10 +259,13 @@
       <button 
         class="mode-toggle" 
         on:click={toggleGroupMode} 
-        title={groupMode === 'none' ? '按 Compose 分组' : '取消分组'}
-        aria-label={groupMode === 'none' ? '按 Compose 分组' : '取消分组'}
+        title={groupMode === 'none' ? '按 Compose 分组' : groupMode === 'compose' ? '按标签分组' : '取消分组'}
+        aria-label={groupMode === 'none' ? '按 Compose 分组' : groupMode === 'compose' ? '按标签分组' : '取消分组'}
       >
         {#if groupMode === 'compose'}
+          <span class="mode-icon">🏷️</span>
+          <span class="mode-text">标签</span>
+        {:else if groupMode === 'label'}
           <span class="mode-icon">📦</span>
           <span class="mode-text">列表</span>
         {:else}
@@ -204,6 +279,17 @@
       </button>
     </div>
   </div>
+  
+  {#if groupMode === 'label'}
+    <div class="label-selector">
+      <label for="label-key-select">选择标签:</label>
+      <select id="label-key-select" value={selectedLabelKey} on:change={handleLabelKeyChange}>
+        {#each availableLabelKeys as labelKey}
+          <option value={labelKey}>{labelKey}</option>
+        {/each}
+      </select>
+    </div>
+  {/if}
   
   <main class="main-content">
     <div class="content-header" bind:this={contentHeaderRef}>
@@ -226,10 +312,13 @@
         <button 
           class="mode-toggle" 
           on:click={toggleGroupMode} 
-          title={groupMode === 'none' ? '按 Compose 分组' : '取消分组'}
-          aria-label={groupMode === 'none' ? '按 Compose 分组' : '取消分组'}
+          title={groupMode === 'none' ? '按 Compose 分组' : groupMode === 'compose' ? '按标签分组' : '取消分组'}
+          aria-label={groupMode === 'none' ? '按 Compose 分组' : groupMode === 'compose' ? '按标签分组' : '取消分组'}
         >
           {#if groupMode === 'compose'}
+            <span class="mode-icon">🏷️</span>
+            <span class="mode-text">标签</span>
+          {:else if groupMode === 'label'}
             <span class="mode-icon">📦</span>
             <span class="mode-text">列表</span>
           {:else}
@@ -608,6 +697,364 @@
             {/if}
           </div>
         {/if}
+      {:else if groupMode === 'label' && selectedLabelKey}
+        <!-- Grouped by selected label -->
+        {@const { grouped, ungrouped } = groupContainersByLabel(containers, selectedLabelKey)}
+        
+        <!-- Quick navigation sidebar -->
+        {#if grouped.size > 0 || ungrouped.length > 0}
+          <div class="quick-nav-sidebar">
+            <div class="quick-nav-title">快速跳转</div>
+            {#each Array.from(grouped.keys()) as groupName}
+              <button class="quick-nav-item" on:click={() => scrollToGroup(`label-${groupName}`)}>
+                {groupName}
+              </button>
+            {/each}
+            {#if ungrouped.length > 0}
+              <button class="quick-nav-item" on:click={() => scrollToGroup('_ungrouped_label_')}>
+                未分组
+              </button>
+            {/if}
+          </div>
+        {/if}
+        
+        {#if grouped.size > 0}
+          {#each Array.from(grouped.entries()) as [labelValue, labelContainers] (labelValue)}
+            <div class="compose-group" id="group-label-{labelValue}">
+              <button 
+                class="compose-group-header" 
+                class:compact={displayMode === 'compact'}
+                on:click={() => toggleGroupCollapse(`label-${labelValue}`)}
+                aria-expanded={!collapsedGroups.has(`label-${labelValue}`)}
+                aria-label={`${labelValue} label group, ${labelContainers.length} containers`}
+              >
+                <span class="compose-icon">🏷️</span>
+                <h3 class="compose-project-name">{labelValue}</h3>
+                <span class="compose-count">{labelContainers.length} 个容器</span>
+                <span class="collapse-icon" aria-hidden="true">{collapsedGroups.has(`label-${labelValue}`) ? '▶' : '▼'}</span>
+              </button>
+              {#if !collapsedGroups.has(`label-${labelValue}`)}
+              <div class="container-list" class:compact={displayMode === 'compact'}>
+                {#each labelContainers as container (container.id)}
+                  <div class="container-item" class:is-self={container.is_self}>
+                    {#if displayMode === 'compact'}
+                      <!-- Compact mode: single line -->
+                      <div class="container-compact">
+                        <span class="compact-status">
+                          <span class="status-emoji">{stateEmojis[container.state] || '⚪'}</span>
+                          {#if container.health && container.health !== 'none'}
+                            <span class="health-emoji">{healthEmojis[container.health]}</span>
+                          {/if}
+                        </span>
+                        <span class="compact-name" title={container.name}>{container.name}</span>
+                        {#if container.is_self}
+                          <span class="self-badge">本应用</span>
+                        {/if}
+                        {#if container.compose_service}
+                          <span class="compose-service-badge">{container.compose_service}</span>
+                        {/if}
+                        <span class="compact-image" title={container.image}>{container.image}</span>
+                        <span class="compact-state">{container.status}</span>
+                        <div class="compact-actions">
+                          {#if container.state === 'running'}
+                            <button 
+                              class="action-btn-compact stop" 
+                              on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
+                              disabled={container.is_self}
+                              title={container.is_self ? '无法停止本应用容器' : '停止'}
+                            >
+                              ⏸️
+                            </button>
+                            <button 
+                              class="action-btn-compact restart" 
+                              on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                              disabled={container.is_self}
+                              title={container.is_self ? '无法重启本应用容器' : '重启'}
+                            >
+                              🔄
+                            </button>
+                          {:else if ['exited', 'created', 'dead'].includes(container.state)}
+                            <button 
+                              class="action-btn-compact start" 
+                              on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                              title="启动"
+                            >
+                              ▶️
+                            </button>
+                          {:else}
+                            <button 
+                              class="action-btn-compact restart" 
+                              on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                              disabled={container.is_self}
+                              title={container.is_self ? '无法重启本应用容器' : '重启'}
+                            >
+                              🔄
+                            </button>
+                          {/if}
+                          <a 
+                            class="action-btn-compact logs" 
+                            href={`#/logs/${container.id}`}
+                            title="查看日志"
+                          >
+                            📋
+                          </a>
+                          <a 
+                            class="action-btn-compact details" 
+                            href={`#/container/${container.id}`}
+                            title="查看详情"
+                          >
+                            ℹ️
+                          </a>
+                        </div>
+                      </div>
+                    {:else}
+                      <!-- Standard mode: multi-line card -->
+                      <div class="container-info">
+                        <div class="container-name">
+                          <span class="name-text">{container.name}</span>
+                          {#if container.is_self}
+                            <span class="self-badge">本应用</span>
+                          {/if}
+                          {#if container.compose_service}
+                            <span class="compose-service-badge">{container.compose_service}</span>
+                          {/if}
+                        </div>
+                        <div class="container-image">{container.image}</div>
+                        <div class="container-meta">
+                          <span class="status">
+                            <span class="status-emoji">{stateEmojis[container.state] || '⚪'}</span>
+                            {container.status}
+                          </span>
+                          {#if container.health && container.health !== 'none'}
+                            <span class="health">
+                              <span class="health-emoji">{healthEmojis[container.health]}</span>
+                              {container.health}
+                            </span>
+                          {/if}
+                        </div>
+                      </div>
+                      
+                      <div class="container-actions">
+                        {#if container.state === 'running'}
+                          <button 
+                            class="action-btn stop" 
+                            on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
+                            disabled={container.is_self}
+                            title={container.is_self ? '无法停止本应用容器' : ''}
+                          >
+                            ⏸️ 停止
+                          </button>
+                          <button 
+                            class="action-btn restart" 
+                            on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                            disabled={container.is_self}
+                            title={container.is_self ? '无法重启本应用容器' : ''}
+                          >
+                            🔄 重启
+                          </button>
+                        {:else if ['exited', 'created', 'dead'].includes(container.state)}
+                          <button 
+                            class="action-btn start" 
+                            on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                          >
+                            ▶️ 启动
+                          </button>
+                        {:else}
+                          <button 
+                            class="action-btn restart" 
+                            on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                            disabled={container.is_self}
+                            title={container.is_self ? '无法重启本应用容器' : ''}
+                          >
+                            🔄 重启
+                          </button>
+                        {/if}
+                        <a 
+                          class="action-btn logs" 
+                          href={`#/logs/${container.id}`}
+                        >
+                          📋 日志
+                        </a>
+                        <a 
+                          class="action-btn details" 
+                          href={`#/container/${container.id}`}
+                        >
+                          ℹ️ 详情
+                        </a>
+                      </div>
+                    {/if}
+                  </div>
+                {/each}
+              </div>
+              {/if}
+            </div>
+          {/each}
+        {/if}
+        
+        {#if ungrouped.length > 0}
+          <div class="compose-group" id="group-_ungrouped_">
+            <button 
+              class="compose-group-header" 
+              class:compact={displayMode === 'compact'}
+              on:click={() => toggleGroupCollapse('_ungrouped_label_')}
+              aria-expanded={!collapsedGroups.has('_ungrouped_label_')}
+              aria-label={`未分组容器, ${ungrouped.length} containers`}
+            >
+              <span class="compose-icon">📦</span>
+              <h3 class="compose-project-name">未分组容器</h3>
+              <span class="compose-count">{ungrouped.length} 个容器</span>
+              <span class="collapse-icon" aria-hidden="true">{collapsedGroups.has('_ungrouped_label_') ? '▶' : '▼'}</span>
+            </button>
+            {#if !collapsedGroups.has('_ungrouped_label_')}
+            <div class="container-list" class:compact={displayMode === 'compact'}>
+              {#each ungrouped as container (container.id)}
+                <div class="container-item" class:is-self={container.is_self}>
+                  {#if displayMode === 'compact'}
+                    <!-- Compact mode: single line -->
+                    <div class="container-compact">
+                      <span class="compact-status">
+                        <span class="status-emoji">{stateEmojis[container.state] || '⚪'}</span>
+                        {#if container.health && container.health !== 'none'}
+                          <span class="health-emoji">{healthEmojis[container.health]}</span>
+                        {/if}
+                      </span>
+                      <span class="compact-name" title={container.name}>{container.name}</span>
+                      {#if container.is_self}
+                        <span class="self-badge">本应用</span>
+                      {/if}
+                      <span class="compact-image" title={container.image}>{container.image}</span>
+                      <span class="compact-state">{container.status}</span>
+                      <div class="compact-actions">
+                        {#if container.state === 'running'}
+                          <button 
+                            class="action-btn-compact stop" 
+                            on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
+                            disabled={container.is_self}
+                            title={container.is_self ? '无法停止本应用容器' : '停止'}
+                          >
+                            ⏸️
+                          </button>
+                          <button 
+                            class="action-btn-compact restart" 
+                            on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                            disabled={container.is_self}
+                            title={container.is_self ? '无法重启本应用容器' : '重启'}
+                          >
+                            🔄
+                          </button>
+                        {:else if ['exited', 'created', 'dead'].includes(container.state)}
+                          <button 
+                            class="action-btn-compact start" 
+                            on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                            title="启动"
+                          >
+                            ▶️
+                          </button>
+                        {:else}
+                          <button 
+                            class="action-btn-compact restart" 
+                            on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                            disabled={container.is_self}
+                            title={container.is_self ? '无法重启本应用容器' : '重启'}
+                          >
+                            🔄
+                          </button>
+                        {/if}
+                        <a 
+                          class="action-btn-compact logs" 
+                          href={`#/logs/${container.id}`}
+                          title="查看日志"
+                        >
+                          📋
+                        </a>
+                        <a 
+                          class="action-btn-compact details" 
+                          href={`#/container/${container.id}`}
+                          title="查看详情"
+                        >
+                          ℹ️
+                        </a>
+                      </div>
+                    </div>
+                  {:else}
+                    <!-- Standard mode: multi-line card -->
+                    <div class="container-info">
+                      <div class="container-name">
+                        <span class="name-text">{container.name}</span>
+                        {#if container.is_self}
+                          <span class="self-badge">本应用</span>
+                        {/if}
+                      </div>
+                      <div class="container-image">{container.image}</div>
+                      <div class="container-meta">
+                        <span class="status">
+                          <span class="status-emoji">{stateEmojis[container.state] || '⚪'}</span>
+                          {container.status}
+                        </span>
+                        {#if container.health && container.health !== 'none'}
+                          <span class="health">
+                            <span class="health-emoji">{healthEmojis[container.health]}</span>
+                            {container.health}
+                          </span>
+                        {/if}
+                      </div>
+                    </div>
+                    
+                    <div class="container-actions">
+                      {#if container.state === 'running'}
+                        <button 
+                          class="action-btn stop" 
+                          on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
+                          disabled={container.is_self}
+                          title={container.is_self ? '无法停止本应用容器' : ''}
+                        >
+                          ⏸️ 停止
+                        </button>
+                        <button 
+                          class="action-btn restart" 
+                          on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                          disabled={container.is_self}
+                          title={container.is_self ? '无法重启本应用容器' : ''}
+                        >
+                          🔄 重启
+                        </button>
+                      {:else if ['exited', 'created', 'dead'].includes(container.state)}
+                        <button 
+                          class="action-btn start" 
+                          on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                        >
+                          ▶️ 启动
+                        </button>
+                      {:else}
+                        <button 
+                          class="action-btn restart" 
+                          on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
+                          disabled={container.is_self}
+                          title={container.is_self ? '无法重启本应用容器' : ''}
+                        >
+                          🔄 重启
+                        </button>
+                      {/if}
+                      <a 
+                        class="action-btn logs" 
+                        href={`#/logs/${container.id}`}
+                      >
+                        📋 日志
+                      </a>
+                      <a 
+                        class="action-btn details" 
+                        href={`#/container/${container.id}`}
+                      >
+                        ℹ️ 详情
+                      </a>
+                    </div>
+                  {/if}
+                </div>
+              {/each}
+            </div>
+            {/if}
+          </div>
+        {/if}
       {:else}
         <!-- Ungrouped list -->
         <div class="container-list" class:compact={displayMode === 'compact'}>
@@ -702,6 +1149,16 @@
                     </span>
                   {/if}
                 </div>
+                {#if container.labels && Object.keys(container.labels).length > 0}
+                  <div class="container-labels">
+                    {#each Object.entries(container.labels) as [key, value]}
+                      <span class="label-badge" title="{key}={value}">
+                        <span class="label-key">{key}:</span>
+                        <span class="label-value">{value}</span>
+                      </span>
+                    {/each}
+                  </div>
+                {/if}
               </div>
               
               <div class="container-actions">
@@ -1321,5 +1778,130 @@
   
   .compose-group .container-item:only-child {
     border-radius: var(--radius, 0.25rem);
+  }
+  
+  /* Label selector styles */
+  .label-selector {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem 1rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .label-selector label {
+    font-weight: 600;
+    color: var(--color-text, #0a0a0a);
+    font-family: var(--font-body, "Merriweather", serif);
+  }
+  
+  .label-selector select {
+    padding: 0.5rem 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius, 0.25rem);
+    background: var(--color-surface, #e7e5e4);
+    color: var(--color-text, #0a0a0a);
+    font-family: var(--font-body, "Merriweather", serif);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .label-selector select:hover {
+    background: var(--color-background, #f5f5f4);
+    border-color: var(--color-primary, #171717);
+  }
+  
+  /* Quick navigation sidebar */
+  .quick-nav-sidebar {
+    position: fixed;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--color-surface, #e7e5e4);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius, 0.25rem);
+    padding: 0.75rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    max-width: 200px;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 50;
+  }
+  
+  .quick-nav-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text, #0a0a0a);
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    font-family: var(--font-heading, "Playfair Display", serif);
+  }
+  
+  .quick-nav-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.25rem;
+    border: none;
+    background: transparent;
+    color: var(--color-text, #0a0a0a);
+    font-size: 0.85rem;
+    font-family: var(--font-body, "Merriweather", serif);
+    border-radius: var(--radius, 0.25rem);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .quick-nav-item:hover {
+    background: var(--color-primary, #171717);
+    color: var(--color-background, #f5f5f4);
+  }
+  
+  /* Container labels display */
+  .container-labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  
+  .label-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius, 0.25rem);
+    padding: 0.15rem 0.5rem;
+    font-size: 0.75rem;
+    font-family: monospace;
+    color: var(--color-text, #0a0a0a);
+  }
+  
+  .label-key {
+    font-weight: 600;
+    color: var(--color-secondary, #525252);
+  }
+  
+  .label-value {
+    color: var(--color-text, #0a0a0a);
+  }
+  
+  /* Mobile responsive adjustments for quick nav */
+  @media (max-width: 768px) {
+    .quick-nav-sidebar {
+      display: none;
+    }
+    
+    .label-selector {
+      padding: 0 1rem 1rem 1rem;
+    }
   }
 </style>

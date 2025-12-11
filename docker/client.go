@@ -83,6 +83,14 @@ func (c *Client) ListContainers(ctx context.Context) ([]models.ContainerInfo, er
 			}
 		}
 
+		// Copy all labels
+		labels := make(map[string]string)
+		if container.Labels != nil {
+			for k, v := range container.Labels {
+				labels[k] = v
+			}
+		}
+
 		result = append(result, models.ContainerInfo{
 			ID:             container.ID[:shortIDLength],
 			Name:           name,
@@ -93,6 +101,7 @@ func (c *Client) ListContainers(ctx context.Context) ([]models.ContainerInfo, er
 			Created:        container.Created,
 			ComposeProject: composeProject,
 			ComposeService: composeService,
+			Labels:         labels,
 		})
 	}
 
@@ -165,6 +174,14 @@ func (c *Client) GetContainerInfo(ctx context.Context, containerID string) (*mod
 		}
 	}
 
+	// Copy all labels
+	labels := make(map[string]string)
+	if inspect.Config.Labels != nil {
+		for k, v := range inspect.Config.Labels {
+			labels[k] = v
+		}
+	}
+
 	// Extract restart policy
 	var restartPolicy *models.RestartPolicy
 	if inspect.HostConfig != nil && inspect.HostConfig.RestartPolicy.Name != "" {
@@ -234,6 +251,7 @@ func (c *Client) GetContainerInfo(ctx context.Context, containerID string) (*mod
 		Created:        createdTime.Unix(),
 		ComposeProject: composeProject,
 		ComposeService: composeService,
+		Labels:         labels,
 		RestartPolicy:  restartPolicy,
 		Env:            inspect.Config.Env,
 		Networks:       networks,
