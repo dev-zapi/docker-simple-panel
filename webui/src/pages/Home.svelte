@@ -706,12 +706,12 @@
           <div class="quick-nav-sidebar">
             <div class="quick-nav-title">快速跳转</div>
             {#each Array.from(grouped.keys()) as groupName}
-              <button class="quick-nav-item" on:click={() => scrollToGroup(groupName)}>
+              <button class="quick-nav-item" on:click={() => scrollToGroup(`label-${groupName}`)}>
                 {groupName}
               </button>
             {/each}
             {#if ungrouped.length > 0}
-              <button class="quick-nav-item" on:click={() => scrollToGroup('_ungrouped_')}>
+              <button class="quick-nav-item" on:click={() => scrollToGroup('_ungrouped_label_')}>
                 未分组
               </button>
             {/if}
@@ -720,20 +720,20 @@
         
         {#if grouped.size > 0}
           {#each Array.from(grouped.entries()) as [labelValue, labelContainers] (labelValue)}
-            <div class="compose-group" id="group-{labelValue}">
+            <div class="compose-group" id="group-label-{labelValue}">
               <button 
                 class="compose-group-header" 
                 class:compact={displayMode === 'compact'}
-                on:click={() => toggleGroupCollapse(labelValue)}
-                aria-expanded={!collapsedGroups.has(labelValue)}
+                on:click={() => toggleGroupCollapse(`label-${labelValue}`)}
+                aria-expanded={!collapsedGroups.has(`label-${labelValue}`)}
                 aria-label={`${labelValue} label group, ${labelContainers.length} containers`}
               >
                 <span class="compose-icon">🏷️</span>
                 <h3 class="compose-project-name">{labelValue}</h3>
                 <span class="compose-count">{labelContainers.length} 个容器</span>
-                <span class="collapse-icon" aria-hidden="true">{collapsedGroups.has(labelValue) ? '▶' : '▼'}</span>
+                <span class="collapse-icon" aria-hidden="true">{collapsedGroups.has(`label-${labelValue}`) ? '▶' : '▼'}</span>
               </button>
-              {#if !collapsedGroups.has(labelValue)}
+              {#if !collapsedGroups.has(`label-${labelValue}`)}
               <div class="container-list" class:compact={displayMode === 'compact'}>
                 {#each labelContainers as container (container.id)}
                   <div class="container-item" class:is-self={container.is_self}>
