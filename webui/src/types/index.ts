@@ -48,6 +48,7 @@ export interface Container {
   is_self?: boolean; // Whether this container is running the DSP application
   compose_project?: string; // Docker Compose project name
   compose_service?: string; // Docker Compose service name
+  labels?: Record<string, string>; // All container labels
   restart_policy?: RestartPolicy;
   env?: string[];
   networks?: Record<string, NetworkInfo>;

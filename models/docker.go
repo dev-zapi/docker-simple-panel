@@ -12,6 +12,7 @@ type ContainerInfo struct {
 	IsSelf         bool              `json:"is_self"`          // Whether this container is running this application
 	ComposeProject string            `json:"compose_project"`  // Docker Compose project name
 	ComposeService string            `json:"compose_service"`  // Docker Compose service name
+	Labels         map[string]string `json:"labels,omitempty"` // All container labels
 	RestartPolicy  *RestartPolicy    `json:"restart_policy,omitempty"`
 	Env            []string          `json:"env,omitempty"`
 	Networks       map[string]NetworkInfo `json:"networks,omitempty"`
