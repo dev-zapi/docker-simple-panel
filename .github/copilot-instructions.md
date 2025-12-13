@@ -89,7 +89,7 @@ docker run -d \
 
 ### Go Code Style
 1. **Error Handling**: Always check and handle errors explicitly
-2. **JSON Response**: Use helper functions (`JSONSuccess`, `JSONError`) for consistent API responses
+2. **JSON Response**: Use helper functions (`respondWithJSON`, `respondWithError`) for consistent API responses
 3. **Struct Tags**: Use JSON tags for all exported struct fields
 4. **Empty Slices**: Initialize slices as `[]Type{}` instead of `nil` to ensure JSON marshals as `[]` not `null`
 5. **Locking**: Docker write operations use `m.mu.Lock()`, read operations use `m.mu.RLock()`
