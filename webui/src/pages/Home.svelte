@@ -1298,6 +1298,7 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
+    position: relative;
   }
   
   .content-header {
@@ -1832,17 +1833,18 @@
   
   /* Quick navigation sidebar */
   .quick-nav-sidebar {
-    position: fixed;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
+    position: sticky;
+    top: 5rem;
+    float: left;
+    margin-left: -220px;
+    margin-right: 20px;
     background: var(--color-surface, #e7e5e4);
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: var(--radius, 0.25rem);
     padding: 0.75rem;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     max-width: 200px;
-    max-height: 80vh;
+    max-height: calc(100vh - 6rem);
     overflow-y: auto;
     z-index: 50;
   }
