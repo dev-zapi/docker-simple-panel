@@ -1843,10 +1843,16 @@
     border-radius: var(--radius, 0.25rem);
     padding: 0.75rem;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-    max-width: 240px;
     max-height: calc(100vh - 6rem);
     overflow-y: auto;
     z-index: 50;
+  }
+  
+  /* Desktop: sidebar with fixed width when floating */
+  @media (min-width: 1025px) {
+    .quick-nav-sidebar {
+      max-width: 240px;
+    }
   }
   
   .quick-nav-title {
