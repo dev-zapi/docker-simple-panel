@@ -1836,14 +1836,14 @@
     position: sticky;
     top: 5rem;
     float: left;
-    margin-left: -220px;
+    margin-left: -260px;
     margin-right: 20px;
     background: var(--color-surface, #e7e5e4);
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: var(--radius, 0.25rem);
     padding: 0.75rem;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-    max-width: 200px;
+    max-width: 240px;
     max-height: calc(100vh - 6rem);
     overflow-y: auto;
     z-index: 50;
@@ -1914,9 +1914,34 @@
   }
   
   /* Mobile responsive adjustments for quick nav */
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     .quick-nav-sidebar {
-      display: none;
+      position: static;
+      float: none;
+      margin-left: 0;
+      margin-right: 0;
+      margin-bottom: 1.5rem;
+      max-width: 100%;
+      max-height: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      padding: 1rem;
+    }
+    
+    .quick-nav-title {
+      width: 100%;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+    
+    .quick-nav-item {
+      width: auto;
+      flex: 0 0 auto;
+      margin-bottom: 0;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8rem;
     }
     
     .label-selector {
