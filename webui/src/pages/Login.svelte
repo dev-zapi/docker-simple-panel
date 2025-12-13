@@ -8,11 +8,18 @@
   let username = '';
   let password = '';
   let error = '';
+  let sessionExpiredMessage = '';
   let loading = false;
   let registrationEnabled = false;
   let configLoading = true;
   
   onMount(async () => {
+    // Check if session expired
+    if (localStorage.getItem('sessionExpired') === 'true') {
+      sessionExpiredMessage = '会话已过期，请重新登录';
+      localStorage.removeItem('sessionExpired');
+    }
+    
     try {
       const config = await configApi.getPublicConfig();
       registrationEnabled = !config.disable_registration;
@@ -27,6 +34,7 @@
   async function handleSubmit(e: Event) {
     e.preventDefault();
     error = '';
+    sessionExpiredMessage = '';
     loading = true;
     
     try {
@@ -74,6 +82,12 @@
     </div>
     
     <form on:submit={handleSubmit} class="login-form">
+      {#if sessionExpiredMessage}
+        <div class="info-message">
+          {sessionExpiredMessage}
+        </div>
+      {/if}
+      
       {#if error}
         <div class="error-message">
           {error}
@@ -172,6 +186,15 @@
     background: rgba(153, 27, 27, 0.1);
     border: 1px solid var(--color-error, #991b1b);
     color: var(--color-error, #991b1b);
+    padding: 0.75rem;
+    border-radius: var(--radius, 0.25rem);
+    font-size: 0.9rem;
+  }
+  
+  .info-message {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid #f59e0b;
+    color: #d97706;
     padding: 0.75rem;
     border-radius: var(--radius, 0.25rem);
     font-size: 0.9rem;

@@ -58,6 +58,7 @@ type UpdateConfigRequest struct {
 	DisableRegistration *bool   `json:"disable_registration,omitempty"`
 	LogLevel            *string `json:"log_level,omitempty"`
 	VolumeExplorerImage *string `json:"volume_explorer_image,omitempty"`
+	SessionMaxTimeout   *int    `json:"session_max_timeout,omitempty"`
 }
 
 // UpdateConfig updates system configuration
@@ -113,6 +114,18 @@ func (h *ConfigHandler) UpdateConfig(w http.ResponseWriter, r *http.Request) {
 		// Persist to database
 		if err := h.db.SetConfig("volume_explorer_image", *req.VolumeExplorerImage); err != nil {
 			respondWithError(w, http.StatusInternalServerError, "Failed to persist volume explorer image config: "+err.Error())
+			return
+		}
+	}
+
+	// Update session max timeout if provided
+	if req.SessionMaxTimeout != nil {
+		h.configManager.SetSessionMaxTimeout(*req.SessionMaxTimeout)
+
+		// Persist to database
+		sessionMaxTimeoutStr := strconv.Itoa(*req.SessionMaxTimeout)
+		if err := h.db.SetConfig("session_max_timeout", sessionMaxTimeoutStr); err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to persist session max timeout config: "+err.Error())
 			return
 		}
 	}

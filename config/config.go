@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -61,6 +62,7 @@ type Config struct {
 	LogLevel            LogLevel
 	StaticPath          string
 	VolumeExplorerImage string
+	SessionMaxTimeout   int // Session timeout in hours
 }
 
 // LoadConfig loads configuration from environment variables with defaults
@@ -74,6 +76,7 @@ func LoadConfig() *Config {
 		LogLevel:            ParseLogLevel(getEnv("LOG_LEVEL", "info")),
 		StaticPath:          getEnv("STATIC_PATH", ""),
 		VolumeExplorerImage: getEnv("VOLUME_EXPLORER_IMAGE", "ghcr.io/dev-zapi/docker-simple-panel:latest"),
+		SessionMaxTimeout:   getEnvInt("SESSION_MAX_TIMEOUT", 24), // Default 24 hours
 	}
 }
 
@@ -88,6 +91,15 @@ func getEnvBool(key string, defaultValue bool) bool {
 	if value := os.Getenv(key); value != "" {
 		lowerValue := strings.ToLower(value)
 		return lowerValue == "true" || lowerValue == "1" || lowerValue == "yes"
+	}
+	return defaultValue
+}
+
+func getEnvInt(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if intValue, err := strconv.Atoi(value); err == nil {
+			return intValue
+		}
 	}
 	return defaultValue
 }

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -49,15 +50,27 @@ func main() {
 		return defaultValue
 	}
 
+	loadConfigInt := func(key string, defaultValue int) int {
+		if value, err := db.GetConfig(key); err == nil && value != "" {
+			if intValue, err := strconv.Atoi(value); err == nil {
+				log.Printf("Loaded %s from database: %d", key, intValue)
+				return intValue
+			}
+		}
+		return defaultValue
+	}
+
 	// Load persisted configs from database or use environment defaults
 	dockerSocket := loadConfigString("docker_socket", cfg.DockerSocket)
 	disableRegistration := loadConfigBool("disable_registration", cfg.DisableRegistration)
 	logLevel := config.ParseLogLevel(loadConfigString("log_level", cfg.LogLevel.String()))
 	volumeExplorerImage := loadConfigString("volume_explorer_image", cfg.VolumeExplorerImage)
+	sessionMaxTimeout := loadConfigInt("session_max_timeout", cfg.SessionMaxTimeout)
 
 	// Initialize configuration manager
-	configManager := config.NewManager(dockerSocket, disableRegistration, logLevel, volumeExplorerImage)
+	configManager := config.NewManager(dockerSocket, disableRegistration, logLevel, volumeExplorerImage, sessionMaxTimeout)
 	log.Printf("Log level set to: %s", logLevel.String())
+	log.Printf("Session max timeout set to: %d hours", sessionMaxTimeout)
 
 	// Initialize Docker manager
 	dockerManager, err := docker.NewManager(dockerSocket)
