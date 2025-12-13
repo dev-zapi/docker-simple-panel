@@ -53,9 +53,9 @@ Use one of the following types to categorize your commit:
 - ✅ `feat: add container restart endpoint`
 - ✅ `fix: resolve JWT token expiration issue`
 - ✅ `docs: update API documentation for volumes endpoint`
-- ❌ `Added new feature` (not imperative)
-- ❌ `Fix bug.` (not descriptive, has period)
-- ❌ `Updates` (too vague)
+- ❌ `Added new feature` (uses past tense, not imperative)
+- ❌ `Fix bug` (not descriptive enough)
+- ❌ `Updates` (too vague, not imperative)
 
 ### Body (Optional)
 
@@ -207,13 +207,13 @@ The caching layer was causing data inconsistencies in production.
 
 ### Commit Message Template
 
-You can configure a commit message template:
+You can optionally configure a commit message template to help remind you of the format:
 
 ```bash
-git config commit.template .github/.gitmessage
+git config commit.template .gitmessage
 ```
 
-Create `.github/.gitmessage`:
+Then create a `.gitmessage` file in your home directory or project root:
 ```
 <type>: <subject>
 
