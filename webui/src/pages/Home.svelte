@@ -354,9 +354,26 @@
         <!-- Grouped by compose project -->
         {@const { grouped, ungrouped } = groupContainersByCompose(containers)}
         
+        <!-- Quick navigation sidebar -->
+        {#if grouped.size > 0 || ungrouped.length > 0}
+          <div class="quick-nav-sidebar">
+            <div class="quick-nav-title">快速跳转</div>
+            {#each Array.from(grouped.keys()) as projectName}
+              <button class="quick-nav-item" on:click={() => scrollToGroup(projectName)}>
+                {projectName}
+              </button>
+            {/each}
+            {#if ungrouped.length > 0}
+              <button class="quick-nav-item" on:click={() => scrollToGroup('_ungrouped_')}>
+                独立容器
+              </button>
+            {/if}
+          </div>
+        {/if}
+        
         {#if grouped.size > 0}
           {#each Array.from(grouped.entries()) as [projectName, projectContainers] (projectName)}
-            <div class="compose-group">
+            <div class="compose-group" id="group-{projectName}">
               <button 
                 class="compose-group-header" 
                 class:compact={displayMode === 'compact'}
@@ -528,7 +545,7 @@
         {/if}
         
         {#if ungrouped.length > 0}
-          <div class="compose-group">
+          <div class="compose-group" id="group-_ungrouped_">
             <button 
               class="compose-group-header" 
               class:compact={displayMode === 'compact'}
@@ -886,7 +903,7 @@
         {/if}
         
         {#if ungrouped.length > 0}
-          <div class="compose-group" id="group-_ungrouped_">
+          <div class="compose-group" id="group-_ungrouped_label_">
             <button 
               class="compose-group-header" 
               class:compact={displayMode === 'compact'}
@@ -1285,6 +1302,7 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
+    position: relative;
   }
   
   .content-header {
@@ -1790,19 +1808,26 @@
   
   /* Quick navigation sidebar */
   .quick-nav-sidebar {
-    position: fixed;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
+    position: sticky;
+    top: 5rem;
+    float: left;
+    margin-left: -260px;
+    margin-right: 20px;
     background: var(--color-surface, #e7e5e4);
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: var(--radius, 0.25rem);
     padding: 0.75rem;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-    max-width: 200px;
-    max-height: 80vh;
+    max-height: calc(100vh - 6rem);
     overflow-y: auto;
     z-index: 50;
+  }
+  
+  /* Desktop: sidebar with fixed width when floating */
+  @media (min-width: 1025px) {
+    .quick-nav-sidebar {
+      max-width: 240px;
+    }
   }
   
   .quick-nav-title {
@@ -1870,9 +1895,34 @@
   }
   
   /* Mobile responsive adjustments for quick nav */
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     .quick-nav-sidebar {
-      display: none;
+      position: static;
+      float: none;
+      margin-left: 0;
+      margin-right: 0;
+      margin-bottom: 1.5rem;
+      max-width: 100%;
+      max-height: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      padding: 1rem;
+    }
+    
+    .quick-nav-title {
+      width: 100%;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+    
+    .quick-nav-item {
+      width: auto;
+      flex: 0 0 auto;
+      margin-bottom: 0;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8rem;
     }
   }
 </style>
