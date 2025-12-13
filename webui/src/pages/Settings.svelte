@@ -190,7 +190,7 @@
               placeholder="24"
               disabled={saving}
             />
-            <p class="form-help">用户登录后的会话有效时间，超时后需要重新登录（建议：1-168小时）</p>
+            <p class="form-help">用户登录后的会话有效时间，超时后需要重新登录（建议：1-168小时，最大：720小时/30天）</p>
           </div>
         </div>
         

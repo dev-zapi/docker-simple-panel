@@ -46,7 +46,8 @@ async function handleApiResponse<T>(response: Response): Promise<T> {
       localStorage.setItem('sessionExpired', 'true');
       // Redirect to login page
       push('/login');
-      throw new Error('Session expired. Please log in again.');
+      // Return a rejected promise without throwing to avoid unhandled rejections
+      return Promise.reject(new Error('Session expired'));
     }
     
     if (contentType?.includes('application/json')) {

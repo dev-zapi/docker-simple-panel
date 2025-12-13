@@ -55,6 +55,8 @@ func main() {
 			if intValue, err := strconv.Atoi(value); err == nil {
 				log.Printf("Loaded %s from database: %d", key, intValue)
 				return intValue
+			} else {
+				log.Printf("Warning: Invalid integer value in database for %s: %s, using default: %d", key, value, defaultValue)
 			}
 		}
 		return defaultValue
