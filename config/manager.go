@@ -11,16 +11,18 @@ type Manager struct {
 	disableRegistration  bool
 	logLevel             LogLevel
 	volumeExplorerImage  string
+	sessionMaxTimeout    int
 	onDockerSocketChange func(string) error
 }
 
 // NewManager creates a new configuration manager
-func NewManager(dockerSocket string, disableRegistration bool, logLevel LogLevel, volumeExplorerImage string) *Manager {
+func NewManager(dockerSocket string, disableRegistration bool, logLevel LogLevel, volumeExplorerImage string, sessionMaxTimeout int) *Manager {
 	return &Manager{
 		dockerSocket:        dockerSocket,
 		disableRegistration: disableRegistration,
 		logLevel:            logLevel,
 		volumeExplorerImage: volumeExplorerImage,
+		sessionMaxTimeout:   sessionMaxTimeout,
 	}
 }
 
@@ -100,12 +102,27 @@ func (m *Manager) SetDockerSocketChangeCallback(callback func(string) error) {
 	m.onDockerSocketChange = callback
 }
 
+// GetSessionMaxTimeout returns the session max timeout in hours
+func (m *Manager) GetSessionMaxTimeout() int {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.sessionMaxTimeout
+}
+
+// SetSessionMaxTimeout updates the session max timeout
+func (m *Manager) SetSessionMaxTimeout(timeout int) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.sessionMaxTimeout = timeout
+}
+
 // SystemConfig represents the system configuration
 type SystemConfig struct {
 	DockerSocket        string `json:"docker_socket"`
 	DisableRegistration bool   `json:"disable_registration"`
 	LogLevel            string `json:"log_level"`
 	VolumeExplorerImage string `json:"volume_explorer_image"`
+	SessionMaxTimeout   int    `json:"session_max_timeout"`
 }
 
 // GetSystemConfig returns the current system configuration
@@ -117,5 +134,6 @@ func (m *Manager) GetSystemConfig() SystemConfig {
 		DisableRegistration: m.disableRegistration,
 		LogLevel:            m.logLevel.String(),
 		VolumeExplorerImage: m.volumeExplorerImage,
+		SessionMaxTimeout:   m.sessionMaxTimeout,
 	}
 }

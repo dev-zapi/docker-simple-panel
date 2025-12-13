@@ -119,6 +119,7 @@ export interface SystemConfig {
   disable_registration: boolean;
   log_level: string;
   volume_explorer_image: string;
+  session_max_timeout: number;
 }
 
 export interface PublicConfig {
@@ -130,6 +131,7 @@ export interface UpdateConfigRequest {
   disable_registration?: boolean;
   log_level?: string;
   volume_explorer_image?: string;
+  session_max_timeout?: number;
 }
 
 // Auth types

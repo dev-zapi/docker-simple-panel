@@ -15,6 +15,8 @@ import type {
   ApiErrorResponse
 } from '../types';
 import { mockAuthApi, mockUserApi, mockContainerApi, mockVolumeApi } from './mockApi';
+import { authStore } from '../stores/authStore';
+import { push } from 'svelte-spa-router';
 
 // Use relative path for API calls to support reverse proxy
 // In development, Vite will proxy /api to backend server
@@ -36,6 +38,18 @@ async function handleApiResponse<T>(response: Response): Promise<T> {
   const contentType = response.headers.get('content-type');
   
   if (!response.ok) {
+    // Handle 401 Unauthorized - session expired
+    if (response.status === 401) {
+      // Clear authentication state
+      authStore.logout();
+      // Set session expired message in localStorage
+      localStorage.setItem('sessionExpired', 'true');
+      // Redirect to login page
+      push('/login');
+      // Return a rejected promise without throwing to avoid unhandled rejections
+      return Promise.reject(new Error('Session expired'));
+    }
+    
     if (contentType?.includes('application/json')) {
       const errorData = await response.json() as ApiErrorResponse;
       throw new Error(errorData.error || 'Request failed');
