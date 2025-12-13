@@ -909,7 +909,7 @@
         {/if}
         
         {#if ungrouped.length > 0}
-          <div class="compose-group" id="group-_ungrouped_">
+          <div class="compose-group" id="group-_ungrouped_label_">
             <button 
               class="compose-group-header" 
               class:compact={displayMode === 'compact'}
