@@ -261,7 +261,7 @@
         <option value="compose">按 Compose 分组</option>
         <option value="label">按标签分组</option>
       </select>
-      {#if groupMode === 'label'}
+      {#if groupMode === 'label' && availableLabelKeys.length > 0}
         <select 
           class="label-key-select" 
           value={selectedLabelKey} 
@@ -308,7 +308,7 @@
           <option value="compose">按 Compose 分组</option>
           <option value="label">按标签分组</option>
         </select>
-        {#if groupMode === 'label'}
+        {#if groupMode === 'label' && availableLabelKeys.length > 0}
           <select 
             class="label-key-select" 
             value={selectedLabelKey} 
