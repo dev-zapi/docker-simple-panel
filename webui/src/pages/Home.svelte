@@ -360,9 +360,26 @@
         <!-- Grouped by compose project -->
         {@const { grouped, ungrouped } = groupContainersByCompose(containers)}
         
+        <!-- Quick navigation sidebar -->
+        {#if grouped.size > 0 || ungrouped.length > 0}
+          <div class="quick-nav-sidebar">
+            <div class="quick-nav-title">快速跳转</div>
+            {#each Array.from(grouped.keys()) as projectName}
+              <button class="quick-nav-item" on:click={() => scrollToGroup(projectName)}>
+                {projectName}
+              </button>
+            {/each}
+            {#if ungrouped.length > 0}
+              <button class="quick-nav-item" on:click={() => scrollToGroup('_ungrouped_')}>
+                独立容器
+              </button>
+            {/if}
+          </div>
+        {/if}
+        
         {#if grouped.size > 0}
           {#each Array.from(grouped.entries()) as [projectName, projectContainers] (projectName)}
-            <div class="compose-group">
+            <div class="compose-group" id="group-{projectName}">
               <button 
                 class="compose-group-header" 
                 class:compact={displayMode === 'compact'}
@@ -534,7 +551,7 @@
         {/if}
         
         {#if ungrouped.length > 0}
-          <div class="compose-group">
+          <div class="compose-group" id="group-_ungrouped_">
             <button 
               class="compose-group-header" 
               class:compact={displayMode === 'compact'}
