@@ -92,14 +92,9 @@
     localStorage.setItem('displayMode', displayMode);
   }
   
-  function toggleGroupMode() {
-    if (groupMode === 'none') {
-      groupMode = 'compose';
-    } else if (groupMode === 'compose') {
-      groupMode = 'label';
-    } else {
-      groupMode = 'none';
-    }
+  function handleGroupModeChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    groupMode = target.value as 'none' | 'compose' | 'label';
     localStorage.setItem('groupMode', groupMode);
   }
   
@@ -256,40 +251,34 @@
           <span class="mode-text">紧凑</span>
         {/if}
       </button>
-      <button 
-        class="mode-toggle" 
-        on:click={toggleGroupMode} 
-        title={groupMode === 'none' ? '按 Compose 分组' : groupMode === 'compose' ? '按标签分组' : '取消分组'}
-        aria-label={groupMode === 'none' ? '按 Compose 分组' : groupMode === 'compose' ? '按标签分组' : '取消分组'}
+      <select 
+        class="group-mode-select" 
+        value={groupMode} 
+        on:change={handleGroupModeChange}
+        aria-label="选择分组方式"
       >
-        {#if groupMode === 'compose'}
-          <span class="mode-icon">🏷️</span>
-          <span class="mode-text">标签</span>
-        {:else if groupMode === 'label'}
-          <span class="mode-icon">📦</span>
-          <span class="mode-text">列表</span>
-        {:else}
-          <span class="mode-icon">📚</span>
-          <span class="mode-text">分组</span>
-        {/if}
-      </button>
+        <option value="none">不分组</option>
+        <option value="compose">按 Compose 分组</option>
+        <option value="label">按标签分组</option>
+      </select>
+      {#if groupMode === 'label'}
+        <select 
+          class="label-key-select" 
+          value={selectedLabelKey} 
+          on:change={handleLabelKeyChange}
+          aria-label="选择标签"
+        >
+          {#each availableLabelKeys as labelKey}
+            <option value={labelKey}>{labelKey}</option>
+          {/each}
+        </select>
+      {/if}
       <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
         <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
         刷新
       </button>
     </div>
   </div>
-  
-  {#if groupMode === 'label'}
-    <div class="label-selector">
-      <label for="label-key-select">选择标签:</label>
-      <select id="label-key-select" value={selectedLabelKey} on:change={handleLabelKeyChange}>
-        {#each availableLabelKeys as labelKey}
-          <option value={labelKey}>{labelKey}</option>
-        {/each}
-      </select>
-    </div>
-  {/if}
   
   <main class="main-content">
     <div class="content-header" bind:this={contentHeaderRef}>
@@ -309,23 +298,28 @@
             <span class="mode-text">紧凑</span>
           {/if}
         </button>
-        <button 
-          class="mode-toggle" 
-          on:click={toggleGroupMode} 
-          title={groupMode === 'none' ? '按 Compose 分组' : groupMode === 'compose' ? '按标签分组' : '取消分组'}
-          aria-label={groupMode === 'none' ? '按 Compose 分组' : groupMode === 'compose' ? '按标签分组' : '取消分组'}
+        <select 
+          class="group-mode-select" 
+          value={groupMode} 
+          on:change={handleGroupModeChange}
+          aria-label="选择分组方式"
         >
-          {#if groupMode === 'compose'}
-            <span class="mode-icon">🏷️</span>
-            <span class="mode-text">标签</span>
-          {:else if groupMode === 'label'}
-            <span class="mode-icon">📦</span>
-            <span class="mode-text">列表</span>
-          {:else}
-            <span class="mode-icon">📚</span>
-            <span class="mode-text">分组</span>
-          {/if}
-        </button>
+          <option value="none">不分组</option>
+          <option value="compose">按 Compose 分组</option>
+          <option value="label">按标签分组</option>
+        </select>
+        {#if groupMode === 'label'}
+          <select 
+            class="label-key-select" 
+            value={selectedLabelKey} 
+            on:change={handleLabelKeyChange}
+            aria-label="选择标签"
+          >
+            {#each availableLabelKeys as labelKey}
+              <option value={labelKey}>{labelKey}</option>
+            {/each}
+          </select>
+        {/if}
         <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
           <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
           刷新
@@ -1263,7 +1257,9 @@
   }
   
   .floating-header .mode-toggle,
-  .floating-header .refresh-button {
+  .floating-header .refresh-button,
+  .floating-header .group-mode-select,
+  .floating-header .label-key-select {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: var(--color-background, #f5f5f4);
@@ -1272,9 +1268,17 @@
   }
   
   .floating-header .mode-toggle:hover,
-  .floating-header .refresh-button:hover:not(:disabled) {
+  .floating-header .refresh-button:hover:not(:disabled),
+  .floating-header .group-mode-select:hover,
+  .floating-header .label-key-select:hover {
     background: rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.3);
+  }
+  
+  .floating-header .group-mode-select option,
+  .floating-header .label-key-select option {
+    background: var(--color-primary, #171717);
+    color: var(--color-background, #f5f5f4);
   }
   
   .main-content {
@@ -1304,7 +1308,9 @@
   }
   
   .mode-toggle,
-  .refresh-button {
+  .refresh-button,
+  .group-mode-select,
+  .label-key-select {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -1320,7 +1326,9 @@
   }
   
   .mode-toggle:hover,
-  .refresh-button:hover:not(:disabled) {
+  .refresh-button:hover:not(:disabled),
+  .group-mode-select:hover,
+  .label-key-select:hover {
     background: var(--color-background, #f5f5f4);
     border-color: var(--color-primary, #171717);
   }
@@ -1780,39 +1788,6 @@
     border-radius: var(--radius, 0.25rem);
   }
   
-  /* Label selector styles */
-  .label-selector {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 2rem 1rem 2rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-  
-  .label-selector label {
-    font-weight: 600;
-    color: var(--color-text, #0a0a0a);
-    font-family: var(--font-body, "Merriweather", serif);
-  }
-  
-  .label-selector select {
-    padding: 0.5rem 1rem;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: var(--radius, 0.25rem);
-    background: var(--color-surface, #e7e5e4);
-    color: var(--color-text, #0a0a0a);
-    font-family: var(--font-body, "Merriweather", serif);
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .label-selector select:hover {
-    background: var(--color-background, #f5f5f4);
-    border-color: var(--color-primary, #171717);
-  }
-  
   /* Quick navigation sidebar */
   .quick-nav-sidebar {
     position: fixed;
@@ -1898,10 +1873,6 @@
   @media (max-width: 768px) {
     .quick-nav-sidebar {
       display: none;
-    }
-    
-    .label-selector {
-      padding: 0 1rem 1rem 1rem;
     }
   }
 </style>
