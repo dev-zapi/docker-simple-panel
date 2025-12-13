@@ -1381,6 +1381,17 @@
               "info",
               "debug"
             ]
+          },
+          "volume_explorer_image": {
+            "type": "string",
+            "description": "Docker image used for volume exploration",
+            "example": "ghcr.io/dev-zapi/docker-simple-panel:latest"
+          },
+          "session_max_timeout": {
+            "type": "integer",
+            "description": "Maximum session timeout in hours",
+            "example": 24,
+            "minimum": 1
           }
         }
       },
@@ -1407,6 +1418,17 @@
               "info",
               "debug"
             ]
+          },
+          "volume_explorer_image": {
+            "type": "string",
+            "description": "Docker image used for volume exploration (optional)",
+            "example": "ghcr.io/dev-zapi/docker-simple-panel:latest"
+          },
+          "session_max_timeout": {
+            "type": "integer",
+            "description": "Maximum session timeout in hours (optional)",
+            "example": 48,
+            "minimum": 1
           }
         }
       },

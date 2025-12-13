@@ -15,6 +15,7 @@
   let disableRegistration = false;
   let logLevel = 'info';
   let volumeExplorerImage = 'ghcr.io/dev-zapi/docker-simple-panel:latest';
+  let sessionMaxTimeout = 24;
   
   const logLevelOptions = [
     { value: 'error', label: '错误 (Error)' },
@@ -31,6 +32,7 @@
       disableRegistration = config.disable_registration;
       logLevel = config.log_level || 'info';
       volumeExplorerImage = config.volume_explorer_image || 'ghcr.io/dev-zapi/docker-simple-panel:latest';
+      sessionMaxTimeout = config.session_max_timeout || 24;
     } catch (err) {
       error = '获取配置失败';
       console.error('Failed to load config:', err);
@@ -49,7 +51,8 @@
         docker_socket: dockerSocket,
         disable_registration: disableRegistration,
         log_level: logLevel,
-        volume_explorer_image: volumeExplorerImage
+        volume_explorer_image: volumeExplorerImage,
+        session_max_timeout: sessionMaxTimeout
       });
       
       config = updatedConfig;
@@ -73,6 +76,7 @@
       disableRegistration = config.disable_registration;
       logLevel = config.log_level || 'info';
       volumeExplorerImage = config.volume_explorer_image || 'ghcr.io/dev-zapi/docker-simple-panel:latest';
+      sessionMaxTimeout = config.session_max_timeout || 24;
     }
     error = '';
     successMessage = '';
@@ -169,6 +173,24 @@
               disabled={saving}
             />
             <p class="form-help">用于浏览卷文件的临时容器镜像（默认使用本项目镜像，也可使用 busybox:latest 或 alpine:latest）</p>
+          </div>
+        </div>
+        
+        <div class="form-section">
+          <h3>会话配置</h3>
+          
+          <div class="form-group">
+            <label for="sessionMaxTimeout">会话超时时间（小时）</label>
+            <input
+              type="number"
+              id="sessionMaxTimeout"
+              bind:value={sessionMaxTimeout}
+              min="1"
+              max="720"
+              placeholder="24"
+              disabled={saving}
+            />
+            <p class="form-help">用户登录后的会话有效时间，超时后需要重新登录（建议：1-168小时）</p>
           </div>
         </div>
         
@@ -291,6 +313,7 @@
   }
   
   .form-group input[type="text"],
+  .form-group input[type="number"],
   .form-group select {
     width: 100%;
     padding: 0.75rem;
@@ -304,6 +327,7 @@
   }
   
   .form-group input[type="text"]:focus,
+  .form-group input[type="number"]:focus,
   .form-group select:focus {
     outline: none;
     border-color: var(--color-primary, #171717);
