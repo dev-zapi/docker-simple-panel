@@ -587,4 +587,25 @@
     opacity: 0.6;
     cursor: not-allowed;
   }
+
+  /* Mobile responsive adjustments for floating header */
+  @media (max-width: 640px) {
+    .floating-header {
+      padding: 0.75rem 1rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .floating-header h2 {
+      font-size: 1rem;
+      flex: 1 1 100%;
+      text-align: center;
+    }
+
+    .floating-header .add-button {
+      padding: 0.35rem 0.75rem;
+      font-size: 0.75rem;
+      min-width: auto;
+    }
+  }
 </style>

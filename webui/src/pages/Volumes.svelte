@@ -658,5 +658,31 @@
       flex-direction: column;
       gap: 0.5rem;
     }
+
+    /* Floating header mobile responsive - smaller buttons with icon only */
+    .floating-header {
+      padding: 0.75rem 1rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .floating-header h2 {
+      font-size: 1rem;
+      flex: 1 1 100%;
+      text-align: center;
+    }
+
+    .floating-header .header-actions {
+      gap: 0.5rem;
+      flex: 1 1 100%;
+      justify-content: center;
+    }
+
+    .floating-header .refresh-button {
+      padding: 0.35rem 0.5rem;
+      font-size: 0.75rem;
+      min-width: auto;
+      gap: 0.25rem;
+    }
   }
 </style>
