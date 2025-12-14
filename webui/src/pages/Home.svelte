@@ -1711,7 +1711,7 @@
       padding-left: 1rem;
     }
 
-    /* Floating header mobile responsive - smaller buttons with icon only */
+    /* Floating header mobile responsive - smaller and more compact buttons */
     .floating-header {
       padding: 0.75rem 1rem;
       gap: 1rem;
@@ -1739,7 +1739,7 @@
       min-width: auto;
     }
 
-    /* Hide text on mode toggle and refresh button, show icon only */
+    /* Reduce gap between icon and text for compact appearance */
     .floating-header .mode-toggle .mode-text,
     .floating-header .refresh-button {
       gap: 0.25rem;
