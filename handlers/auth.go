@@ -103,9 +103,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 // generateToken generates a JWT token for the user
 func (h *AuthHandler) generateToken(username string) (string, error) {
+	// Get session timeout from config (in hours)
+	sessionTimeout := h.configManager.GetSessionMaxTimeout()
+	
 	claims := jwt.MapClaims{
 		"username": username,
-		"exp":      time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours
+		"exp":      time.Now().Add(time.Hour * time.Duration(sessionTimeout)).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
