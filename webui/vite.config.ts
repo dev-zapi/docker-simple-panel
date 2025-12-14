@@ -20,7 +20,6 @@ export default defineConfig(({ mode }) => {
           theme_color: '#0db7ed',
           background_color: '#ffffff',
           display: 'standalone',
-          orientation: 'portrait',
           scope: '/',
           start_url: '/',
           icons: [
@@ -28,13 +27,25 @@ export default defineConfig(({ mode }) => {
               src: 'icon-192x192.png',
               sizes: '192x192',
               type: 'image/png',
-              purpose: 'any maskable'
+              purpose: 'any'
+            },
+            {
+              src: 'icon-192x192.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'maskable'
             },
             {
               src: 'icon-512x512.png',
               sizes: '512x512',
               type: 'image/png',
-              purpose: 'any maskable'
+              purpose: 'any'
+            },
+            {
+              src: 'icon-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable'
             }
           ]
         },
@@ -43,12 +54,12 @@ export default defineConfig(({ mode }) => {
           runtimeCaching: [
             {
               urlPattern: /^https?:\/\/.*\/api\/.*/i,
-              handler: 'NetworkFirst',
+              handler: 'StaleWhileRevalidate',
               options: {
                 cacheName: 'api-cache',
                 expiration: {
                   maxEntries: 50,
-                  maxAgeSeconds: 5 * 60 // 5 minutes
+                  maxAgeSeconds: 30 * 60 // 30 minutes
                 },
                 cacheableResponse: {
                   statuses: [0, 200]
