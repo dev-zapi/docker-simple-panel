@@ -1710,6 +1710,40 @@
       background: linear-gradient(to right, transparent, var(--color-surface, #e7e5e4) 20%);
       padding-left: 1rem;
     }
+
+    /* Floating header mobile responsive - smaller and more compact buttons */
+    .floating-header {
+      padding: 0.75rem 1rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .floating-header h2 {
+      font-size: 1rem;
+      flex: 1 1 100%;
+      text-align: center;
+    }
+
+    .floating-header .header-actions {
+      gap: 0.5rem;
+      flex: 1 1 100%;
+      justify-content: center;
+    }
+
+    .floating-header .mode-toggle,
+    .floating-header .refresh-button,
+    .floating-header .group-mode-select,
+    .floating-header .label-key-select {
+      padding: 0.35rem 0.5rem;
+      font-size: 0.75rem;
+      min-width: auto;
+    }
+
+    /* Reduce gap between icon and text for compact appearance */
+    .floating-header .mode-toggle .mode-text,
+    .floating-header .refresh-button {
+      gap: 0.25rem;
+    }
   }
   
   /* Compose group styles */

@@ -724,5 +724,33 @@
       gap: 1rem;
       align-items: flex-start;
     }
+
+    /* Floating header mobile responsive - smaller and more compact */
+    .floating-header {
+      padding: 0.5rem 1rem;
+      gap: 0.5rem;
+    }
+
+    .floating-header h2 {
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .floating-header .breadcrumb {
+      font-size: 0.75rem;
+    }
+
+    .floating-header .breadcrumb-btn {
+      padding: 0.25rem 0.4rem;
+      font-size: 0.9rem;
+    }
+
+    .floating-header .path-text {
+      font-size: 0.75rem;
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 </style>
