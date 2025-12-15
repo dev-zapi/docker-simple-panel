@@ -1735,10 +1735,18 @@
       min-width: auto;
     }
 
-    /* Reduce gap between icon and text for compact appearance */
-    .floating-header .mode-toggle .mode-text,
+    /* Hide button text on mobile, show icons only */
+    .floating-header .mode-toggle .mode-text {
+      display: none;
+    }
+
     .floating-header .refresh-button {
-      gap: 0.25rem;
+      font-size: 0;
+      gap: 0;
+    }
+
+    .floating-header .refresh-icon {
+      font-size: 1rem;
     }
   }
   

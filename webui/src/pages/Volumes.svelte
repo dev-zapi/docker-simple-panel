@@ -676,9 +676,13 @@
 
     .floating-header .refresh-button {
       padding: 0.35rem 0.5rem;
-      font-size: 0.75rem;
+      font-size: 0;
       min-width: auto;
-      gap: 0.25rem;
+      gap: 0;
+    }
+
+    .floating-header .refresh-icon {
+      font-size: 1rem;
     }
   }
 </style>
