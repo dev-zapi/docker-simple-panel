@@ -13,6 +13,8 @@ This is a Go backend application that provides a REST API for managing Docker co
 - Real-time container log streaming via WebSocket (with 30-minute history)
 - Docker volume management with container associations
 - Docker daemon connectivity via `/var/run/docker.sock`
+- **Progressive Web App (PWA) support** - Install as an app on iPhone, Android, and desktop
+- Offline support with service worker caching
 
 ## Requirements
 - Go 1.21 or higher (for building from source)
@@ -44,6 +46,46 @@ curl http://localhost:8080/api/health
 - The Docker socket (`/var/run/docker.sock`) must be mounted for the application to manage containers.
 - **Always change the JWT_SECRET** to a strong, random value in production.
 - Consider disabling registration after creating initial users with `-e DISABLE_REGISTRATION=true`.
+
+## Installing as a PWA
+
+Docker Simple Panel supports Progressive Web App (PWA) installation, allowing you to use it as a native app on iPhone, Android, and desktop devices.
+
+### iPhone/iPad Installation
+
+1. Open the application in Safari (http://your-server:8080)
+2. Tap the **Share** button (square with arrow pointing up)
+3. Scroll down and tap **"Add to Home Screen"**
+4. Customize the name if desired and tap **"Add"**
+5. The app will now appear on your home screen like a native app
+
+### Android Installation
+
+1. Open the application in Chrome (http://your-server:8080)
+2. Tap the menu (three dots) in the top-right corner
+3. Tap **"Add to Home screen"** or **"Install app"**
+4. Follow the prompts to install
+5. The app will appear in your app drawer and home screen
+
+### Desktop Installation
+
+#### Chrome/Edge/Brave
+1. Open the application in your browser
+2. Look for the install icon in the address bar (plus sign or computer icon)
+3. Click the install button
+4. The app will open in its own window and appear in your applications
+
+#### Safari (macOS)
+1. Open the application in Safari
+2. Go to **File** → **Add to Dock**
+3. The app will appear in your Dock
+
+### PWA Features
+- **Offline Support**: The app caches resources for offline access
+- **Fast Loading**: Instant loading from cache
+- **App-like Experience**: Runs in standalone mode without browser UI
+- **Home Screen Icon**: Custom Docker-themed icon
+- **Auto-updates**: Service worker automatically updates the app
 
 ## Development with Dev Container
 
