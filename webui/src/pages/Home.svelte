@@ -1734,8 +1734,17 @@
       font-size: 0.75rem;
       min-width: auto;
     }
+  }
 
-    /* Hide button text on mobile, show icons only */
+  /* Hide title on smaller screens to save space */
+  @media (max-width: 480px) {
+    .floating-header h2 {
+      display: none;
+    }
+  }
+
+  /* Hide button text on very small screens, show icons only */
+  @media (max-width: 400px) {
     .floating-header .mode-toggle .mode-text {
       display: none;
     }
