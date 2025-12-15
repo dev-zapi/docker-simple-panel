@@ -1713,21 +1713,17 @@
 
     /* Floating header mobile responsive - smaller and more compact buttons */
     .floating-header {
-      padding: 0.75rem 1rem;
-      gap: 1rem;
-      flex-wrap: wrap;
+      padding: 1rem;
+      gap: 0.5rem;
     }
 
     .floating-header h2 {
-      font-size: 1rem;
-      flex: 1 1 100%;
-      text-align: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
     }
 
     .floating-header .header-actions {
       gap: 0.5rem;
-      flex: 1 1 100%;
-      justify-content: center;
     }
 
     .floating-header .mode-toggle,

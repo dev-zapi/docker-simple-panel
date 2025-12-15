@@ -727,7 +727,7 @@
 
     /* Floating header mobile responsive - smaller and more compact */
     .floating-header {
-      padding: 0.5rem 1rem;
+      padding: 1rem;
       gap: 0.5rem;
     }
 
