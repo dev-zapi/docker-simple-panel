@@ -282,6 +282,22 @@
             </div>
           </section>
         {/if}
+        
+        <!-- Labels -->
+        {#if container.labels && Object.keys(container.labels).length > 0}
+          <section class="detail-section">
+            <h3 class="section-title">🏷️ 标签</h3>
+            <div class="labels-list">
+              {#each Object.entries(container.labels) as [key, value]}
+                <div class="label-item">
+                  <span class="label-key mono">{key}</span>
+                  <span class="label-equals">=</span>
+                  <span class="label-value mono">{value}</span>
+                </div>
+              {/each}
+            </div>
+          </section>
+        {/if}
       </div>
     {:else}
       <div class="empty-state">
@@ -633,6 +649,39 @@
   }
   
   .env-value {
+    color: var(--color-text, #0a0a0a);
+    word-break: break-all;
+  }
+  
+  .labels-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  
+  .label-item {
+    background: var(--color-background, #f5f5f4);
+    border-radius: var(--radius, 0.25rem);
+    padding: 0.5rem 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+    font-size: 0.9rem;
+  }
+  
+  .label-key {
+    color: var(--color-secondary, #525252);
+    font-weight: 600;
+  }
+  
+  .label-equals {
+    color: var(--color-muted, #78716c);
+  }
+  
+  .label-value {
     color: var(--color-text, #0a0a0a);
     word-break: break-all;
   }

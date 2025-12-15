@@ -57,7 +57,13 @@ export const mockContainers = [
         rw: false
       }
     ],
-    hostname: 'nginx-web'
+    hostname: 'nginx-web',
+    labels: {
+      'com.example.project': 'web-frontend',
+      'com.example.environment': 'production',
+      'com.example.version': '1.0.0',
+      'maintainer': 'devops@example.com'
+    }
   },
   {
     id: 'container2',

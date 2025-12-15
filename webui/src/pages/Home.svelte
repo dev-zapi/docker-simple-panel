@@ -1566,16 +1566,6 @@
                     </span>
                   {/if}
                 </div>
-                {#if container.labels && Object.keys(container.labels).length > 0}
-                  <div class="container-labels">
-                    {#each Object.entries(container.labels) as [key, value]}
-                      <span class="label-badge" title="{key}={value}">
-                        <span class="label-key">{key}:</span>
-                        <span class="label-value">{value}</span>
-                      </span>
-                    {/each}
-                  </div>
-                {/if}
               </div>
               
               <div class="container-actions">
@@ -2315,36 +2305,6 @@
   .quick-nav-item:hover {
     background: var(--color-primary, #171717);
     color: var(--color-background, #f5f5f4);
-  }
-  
-  /* Container labels display */
-  .container-labels {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-  }
-  
-  .label-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    background: rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: var(--radius, 0.25rem);
-    padding: 0.15rem 0.5rem;
-    font-size: 0.75rem;
-    font-family: monospace;
-    color: var(--color-text, #0a0a0a);
-  }
-  
-  .label-key {
-    font-weight: 600;
-    color: var(--color-secondary, #525252);
-  }
-  
-  .label-value {
-    color: var(--color-text, #0a0a0a);
   }
   
   /* Mobile responsive adjustments for quick nav */
