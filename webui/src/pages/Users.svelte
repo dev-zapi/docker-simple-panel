@@ -591,21 +591,33 @@
   /* Mobile responsive adjustments for floating header */
   @media (max-width: 640px) {
     .floating-header {
-      padding: 0.75rem 1rem;
-      gap: 1rem;
-      flex-wrap: wrap;
+      padding: 1rem;
+      gap: 0.5rem;
     }
 
     .floating-header h2 {
-      font-size: 1rem;
-      flex: 1 1 100%;
-      text-align: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
     }
 
     .floating-header .add-button {
-      padding: 0.35rem 0.75rem;
+      padding: 0.35rem 0.5rem;
       font-size: 0.75rem;
       min-width: auto;
+    }
+  }
+
+  /* Hide title on smaller screens to save space */
+  @media (max-width: 480px) {
+    .floating-header h2 {
+      display: none;
+    }
+  }
+
+  /* Hide button text on very small screens, show icons only */
+  @media (max-width: 400px) {
+    .floating-header .add-button {
+      font-size: 0;
     }
   }
 </style>
