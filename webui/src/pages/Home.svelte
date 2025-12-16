@@ -9,7 +9,7 @@
   let error = '';
   let refreshing = false;
   let displayMode: 'compact' | 'standard' = 'standard';
-  let groupMode: 'none' | 'compose' | 'label' | 'status' | 'health' = 'none';
+  let groupMode: 'none' | 'compose' | 'label' | 'status-health' = 'none';
   let actionError = '';
   let collapsedGroups: Set<string> = new Set();
   let selectedLabelKey: string = '';
@@ -44,8 +44,12 @@
       displayMode = savedMode;
     }
     const savedGroupMode = localStorage.getItem('groupMode');
-    if (savedGroupMode === 'none' || savedGroupMode === 'compose' || savedGroupMode === 'label' || savedGroupMode === 'status' || savedGroupMode === 'health') {
+    if (savedGroupMode === 'none' || savedGroupMode === 'compose' || savedGroupMode === 'label' || savedGroupMode === 'status-health') {
       groupMode = savedGroupMode;
+    } else if (savedGroupMode === 'status' || savedGroupMode === 'health') {
+      // Migrate old modes to new combined mode
+      groupMode = 'status-health';
+      localStorage.setItem('groupMode', 'status-health');
     }
     const savedSelectedLabelKey = localStorage.getItem('selectedLabelKey');
     if (savedSelectedLabelKey) {
@@ -94,7 +98,7 @@
   
   function handleGroupModeChange(event: Event) {
     const target = event.target as HTMLSelectElement;
-    groupMode = target.value as 'none' | 'compose' | 'label' | 'status' | 'health';
+    groupMode = target.value as 'none' | 'compose' | 'label' | 'status-health';
     localStorage.setItem('groupMode', groupMode);
   }
   
@@ -172,6 +176,32 @@
     }
     
     return { grouped, ungrouped: [] };
+  }
+  
+  // Group containers by combined status and health
+  function groupContainersByStatusHealth(containers: Container[]) {
+    const grouped = new Map<string, Container[]>();
+    
+    for (const container of containers) {
+      const state = container.state;
+      const health = container.health || 'none';
+      // Create a combined key like "running-healthy" or "exited-none"
+      const groupKey = `${state}-${health}`;
+      const existing = grouped.get(groupKey) || [];
+      existing.push(container);
+      grouped.set(groupKey, existing);
+    }
+    
+    return { grouped, ungrouped: [] };
+  }
+  
+  // Helper to get display info for combined status-health group
+  function getStatusHealthDisplay(groupKey: string) {
+    const [state, health] = groupKey.split('-');
+    const stateEmoji = stateEmojis[state] || '⚪';
+    const healthEmoji = health !== 'none' ? (healthEmojis[health] || '') : '';
+    const displayName = health !== 'none' ? `${state} (${health})` : state;
+    return { stateEmoji, healthEmoji, displayName, state, health };
   }
   
   // Extract all unique label keys from containers
@@ -288,6 +318,7 @@
         <option value="none">不分组</option>
         <option value="compose">按 Compose 分组</option>
         <option value="label">按标签分组</option>
+        <option value="status-health">按状态和健康分组</option>
       </select>
       {#if groupMode === 'label' && availableLabelKeys.length > 0}
         <select 
@@ -335,8 +366,7 @@
           <option value="none">不分组</option>
           <option value="compose">按 Compose 分组</option>
           <option value="label">按标签分组</option>
-          <option value="status">按状态分组</option>
-          <option value="health">按健康状态分组</option>
+          <option value="status-health">按状态和健康分组</option>
         </select>
         {#if groupMode === 'label' && availableLabelKeys.length > 0}
           <select 
@@ -1096,228 +1126,42 @@
             {/if}
           </div>
         {/if}
-      {:else if groupMode === 'status'}
-        <!-- Grouped by status -->
-        {@const { grouped, ungrouped } = groupContainersByStatus(containers)}
+      {:else if groupMode === 'status-health'}
+        <!-- Grouped by combined status and health -->
+        {@const { grouped, ungrouped } = groupContainersByStatusHealth(containers)}
         
         <!-- Quick navigation sidebar -->
         {#if grouped.size > 0}
           <div class="quick-nav-sidebar">
             <div class="quick-nav-title">快速跳转</div>
-            {#each Array.from(grouped.keys()) as statusName}
-              <button class="quick-nav-item" on:click={() => scrollToGroup(`status-${statusName}`)}>
-                {stateEmojis[statusName] || '⚪'} {statusName}
+            {#each Array.from(grouped.keys()) as groupKey}
+              {@const { stateEmoji, healthEmoji, displayName } = getStatusHealthDisplay(groupKey)}
+              <button class="quick-nav-item" on:click={() => scrollToGroup(`status-health-${groupKey}`)}>
+                {stateEmoji}{healthEmoji} {displayName}
               </button>
             {/each}
           </div>
         {/if}
         
         {#if grouped.size > 0}
-          {#each Array.from(grouped.entries()) as [statusName, statusContainers] (statusName)}
-            <div class="compose-group" id="group-status-{statusName}">
+          {#each Array.from(grouped.entries()) as [groupKey, groupContainers] (groupKey)}
+            {@const { stateEmoji, healthEmoji, displayName } = getStatusHealthDisplay(groupKey)}
+            <div class="compose-group" id="group-status-health-{groupKey}">
               <button 
                 class="compose-group-header" 
                 class:compact={displayMode === 'compact'}
-                on:click={() => toggleGroupCollapse(`status-${statusName}`)}
-                aria-expanded={!collapsedGroups.has(`status-${statusName}`)}
-                aria-label={`${statusName} status group, ${statusContainers.length} containers`}
+                on:click={() => toggleGroupCollapse(`status-health-${groupKey}`)}
+                aria-expanded={!collapsedGroups.has(`status-health-${groupKey}`)}
+                aria-label={`${displayName} group, ${groupContainers.length} containers`}
               >
-                <span class="compose-icon">{stateEmojis[statusName] || '⚪'}</span>
-                <h3 class="compose-project-name">{statusName}</h3>
-                <span class="compose-count">{statusContainers.length} 个容器</span>
-                <span class="collapse-icon" aria-hidden="true">{collapsedGroups.has(`status-${statusName}`) ? '▶' : '▼'}</span>
+                <span class="compose-icon">{stateEmoji}{healthEmoji}</span>
+                <h3 class="compose-project-name">{displayName}</h3>
+                <span class="compose-count">{groupContainers.length} 个容器</span>
+                <span class="collapse-icon" aria-hidden="true">{collapsedGroups.has(`status-health-${groupKey}`) ? '▶' : '▼'}</span>
               </button>
-              {#if !collapsedGroups.has(`status-${statusName}`)}
+              {#if !collapsedGroups.has(`status-health-${groupKey}`)}
               <div class="container-list" class:compact={displayMode === 'compact'}>
-                {#each statusContainers as container (container.id)}
-                  <div class="container-item" class:is-self={container.is_self}>
-                    {#if displayMode === 'compact'}
-                      <!-- Compact mode: single line -->
-                      <div class="container-compact">
-                        <span class="compact-status">
-                          <span class="status-emoji">{stateEmojis[container.state] || '⚪'}</span>
-                          {#if container.health && container.health !== 'none'}
-                            <span class="health-emoji">{healthEmojis[container.health]}</span>
-                          {/if}
-                        </span>
-                        <span class="compact-name" title={container.name}>{container.name}</span>
-                        {#if container.is_self}
-                          <span class="self-badge">本应用</span>
-                        {/if}
-                        {#if container.compose_service}
-                          <span class="compose-service-badge">{container.compose_service}</span>
-                        {/if}
-                        <span class="compact-image" title={container.image}>{container.image}</span>
-                        <span class="compact-state">{container.status}</span>
-                        <div class="compact-actions">
-                          {#if container.state === 'running'}
-                            <button 
-                              class="action-btn-compact stop" 
-                              on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
-                              disabled={container.is_self}
-                              title={container.is_self ? '无法停止本应用容器' : '停止'}
-                            >
-                              ⏸️
-                            </button>
-                            <button 
-                              class="action-btn-compact restart" 
-                              on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
-                              disabled={container.is_self}
-                              title={container.is_self ? '无法重启本应用容器' : '重启'}
-                            >
-                              🔄
-                            </button>
-                          {:else if ['exited', 'created', 'dead'].includes(container.state)}
-                            <button 
-                              class="action-btn-compact start" 
-                              on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                              title="启动"
-                            >
-                              ▶️
-                            </button>
-                          {:else}
-                            <button 
-                              class="action-btn-compact restart" 
-                              on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
-                              disabled={container.is_self}
-                              title={container.is_self ? '无法重启本应用容器' : '重启'}
-                            >
-                              🔄
-                            </button>
-                          {/if}
-                          <a 
-                            class="action-btn-compact logs" 
-                            href={`#/logs/${container.id}`}
-                            title="查看日志"
-                          >
-                            📋
-                          </a>
-                          <a 
-                            class="action-btn-compact details" 
-                            href={`#/container/${container.id}`}
-                            title="查看详情"
-                          >
-                            ℹ️
-                          </a>
-                        </div>
-                      </div>
-                    {:else}
-                      <!-- Standard mode: multi-line card -->
-                      <div class="container-info">
-                        <div class="container-name">
-                          <span class="name-text">{container.name}</span>
-                          {#if container.is_self}
-                            <span class="self-badge">本应用</span>
-                          {/if}
-                          {#if container.compose_service}
-                            <span class="compose-service-badge">{container.compose_service}</span>
-                          {/if}
-                        </div>
-                        <div class="container-image">{container.image}</div>
-                        <div class="container-meta">
-                          <span class="status">
-                            <span class="status-emoji">{stateEmojis[container.state] || '⚪'}</span>
-                            {container.status}
-                          </span>
-                          {#if container.health && container.health !== 'none'}
-                            <span class="health">
-                              <span class="health-emoji">{healthEmojis[container.health]}</span>
-                              {container.health}
-                            </span>
-                          {/if}
-                        </div>
-                      </div>
-                      
-                      <div class="container-actions">
-                        {#if container.state === 'running'}
-                          <button 
-                            class="action-btn stop" 
-                            on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
-                            disabled={container.is_self}
-                            title={container.is_self ? '无法停止本应用容器' : ''}
-                          >
-                            ⏸️ 停止
-                          </button>
-                          <button 
-                            class="action-btn restart" 
-                            on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
-                            disabled={container.is_self}
-                            title={container.is_self ? '无法重启本应用容器' : ''}
-                          >
-                            🔄 重启
-                          </button>
-                        {:else if ['exited', 'created', 'dead'].includes(container.state)}
-                          <button 
-                            class="action-btn start" 
-                            on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                          >
-                            ▶️ 启动
-                          </button>
-                        {:else}
-                          <button 
-                            class="action-btn restart" 
-                            on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
-                            disabled={container.is_self}
-                            title={container.is_self ? '无法重启本应用容器' : ''}
-                          >
-                            🔄 重启
-                          </button>
-                        {/if}
-                        <a 
-                          class="action-btn logs" 
-                          href={`#/logs/${container.id}`}
-                        >
-                          📋 日志
-                        </a>
-                        <a 
-                          class="action-btn details" 
-                          href={`#/container/${container.id}`}
-                        >
-                          ℹ️ 详情
-                        </a>
-                      </div>
-                    {/if}
-                  </div>
-                {/each}
-              </div>
-              {/if}
-            </div>
-          {/each}
-        {/if}
-      {:else if groupMode === 'health'}
-        <!-- Grouped by health -->
-        {@const { grouped, ungrouped } = groupContainersByHealth(containers)}
-        
-        <!-- Quick navigation sidebar -->
-        {#if grouped.size > 0}
-          <div class="quick-nav-sidebar">
-            <div class="quick-nav-title">快速跳转</div>
-            {#each Array.from(grouped.keys()) as healthName}
-              <button class="quick-nav-item" on:click={() => scrollToGroup(`health-${healthName}`)}>
-                {healthEmojis[healthName] || '⚪'} {healthName}
-              </button>
-            {/each}
-          </div>
-        {/if}
-        
-        {#if grouped.size > 0}
-          {#each Array.from(grouped.entries()) as [healthName, healthContainers] (healthName)}
-            <div class="compose-group" id="group-health-{healthName}">
-              <button 
-                class="compose-group-header" 
-                class:compact={displayMode === 'compact'}
-                on:click={() => toggleGroupCollapse(`health-${healthName}`)}
-                aria-expanded={!collapsedGroups.has(`health-${healthName}`)}
-                aria-label={`${healthName} health group, ${healthContainers.length} containers`}
-              >
-                <span class="compose-icon">{healthEmojis[healthName] || '⚪'}</span>
-                <h3 class="compose-project-name">{healthName}</h3>
-                <span class="compose-count">{healthContainers.length} 个容器</span>
-                <span class="collapse-icon" aria-hidden="true">{collapsedGroups.has(`health-${healthName}`) ? '▶' : '▼'}</span>
-              </button>
-              {#if !collapsedGroups.has(`health-${healthName}`)}
-              <div class="container-list" class:compact={displayMode === 'compact'}>
-                {#each healthContainers as container (container.id)}
+                {#each groupContainers as container (container.id)}
                   <div class="container-item" class:is-self={container.is_self}>
                     {#if displayMode === 'compact'}
                       <!-- Compact mode: single line -->
