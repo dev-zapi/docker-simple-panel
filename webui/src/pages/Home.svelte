@@ -14,6 +14,7 @@
   let collapsedGroups: Set<string> = new Set();
   let selectedLabelKey: string = '';
   let availableLabelKeys: string[] = [];
+  let filterText: string = '';
   
   // Scroll-based header state
   let isScrolled = false;
@@ -65,6 +66,10 @@
         collapsedGroups = new Set();
       }
     }
+    const savedFilterText = localStorage.getItem('containerFilterText');
+    if (savedFilterText) {
+      filterText = savedFilterText;
+    }
     loadContainers();
     
     // Set up intersection observer to detect when content header scrolls out of view
@@ -102,6 +107,12 @@
     localStorage.setItem('groupMode', groupMode);
   }
   
+  function handleFilterTextChange(event: Event) {
+    const target = event.target as HTMLInputElement;
+    filterText = target.value;
+    localStorage.setItem('containerFilterText', filterText);
+  }
+  
   function toggleGroupCollapse(groupName: string) {
     const newCollapsedGroups = new Set(collapsedGroups);
     if (newCollapsedGroups.has(groupName)) {
@@ -111,6 +122,17 @@
     }
     collapsedGroups = newCollapsedGroups;
     localStorage.setItem('collapsedGroups', JSON.stringify(Array.from(collapsedGroups)));
+  }
+  
+  // Filter containers by name
+  function filterContainersByName(containers: Container[]): Container[] {
+    if (!filterText.trim()) {
+      return containers;
+    }
+    const lowerFilter = filterText.toLowerCase();
+    return containers.filter(container => 
+      container.name.toLowerCase().includes(lowerFilter)
+    );
   }
   
   // Group containers by compose project
@@ -204,6 +226,9 @@
     }
   }
   
+  // Filter containers by name
+  $: filteredContainers = filterContainersByName(containers);
+  
   function handleLabelKeyChange(event: Event) {
     const target = event.target as HTMLSelectElement;
     selectedLabelKey = target.value;
@@ -267,6 +292,14 @@
   <div class="floating-header" class:visible={isScrolled}>
     <h2>容器列表</h2>
     <div class="header-actions">
+      <input
+        type="text"
+        class="filter-input"
+        placeholder="按名称筛选..."
+        value={filterText}
+        on:input={handleFilterTextChange}
+        aria-label="按容器名称筛选"
+      />
       <button 
         class="mode-toggle" 
         on:click={toggleDisplayMode} 
@@ -315,6 +348,14 @@
     <div class="content-header" bind:this={contentHeaderRef}>
       <h2>容器列表</h2>
       <div class="header-actions">
+        <input
+          type="text"
+          class="filter-input"
+          placeholder="按名称筛选..."
+          value={filterText}
+          on:input={handleFilterTextChange}
+          aria-label="按容器名称筛选"
+        />
         <button 
           class="mode-toggle" 
           on:click={toggleDisplayMode} 
@@ -384,7 +425,7 @@
     {:else}
       {#if groupMode === 'compose'}
         <!-- Grouped by compose project -->
-        {@const { grouped, ungrouped } = groupContainersByCompose(containers)}
+        {@const { grouped, ungrouped } = groupContainersByCompose(filteredContainers)}
         
         <!-- Quick navigation sidebar -->
         {#if grouped.size > 0 || ungrouped.length > 0}
@@ -742,7 +783,7 @@
         {/if}
       {:else if groupMode === 'label' && selectedLabelKey}
         <!-- Grouped by selected label -->
-        {@const { grouped, ungrouped } = groupContainersByLabel(containers, selectedLabelKey)}
+        {@const { grouped, ungrouped } = groupContainersByLabel(filteredContainers, selectedLabelKey)}
         
         <!-- Quick navigation sidebar -->
         {#if grouped.size > 0 || ungrouped.length > 0}
@@ -1100,7 +1141,7 @@
         {/if}
       {:else if groupMode === 'status-health'}
         <!-- Grouped by combined status and health -->
-        {@const { grouped, ungrouped } = groupContainersByStatusHealth(containers)}
+        {@const { grouped, ungrouped } = groupContainersByStatusHealth(filteredContainers)}
         
         <!-- Quick navigation sidebar -->
         {#if grouped.size > 0}
@@ -1291,7 +1332,7 @@
       {:else}
         <!-- Ungrouped list -->
         <div class="container-list" class:compact={displayMode === 'compact'}>
-          {#each containers as container (container.id)}
+          {#each filteredContainers as container (container.id)}
           <div class="container-item" class:is-self={container.is_self}>
             {#if displayMode === 'compact'}
               <!-- Compact mode: single line -->
@@ -1488,7 +1529,8 @@
   .floating-header .mode-toggle,
   .floating-header .refresh-button,
   .floating-header .group-mode-select,
-  .floating-header .label-key-select {
+  .floating-header .label-key-select,
+  .floating-header .filter-input {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: var(--color-background, #f5f5f4);
@@ -1496,10 +1538,15 @@
     font-size: 0.85rem;
   }
   
+  .floating-header .filter-input::placeholder {
+    color: rgba(245, 245, 244, 0.6);
+  }
+  
   .floating-header .mode-toggle:hover,
   .floating-header .refresh-button:hover:not(:disabled),
   .floating-header .group-mode-select:hover,
-  .floating-header .label-key-select:hover {
+  .floating-header .label-key-select:hover,
+  .floating-header .filter-input:hover {
     background: rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.3);
   }
@@ -1540,7 +1587,8 @@
   .mode-toggle,
   .refresh-button,
   .group-mode-select,
-  .label-key-select {
+  .label-key-select,
+  .filter-input {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -1555,10 +1603,21 @@
     font-family: var(--font-body, "Merriweather", serif);
   }
   
+  .filter-input {
+    min-width: 200px;
+    cursor: text;
+  }
+  
+  .filter-input::placeholder {
+    color: var(--color-muted, #78716c);
+    opacity: 0.7;
+  }
+  
   .mode-toggle:hover,
   .refresh-button:hover:not(:disabled),
   .group-mode-select:hover,
-  .label-key-select:hover {
+  .label-key-select:hover,
+  .filter-input:hover {
     background: var(--color-background, #f5f5f4);
     border-color: var(--color-primary, #171717);
   }
@@ -1941,10 +2000,15 @@
     .floating-header .mode-toggle,
     .floating-header .refresh-button,
     .floating-header .group-mode-select,
-    .floating-header .label-key-select {
+    .floating-header .label-key-select,
+    .floating-header .filter-input {
       padding: 0.35rem 0.5rem;
       font-size: 0.75rem;
       min-width: auto;
+    }
+    
+    .floating-header .filter-input {
+      min-width: 120px;
     }
   }
 
