@@ -251,12 +251,12 @@
       
       pendingAction = { containerId, action };
       // Reset confirmation after 3 seconds
-      actionTimeoutId = setTimeout(() => {
+      actionTimeoutId = window.setTimeout(() => {
         if (pendingAction && pendingAction.containerId === containerId && pendingAction.action === action) {
           pendingAction = null;
           actionTimeoutId = null;
         }
-      }, 3000) as unknown as number;
+      }, 3000);
       return;
     }
     
@@ -285,6 +285,13 @@
   }
   
   async function handleRefresh() {
+    // Clear pending confirmation states to avoid confusing UI after refresh
+    if (actionTimeoutId !== null) {
+      clearTimeout(actionTimeoutId);
+      actionTimeoutId = null;
+    }
+    pendingAction = null;
+    
     refreshing = true;
     await loadContainers();
   }
