@@ -150,34 +150,6 @@
     return { grouped, ungrouped };
   }
   
-  // Group containers by state (status)
-  function groupContainersByStatus(containers: Container[]) {
-    const grouped = new Map<string, Container[]>();
-    
-    for (const container of containers) {
-      const state = container.state;
-      const existing = grouped.get(state) || [];
-      existing.push(container);
-      grouped.set(state, existing);
-    }
-    
-    return { grouped, ungrouped: [] };
-  }
-  
-  // Group containers by health
-  function groupContainersByHealth(containers: Container[]) {
-    const grouped = new Map<string, Container[]>();
-    
-    for (const container of containers) {
-      const health = container.health || 'none';
-      const existing = grouped.get(health) || [];
-      existing.push(container);
-      grouped.set(health, existing);
-    }
-    
-    return { grouped, ungrouped: [] };
-  }
-  
   // Group containers by combined status and health
   function groupContainersByStatusHealth(containers: Container[]) {
     const grouped = new Map<string, Container[]>();
