@@ -107,9 +107,7 @@
       observer.disconnect();
     }
     // Clear debounce timer if it exists
-    if (filterDebounceTimer !== null) {
-      clearTimeout(filterDebounceTimer);
-    }
+    clearTimeout(filterDebounceTimer);
   });
   
   function toggleDisplayMode() {
@@ -317,11 +315,9 @@
   // Auto-reload containers when filter text changes with debouncing (after initial mount)
   $: if (isMounted && filterText !== undefined) {
     // Clear existing timer
-    if (filterDebounceTimer !== null) {
-      clearTimeout(filterDebounceTimer);
-    }
+    clearTimeout(filterDebounceTimer);
     // Set new timer to reload after 500ms of no typing
-    filterDebounceTimer = window.setTimeout(() => {
+    filterDebounceTimer = setTimeout(() => {
       loadContainers();
     }, 500);
   }
