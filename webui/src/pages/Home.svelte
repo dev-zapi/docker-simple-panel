@@ -15,10 +15,6 @@
   let selectedLabelKey: string = '';
   let availableLabelKeys: string[] = [];
   
-  // Pending action state for double confirmation
-  let pendingAction: { containerId: string; action: 'start' | 'stop' | 'restart' } | null = null;
-  let actionTimeoutId: number | null = null;
-  
   // Scroll-based header state
   let isScrolled = false;
   let contentHeaderRef: HTMLElement;
@@ -242,34 +238,17 @@
       return;
     }
     
-    // First click: set the action to pending (confirmation state)
-    if (!pendingAction || pendingAction.containerId !== containerId || pendingAction.action !== action) {
-      // Clear any existing timeout
-      if (actionTimeoutId !== null) {
-        clearTimeout(actionTimeoutId);
-      }
-      
-      pendingAction = { containerId, action };
-      // Reset confirmation after 3 seconds
-      actionTimeoutId = window.setTimeout(() => {
-        if (pendingAction && pendingAction.containerId === containerId && pendingAction.action === action) {
-          pendingAction = null;
-          actionTimeoutId = null;
-        }
-      }, 3000);
-      return;
-    }
+    // Show confirmation dialog
+    const actionText = action === 'start' ? '启动' : action === 'stop' ? '停止' : '重启';
+    const container = containers.find(c => c.id === containerId);
+    const containerName = container?.name || containerId;
     
-    // Second click: actually perform the action
-    // Clear the timeout since we're performing the action
-    if (actionTimeoutId !== null) {
-      clearTimeout(actionTimeoutId);
-      actionTimeoutId = null;
+    if (!confirm(`确定要${actionText}容器 "${containerName}" 吗？`)) {
+      return;
     }
     
     try {
       actionError = '';
-      pendingAction = null;
       await containerApi.controlContainer({ containerId, action });
       await loadContainers();
     } catch (err) {
@@ -285,21 +264,8 @@
   }
   
   async function handleRefresh() {
-    // Clear pending confirmation states to avoid confusing UI after refresh
-    if (actionTimeoutId !== null) {
-      clearTimeout(actionTimeoutId);
-      actionTimeoutId = null;
-    }
-    pendingAction = null;
-    
     refreshing = true;
     await loadContainers();
-  }
-  
-  function isPendingAction(containerId: string, action: 'start' | 'stop' | 'restart'): boolean {
-    return pendingAction !== null && 
-           pendingAction.containerId === containerId && 
-           pendingAction.action === action;
   }
 </script>
 
@@ -487,40 +453,36 @@
                           {#if container.state === 'running'}
                             <button 
                               class="action-btn-compact stop" 
-                              class:confirm={isPendingAction(container.id, "stop")} 
                               on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                               disabled={container.is_self}
-                              title={container.is_self ? "无法停止本应用容器" : (isPendingAction(container.id, "stop") ? "再次点击确认" : "停止")}
+                              title={container.is_self ? "无法停止本应用容器" : "停止"}
                             >
-              {isPendingAction(container.id, "stop") ? "✓" : "⏸️"}
+              ⏸️
                             </button>
                             <button 
                               class="action-btn-compact restart" 
-                              class:confirm={isPendingAction(container.id, "restart")} 
                               on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                               disabled={container.is_self}
-                              title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "重启")}
+                              title={container.is_self ? "无法重启本应用容器" : "重启"}
                             >
-              {isPendingAction(container.id, "restart") ? "✓" : "🔄"}
+              🔄
                             </button>
                           {:else if ['exited', 'created', 'dead'].includes(container.state)}
                             <button 
                               class="action-btn-compact start" 
-                              class:confirm={isPendingAction(container.id, "start")} 
                               on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                              title={isPendingAction(container.id, "start") ? "再次点击确认" : "启动"}
+                              title="启动"
                             >
-              {isPendingAction(container.id, "start") ? "✓" : "▶️"}
+              ▶️
                             </button>
                           {:else}
                             <button 
                               class="action-btn-compact restart" 
-                              class:confirm={isPendingAction(container.id, "restart")} 
                               on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                               disabled={container.is_self}
-                              title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "重启")}
+                              title={container.is_self ? "无法重启本应用容器" : "重启"}
                             >
-              {isPendingAction(container.id, "restart") ? "✓" : "🔄"}
+              🔄
                             </button>
                           {/if}
                           <a 
@@ -570,40 +532,36 @@
                         {#if container.state === 'running'}
                           <button 
                             class="action-btn stop" 
-                            class:confirm={isPendingAction(container.id, "stop")} 
                             on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? "无法停止本应用容器" : (isPendingAction(container.id, "stop") ? "再次点击确认" : "")}
+                            title={container.is_self ? "无法停止本应用容器" : ""}
                           >
-            {isPendingAction(container.id, "stop") ? "✓ 确认停止" : "⏸️ 停止"}
+            ⏸️ 停止
                           </button>
                           <button 
                             class="action-btn restart" 
-                            class:confirm={isPendingAction(container.id, "restart")} 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "")}
+                            title={container.is_self ? "无法重启本应用容器" : ""}
                           >
-            {isPendingAction(container.id, "restart") ? "✓ 确认重启" : "🔄 重启"}
+            🔄 重启
                           </button>
                         {:else if ['exited', 'created', 'dead'].includes(container.state)}
                           <button 
                             class="action-btn start" 
-                            class:confirm={isPendingAction(container.id, "start")} 
                             on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                          title={isPendingAction(container.id, "start") ? "再次点击确认" : ""}
+                          
                           >
-            {isPendingAction(container.id, "start") ? "✓ 确认启动" : "▶️ 启动"}
+            ▶️ 启动
                           </button>
                         {:else}
                           <button 
                             class="action-btn restart" 
-                            class:confirm={isPendingAction(container.id, "restart")} 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "")}
+                            title={container.is_self ? "无法重启本应用容器" : ""}
                           >
-            {isPendingAction(container.id, "restart") ? "✓ 确认重启" : "🔄 重启"}
+            🔄 重启
                           </button>
                         {/if}
                         <a 
@@ -665,40 +623,36 @@
                         {#if container.state === 'running'}
                           <button 
                             class="action-btn-compact stop" 
-                            class:confirm={isPendingAction(container.id, "stop")} 
                             on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? "无法停止本应用容器" : (isPendingAction(container.id, "stop") ? "再次点击确认" : "停止")}
+                            title={container.is_self ? "无法停止本应用容器" : "停止"}
                           >
-              {isPendingAction(container.id, "stop") ? "✓" : "⏸️"}
+              ⏸️
                           </button>
                           <button 
                             class="action-btn-compact restart" 
-                            class:confirm={isPendingAction(container.id, "restart")} 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "重启")}
+                            title={container.is_self ? "无法重启本应用容器" : "重启"}
                           >
-              {isPendingAction(container.id, "restart") ? "✓" : "🔄"}
+              🔄
                           </button>
                         {:else if ['exited', 'created', 'dead'].includes(container.state)}
                           <button 
                             class="action-btn-compact start" 
-                            class:confirm={isPendingAction(container.id, "start")} 
                             on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                            title={isPendingAction(container.id, "start") ? "再次点击确认" : "启动"}
+                            title="启动"
                           >
-              {isPendingAction(container.id, "start") ? "✓" : "▶️"}
+              ▶️
                           </button>
                         {:else}
                           <button 
                             class="action-btn-compact restart" 
-                            class:confirm={isPendingAction(container.id, "restart")} 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "重启")}
+                            title={container.is_self ? "无法重启本应用容器" : "重启"}
                           >
-              {isPendingAction(container.id, "restart") ? "✓" : "🔄"}
+              🔄
                           </button>
                         {/if}
                         <a 
@@ -745,40 +699,36 @@
                       {#if container.state === 'running'}
                         <button 
                           class="action-btn stop" 
-                          class:confirm={isPendingAction(container.id, "stop")} 
                           on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                           disabled={container.is_self}
-                          title={container.is_self ? "无法停止本应用容器" : (isPendingAction(container.id, "stop") ? "再次点击确认" : "")}
+                          title={container.is_self ? "无法停止本应用容器" : ""}
                         >
-            {isPendingAction(container.id, "stop") ? "✓ 确认停止" : "⏸️ 停止"}
+            ⏸️ 停止
                         </button>
                         <button 
                           class="action-btn restart" 
-                          class:confirm={isPendingAction(container.id, "restart")} 
                           on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                           disabled={container.is_self}
-                          title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "")}
+                          title={container.is_self ? "无法重启本应用容器" : ""}
                         >
-            {isPendingAction(container.id, "restart") ? "✓ 确认重启" : "🔄 重启"}
+            🔄 重启
                         </button>
                       {:else if ['exited', 'created', 'dead'].includes(container.state)}
                         <button 
                           class="action-btn start" 
-                          class:confirm={isPendingAction(container.id, "start")} 
                           on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                        title={isPendingAction(container.id, "start") ? "再次点击确认" : ""}
+                        
                         >
-            {isPendingAction(container.id, "start") ? "✓ 确认启动" : "▶️ 启动"}
+            ▶️ 启动
                         </button>
                       {:else}
                         <button 
                           class="action-btn restart" 
-                          class:confirm={isPendingAction(container.id, "restart")} 
                           on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                           disabled={container.is_self}
-                          title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "")}
+                          title={container.is_self ? "无法重启本应用容器" : ""}
                         >
-            {isPendingAction(container.id, "restart") ? "✓ 确认重启" : "🔄 重启"}
+            🔄 重启
                         </button>
                       {/if}
                       <a 
@@ -863,40 +813,36 @@
                           {#if container.state === 'running'}
                             <button 
                               class="action-btn-compact stop" 
-                              class:confirm={isPendingAction(container.id, "stop")} 
                               on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                               disabled={container.is_self}
-                              title={container.is_self ? "无法停止本应用容器" : (isPendingAction(container.id, "stop") ? "再次点击确认" : "停止")}
+                              title={container.is_self ? "无法停止本应用容器" : "停止"}
                             >
-              {isPendingAction(container.id, "stop") ? "✓" : "⏸️"}
+              ⏸️
                             </button>
                             <button 
                               class="action-btn-compact restart" 
-                              class:confirm={isPendingAction(container.id, "restart")} 
                               on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                               disabled={container.is_self}
-                              title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "重启")}
+                              title={container.is_self ? "无法重启本应用容器" : "重启"}
                             >
-              {isPendingAction(container.id, "restart") ? "✓" : "🔄"}
+              🔄
                             </button>
                           {:else if ['exited', 'created', 'dead'].includes(container.state)}
                             <button 
                               class="action-btn-compact start" 
-                              class:confirm={isPendingAction(container.id, "start")} 
                               on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                              title={isPendingAction(container.id, "start") ? "再次点击确认" : "启动"}
+                              title="启动"
                             >
-              {isPendingAction(container.id, "start") ? "✓" : "▶️"}
+              ▶️
                             </button>
                           {:else}
                             <button 
                               class="action-btn-compact restart" 
-                              class:confirm={isPendingAction(container.id, "restart")} 
                               on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                               disabled={container.is_self}
-                              title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "重启")}
+                              title={container.is_self ? "无法重启本应用容器" : "重启"}
                             >
-              {isPendingAction(container.id, "restart") ? "✓" : "🔄"}
+              🔄
                             </button>
                           {/if}
                           <a 
@@ -946,40 +892,36 @@
                         {#if container.state === 'running'}
                           <button 
                             class="action-btn stop" 
-                            class:confirm={isPendingAction(container.id, "stop")} 
                             on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? "无法停止本应用容器" : (isPendingAction(container.id, "stop") ? "再次点击确认" : "")}
+                            title={container.is_self ? "无法停止本应用容器" : ""}
                           >
-            {isPendingAction(container.id, "stop") ? "✓ 确认停止" : "⏸️ 停止"}
+            ⏸️ 停止
                           </button>
                           <button 
                             class="action-btn restart" 
-                            class:confirm={isPendingAction(container.id, "restart")} 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "")}
+                            title={container.is_self ? "无法重启本应用容器" : ""}
                           >
-            {isPendingAction(container.id, "restart") ? "✓ 确认重启" : "🔄 重启"}
+            🔄 重启
                           </button>
                         {:else if ['exited', 'created', 'dead'].includes(container.state)}
                           <button 
                             class="action-btn start" 
-                            class:confirm={isPendingAction(container.id, "start")} 
                             on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                          title={isPendingAction(container.id, "start") ? "再次点击确认" : ""}
+                          
                           >
-            {isPendingAction(container.id, "start") ? "✓ 确认启动" : "▶️ 启动"}
+            ▶️ 启动
                           </button>
                         {:else}
                           <button 
                             class="action-btn restart" 
-                            class:confirm={isPendingAction(container.id, "restart")} 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "")}
+                            title={container.is_self ? "无法重启本应用容器" : ""}
                           >
-            {isPendingAction(container.id, "restart") ? "✓ 确认重启" : "🔄 重启"}
+            🔄 重启
                           </button>
                         {/if}
                         <a 
@@ -1041,40 +983,36 @@
                         {#if container.state === 'running'}
                           <button 
                             class="action-btn-compact stop" 
-                            class:confirm={isPendingAction(container.id, "stop")} 
                             on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? "无法停止本应用容器" : (isPendingAction(container.id, "stop") ? "再次点击确认" : "停止")}
+                            title={container.is_self ? "无法停止本应用容器" : "停止"}
                           >
-              {isPendingAction(container.id, "stop") ? "✓" : "⏸️"}
+              ⏸️
                           </button>
                           <button 
                             class="action-btn-compact restart" 
-                            class:confirm={isPendingAction(container.id, "restart")} 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "重启")}
+                            title={container.is_self ? "无法重启本应用容器" : "重启"}
                           >
-              {isPendingAction(container.id, "restart") ? "✓" : "🔄"}
+              🔄
                           </button>
                         {:else if ['exited', 'created', 'dead'].includes(container.state)}
                           <button 
                             class="action-btn-compact start" 
-                            class:confirm={isPendingAction(container.id, "start")} 
                             on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                            title={isPendingAction(container.id, "start") ? "再次点击确认" : "启动"}
+                            title="启动"
                           >
-              {isPendingAction(container.id, "start") ? "✓" : "▶️"}
+              ▶️
                           </button>
                         {:else}
                           <button 
                             class="action-btn-compact restart" 
-                            class:confirm={isPendingAction(container.id, "restart")} 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "重启")}
+                            title={container.is_self ? "无法重启本应用容器" : "重启"}
                           >
-              {isPendingAction(container.id, "restart") ? "✓" : "🔄"}
+              🔄
                           </button>
                         {/if}
                         <a 
@@ -1121,40 +1059,36 @@
                       {#if container.state === 'running'}
                         <button 
                           class="action-btn stop" 
-                          class:confirm={isPendingAction(container.id, "stop")} 
                           on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                           disabled={container.is_self}
-                          title={container.is_self ? "无法停止本应用容器" : (isPendingAction(container.id, "stop") ? "再次点击确认" : "")}
+                          title={container.is_self ? "无法停止本应用容器" : ""}
                         >
-            {isPendingAction(container.id, "stop") ? "✓ 确认停止" : "⏸️ 停止"}
+            ⏸️ 停止
                         </button>
                         <button 
                           class="action-btn restart" 
-                          class:confirm={isPendingAction(container.id, "restart")} 
                           on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                           disabled={container.is_self}
-                          title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "")}
+                          title={container.is_self ? "无法重启本应用容器" : ""}
                         >
-            {isPendingAction(container.id, "restart") ? "✓ 确认重启" : "🔄 重启"}
+            🔄 重启
                         </button>
                       {:else if ['exited', 'created', 'dead'].includes(container.state)}
                         <button 
                           class="action-btn start" 
-                          class:confirm={isPendingAction(container.id, "start")} 
                           on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                        title={isPendingAction(container.id, "start") ? "再次点击确认" : ""}
+                        
                         >
-            {isPendingAction(container.id, "start") ? "✓ 确认启动" : "▶️ 启动"}
+            ▶️ 启动
                         </button>
                       {:else}
                         <button 
                           class="action-btn restart" 
-                          class:confirm={isPendingAction(container.id, "restart")} 
                           on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                           disabled={container.is_self}
-                          title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "")}
+                          title={container.is_self ? "无法重启本应用容器" : ""}
                         >
-            {isPendingAction(container.id, "restart") ? "✓ 确认重启" : "🔄 重启"}
+            🔄 重启
                         </button>
                       {/if}
                       <a 
@@ -1236,40 +1170,36 @@
                           {#if container.state === 'running'}
                             <button 
                               class="action-btn-compact stop" 
-                              class:confirm={isPendingAction(container.id, "stop")} 
                               on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                               disabled={container.is_self}
-                              title={container.is_self ? "无法停止本应用容器" : (isPendingAction(container.id, "stop") ? "再次点击确认" : "停止")}
+                              title={container.is_self ? "无法停止本应用容器" : "停止"}
                             >
-              {isPendingAction(container.id, "stop") ? "✓" : "⏸️"}
+              ⏸️
                             </button>
                             <button 
                               class="action-btn-compact restart" 
-                              class:confirm={isPendingAction(container.id, "restart")} 
                               on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                               disabled={container.is_self}
-                              title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "重启")}
+                              title={container.is_self ? "无法重启本应用容器" : "重启"}
                             >
-              {isPendingAction(container.id, "restart") ? "✓" : "🔄"}
+              🔄
                             </button>
                           {:else if ['exited', 'created', 'dead'].includes(container.state)}
                             <button 
                               class="action-btn-compact start" 
-                              class:confirm={isPendingAction(container.id, "start")} 
                               on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                              title={isPendingAction(container.id, "start") ? "再次点击确认" : "启动"}
+                              title="启动"
                             >
-              {isPendingAction(container.id, "start") ? "✓" : "▶️"}
+              ▶️
                             </button>
                           {:else}
                             <button 
                               class="action-btn-compact restart" 
-                              class:confirm={isPendingAction(container.id, "restart")} 
                               on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                               disabled={container.is_self}
-                              title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "重启")}
+                              title={container.is_self ? "无法重启本应用容器" : "重启"}
                             >
-              {isPendingAction(container.id, "restart") ? "✓" : "🔄"}
+              🔄
                             </button>
                           {/if}
                           <a 
@@ -1319,40 +1249,36 @@
                         {#if container.state === 'running'}
                           <button 
                             class="action-btn stop" 
-                            class:confirm={isPendingAction(container.id, "stop")} 
                             on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? "无法停止本应用容器" : (isPendingAction(container.id, "stop") ? "再次点击确认" : "")}
+                            title={container.is_self ? "无法停止本应用容器" : ""}
                           >
-            {isPendingAction(container.id, "stop") ? "✓ 确认停止" : "⏸️ 停止"}
+            ⏸️ 停止
                           </button>
                           <button 
                             class="action-btn restart" 
-                            class:confirm={isPendingAction(container.id, "restart")} 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "")}
+                            title={container.is_self ? "无法重启本应用容器" : ""}
                           >
-            {isPendingAction(container.id, "restart") ? "✓ 确认重启" : "🔄 重启"}
+            🔄 重启
                           </button>
                         {:else if ['exited', 'created', 'dead'].includes(container.state)}
                           <button 
                             class="action-btn start" 
-                            class:confirm={isPendingAction(container.id, "start")} 
                             on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                          title={isPendingAction(container.id, "start") ? "再次点击确认" : ""}
+                          
                           >
-            {isPendingAction(container.id, "start") ? "✓ 确认启动" : "▶️ 启动"}
+            ▶️ 启动
                           </button>
                         {:else}
                           <button 
                             class="action-btn restart" 
-                            class:confirm={isPendingAction(container.id, "restart")} 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "")}
+                            title={container.is_self ? "无法重启本应用容器" : ""}
                           >
-            {isPendingAction(container.id, "restart") ? "✓ 确认重启" : "🔄 重启"}
+            🔄 重启
                           </button>
                         {/if}
                         <a 
@@ -1400,40 +1326,36 @@
                   {#if container.state === 'running'}
                     <button 
                       class="action-btn-compact stop" 
-                      class:confirm={isPendingAction(container.id, "stop")} 
                       on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                       disabled={container.is_self}
-                      title={container.is_self ? "无法停止本应用容器" : (isPendingAction(container.id, "stop") ? "再次点击确认" : "停止")}
+                      title={container.is_self ? "无法停止本应用容器" : "停止"}
                     >
-              {isPendingAction(container.id, "stop") ? "✓" : "⏸️"}
+              ⏸️
                     </button>
                     <button 
                       class="action-btn-compact restart" 
-                      class:confirm={isPendingAction(container.id, "restart")} 
                       on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                       disabled={container.is_self}
-                      title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "重启")}
+                      title={container.is_self ? "无法重启本应用容器" : "重启"}
                     >
-              {isPendingAction(container.id, "restart") ? "✓" : "🔄"}
+              🔄
                     </button>
                   {:else if ['exited', 'created', 'dead'].includes(container.state)}
                     <button 
                       class="action-btn-compact start" 
-                      class:confirm={isPendingAction(container.id, "start")} 
                       on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                      title={isPendingAction(container.id, "start") ? "再次点击确认" : "启动"}
+                      title="启动"
                     >
-              {isPendingAction(container.id, "start") ? "✓" : "▶️"}
+              ▶️
                     </button>
                   {:else}
                     <button 
                       class="action-btn-compact restart" 
-                      class:confirm={isPendingAction(container.id, "restart")} 
                       on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                       disabled={container.is_self}
-                      title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "重启")}
+                      title={container.is_self ? "无法重启本应用容器" : "重启"}
                     >
-              {isPendingAction(container.id, "restart") ? "✓" : "🔄"}
+              🔄
                     </button>
                   {/if}
                   <a 
@@ -1480,40 +1402,36 @@
                 {#if container.state === 'running'}
                   <button 
                     class="action-btn stop" 
-                    class:confirm={isPendingAction(container.id, "stop")} 
                     on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                     disabled={container.is_self}
-                    title={container.is_self ? "无法停止本应用容器" : (isPendingAction(container.id, "stop") ? "再次点击确认" : "")}
+                    title={container.is_self ? "无法停止本应用容器" : ""}
                   >
-            {isPendingAction(container.id, "stop") ? "✓ 确认停止" : "⏸️ 停止"}
+            ⏸️ 停止
                   </button>
                   <button 
                     class="action-btn restart" 
-                    class:confirm={isPendingAction(container.id, "restart")} 
                     on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                     disabled={container.is_self}
-                    title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "")}
+                    title={container.is_self ? "无法重启本应用容器" : ""}
                   >
-            {isPendingAction(container.id, "restart") ? "✓ 确认重启" : "🔄 重启"}
+            🔄 重启
                   </button>
                 {:else if ['exited', 'created', 'dead'].includes(container.state)}
                   <button 
                     class="action-btn start" 
-                    class:confirm={isPendingAction(container.id, "start")} 
                     on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                  title={isPendingAction(container.id, "start") ? "再次点击确认" : ""}
+                  
                   >
-            {isPendingAction(container.id, "start") ? "✓ 确认启动" : "▶️ 启动"}
+            ▶️ 启动
                   </button>
                 {:else}
                   <button 
                     class="action-btn restart" 
-                    class:confirm={isPendingAction(container.id, "restart")} 
                     on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                     disabled={container.is_self}
-                    title={container.is_self ? "无法重启本应用容器" : (isPendingAction(container.id, "restart") ? "再次点击确认" : "")}
+                    title={container.is_self ? "无法重启本应用容器" : ""}
                   >
-            {isPendingAction(container.id, "restart") ? "✓ 确认重启" : "🔄 重启"}
+            🔄 重启
                   </button>
                 {/if}
                 <a 
@@ -1859,29 +1777,6 @@
     cursor: not-allowed;
   }
   
-  /* Confirmation state styles */
-  .action-btn.confirm {
-    animation: pulse 0.5s ease-in-out;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
-  }
-  
-  .action-btn.start.confirm {
-    background: #166534;
-  }
-  
-  .action-btn.stop.confirm {
-    background: #7f1d1d;
-  }
-  
-  .action-btn.restart.confirm {
-    background: #92400e;
-  }
-  
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-  }
-  
   .action-btn.logs {
     background: var(--color-secondary, #525252);
     color: white;
@@ -1977,13 +1872,6 @@
   .action-btn-compact:disabled {
     opacity: 0.4;
     cursor: not-allowed;
-  }
-  
-  /* Confirmation state styles for compact buttons */
-  .action-btn-compact.confirm {
-    animation: pulse 0.5s ease-in-out;
-    background: rgba(0, 0, 0, 0.15);
-    font-weight: bold;
   }
   
   .action-btn-compact.logs {
