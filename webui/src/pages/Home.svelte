@@ -17,6 +17,11 @@
   let availableLabelKeys: string[] = [];
   let filterText: string = '';
   
+  // Track if component has mounted to prevent reload during initial setup
+  let isMounted = false;
+  let filterDebounceTimer: number | null = null;
+  const FILTER_DEBOUNCE_DELAY = 500; // milliseconds to wait before reloading after filter text changes
+  
   // Scroll-based header state
   let isScrolled = false;
   let contentHeaderRef: HTMLElement;
@@ -93,12 +98,17 @@
       );
       observer.observe(contentHeaderRef);
     }
+    
+    // Mark as mounted after initial load completes
+    isMounted = true;
   });
   
   onDestroy(() => {
     if (observer) {
       observer.disconnect();
     }
+    // Clear debounce timer if it exists
+    clearTimeout(filterDebounceTimer);
   });
   
   function toggleDisplayMode() {
@@ -293,10 +303,34 @@
     }
   }
   
+  // Auto-reload containers when sort mode changes (after initial mount)
+  $: if (isMounted && sortMode) {
+    loadContainers();
+  }
+  
+  // Auto-reload containers when group mode changes (after initial mount)
+  $: if (isMounted && groupMode) {
+    loadContainers();
+  }
+  
+  // Auto-reload containers when filter text changes with debouncing (after initial mount)
+  $: if (isMounted && filterText !== undefined) {
+    // Clear existing timer
+    clearTimeout(filterDebounceTimer);
+    // Set new timer to reload after user stops typing
+    filterDebounceTimer = setTimeout(() => {
+      loadContainers();
+    }, FILTER_DEBOUNCE_DELAY);
+  }
+  
   function handleLabelKeyChange(event: Event) {
     const target = event.target as HTMLSelectElement;
     selectedLabelKey = target.value;
     localStorage.setItem('selectedLabelKey', selectedLabelKey);
+    // Reload containers when user manually changes label key
+    if (isMounted) {
+      loadContainers();
+    }
   }
   
   function scrollToGroup(groupName: string) {
