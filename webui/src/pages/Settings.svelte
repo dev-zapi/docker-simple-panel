@@ -221,6 +221,11 @@
   
   .content-header {
     margin-bottom: 1.5rem;
+    position: sticky;
+    top: 0;
+    background: var(--color-background, #f5f5f4);
+    z-index: 50;
+    padding: 1rem 0;
   }
   
   .content-header h2 {

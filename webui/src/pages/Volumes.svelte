@@ -13,37 +13,14 @@
   let volumeToDelete: string | null = null;
   let deleteTimeoutId: number | null = null;
   
-  // Scroll-based header state
-  let isScrolled = false;
-  let contentHeaderRef: HTMLElement;
-  let observer: IntersectionObserver | null = null;
+
   
   // Load volumes and containers
   onMount(() => {
     loadData();
-    
-    // Set up intersection observer to detect when content header scrolls out of view
-    const HEADER_HEIGHT = 68; // Header height in pixels
-    if (contentHeaderRef) {
-      observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            isScrolled = !entry.isIntersecting;
-          });
-        },
-        { 
-          threshold: 0,
-          rootMargin: `-${HEADER_HEIGHT}px 0px 0px 0px`
-        }
-      );
-      observer.observe(contentHeaderRef);
-    }
   });
   
   onDestroy(() => {
-    if (observer) {
-      observer.disconnect();
-    }
   });
   
   async function loadData() {
@@ -155,22 +132,11 @@
   }
 </script>
 
-<div class="volumes-container" class:scrolled={isScrolled}>
+<div class="volumes-container">
   <Header />
   
-  <!-- Floating header that appears when scrolled -->
-  <div class="floating-header" class:visible={isScrolled}>
-    <h2>卷列表</h2>
-    <div class="header-actions">
-      <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
-        <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
-        刷新
-      </button>
-    </div>
-  </div>
-  
   <main class="main-content">
-    <div class="content-header" bind:this={contentHeaderRef}>
+    <div class="content-header">
       <h2>卷列表</h2>
       <div class="header-actions">
         <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
@@ -282,57 +248,6 @@
     background: var(--color-background, #f5f5f4);
   }
   
-  /* Floating header that appears when scrolled */
-  .floating-header {
-    position: fixed;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%) translateY(-100%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1.5rem;
-    padding: 1rem 2rem;
-    background: var(--color-primary, #171717);
-    color: var(--color-background, #f5f5f4);
-    z-index: 101;
-    opacity: 0;
-    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-    pointer-events: none;
-    border-radius: 0 0 var(--radius, 0.25rem) var(--radius, 0.25rem);
-  }
-  
-  .floating-header.visible {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-    pointer-events: auto;
-  }
-  
-  .floating-header h2 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin: 0;
-    font-family: var(--font-heading, "Playfair Display", serif);
-  }
-  
-  .floating-header .header-actions {
-    display: flex;
-    gap: 0.75rem;
-  }
-  
-  .floating-header .refresh-button {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--color-background, #f5f5f4);
-    padding: 0.4rem 0.75rem;
-    font-size: 0.85rem;
-  }
-  
-  .floating-header .refresh-button:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.3);
-  }
-  
   .main-content {
     max-width: 1200px;
     margin: 0 auto;
@@ -344,6 +259,11 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.5rem;
+    position: sticky;
+    top: 0;
+    background: var(--color-background, #f5f5f4);
+    z-index: 50;
+    padding: 1rem 0;
   }
   
   .content-header h2 {

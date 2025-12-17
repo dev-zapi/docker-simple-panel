@@ -325,6 +325,11 @@
     align-items: center;
     gap: 1rem;
     margin-bottom: 1.5rem;
+    position: sticky;
+    top: 0;
+    background: var(--color-background, #f5f5f4);
+    z-index: 50;
+    padding: 1rem 0;
   }
   
   .back-button {

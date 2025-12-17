@@ -23,10 +23,7 @@
   let filterDebounceTimer: number | null = null;
   const FILTER_DEBOUNCE_DELAY = 500; // milliseconds to wait before reloading after filter text changes
   
-  // Scroll-based header state
-  let isScrolled = false;
-  let contentHeaderRef: HTMLElement;
-  let observer: IntersectionObserver | null = null;
+
   
   const stateEmojis: Record<string, string> = {
     created: '🆕',
@@ -83,31 +80,11 @@
     }
     loadContainers();
     
-    // Set up intersection observer to detect when content header scrolls out of view
-    const HEADER_HEIGHT = 68; // Header height in pixels
-    if (contentHeaderRef) {
-      observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            isScrolled = !entry.isIntersecting;
-          });
-        },
-        { 
-          threshold: 0,
-          rootMargin: `-${HEADER_HEIGHT}px 0px 0px 0px`
-        }
-      );
-      observer.observe(contentHeaderRef);
-    }
-    
     // Mark as mounted after initial load completes
     isMounted = true;
   });
   
   onDestroy(() => {
-    if (observer) {
-      observer.disconnect();
-    }
     // Clear debounce timer if it exists
     clearTimeout(filterDebounceTimer);
   });
@@ -393,79 +370,11 @@
   }
 </script>
 
-<div class="home-container" class:scrolled={isScrolled}>
+<div class="home-container">
   <Header />
   
-  <!-- Floating header that appears when scrolled -->
-  <div class="floating-header" class:visible={isScrolled}>
-    <h2>容器列表</h2>
-    <div class="header-actions">
-      <input
-        type="text"
-        class="filter-input"
-        placeholder="按名称筛选..."
-        value={filterText}
-        on:input={handleFilterTextChange}
-        aria-label="按容器名称筛选"
-      />
-      <button 
-        class="mode-toggle" 
-        on:click={toggleDisplayMode} 
-        title={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}
-        aria-label={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}
-      >
-        {#if displayMode === 'compact'}
-          <span class="mode-icon">📋</span>
-          <span class="mode-text">标准</span>
-        {:else}
-          <span class="mode-icon">📑</span>
-          <span class="mode-text">紧凑</span>
-        {/if}
-      </button>
-      <select 
-        class="group-mode-select" 
-        value={groupMode} 
-        on:change={handleGroupModeChange}
-        aria-label="选择分组方式"
-      >
-        <option value="none">不分组</option>
-        <option value="compose">按 Compose 分组</option>
-        <option value="label">按标签分组</option>
-        <option value="status-health">按状态和健康分组</option>
-      </select>
-      {#if groupMode === 'label' && availableLabelKeys.length > 0}
-        <select 
-          class="label-key-select" 
-          value={selectedLabelKey} 
-          on:change={handleLabelKeyChange}
-          aria-label="选择标签"
-        >
-          {#each availableLabelKeys as labelKey}
-            <option value={labelKey}>{labelKey}</option>
-          {/each}
-        </select>
-      {/if}
-      <select 
-        class="sort-mode-select" 
-        value={sortMode} 
-        on:change={handleSortModeChange}
-        aria-label="选择排序方式"
-      >
-        <option value="none">不排序</option>
-        <option value="name">按名称</option>
-        <option value="created">按创建时间</option>
-        <option value="state-health">按状态和健康</option>
-        <option value="compose">按 Compose 名称</option>
-      </select>
-      <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
-        <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
-        刷新
-      </button>
-    </div>
-  </div>
-  
   <main class="main-content">
-    <div class="content-header" bind:this={contentHeaderRef}>
+    <div class="content-header">
       <h2>容器列表</h2>
       <div class="header-actions">
         <input
@@ -756,78 +665,6 @@
     background: var(--color-background, #f5f5f4);
   }
   
-  /* Floating header that appears when scrolled - positioned inside the main header area */
-  .floating-header {
-    position: fixed;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%) translateY(-100%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1.5rem;
-    padding: 1rem 2rem;
-    background: var(--color-primary, #171717);
-    color: var(--color-background, #f5f5f4);
-    z-index: 101;
-    opacity: 0;
-    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-    pointer-events: none;
-    border-radius: 0 0 var(--radius, 0.25rem) var(--radius, 0.25rem);
-  }
-  
-  .floating-header.visible {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-    pointer-events: auto;
-  }
-  
-  .floating-header h2 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin: 0;
-    font-family: var(--font-heading, "Playfair Display", serif);
-  }
-  
-  .floating-header .header-actions {
-    display: flex;
-    gap: 0.75rem;
-  }
-  
-  .floating-header .mode-toggle,
-  .floating-header .refresh-button,
-  .floating-header .group-mode-select,
-  .floating-header .label-key-select,
-  .floating-header .sort-mode-select,
-  .floating-header .filter-input {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--color-background, #f5f5f4);
-    padding: 0.4rem 0.75rem;
-    font-size: 0.85rem;
-  }
-  
-  .floating-header .filter-input::placeholder {
-    color: rgba(245, 245, 244, 0.6);
-  }
-  
-  .floating-header .mode-toggle:hover,
-  .floating-header .refresh-button:hover:not(:disabled),
-  .floating-header .group-mode-select:hover,
-  .floating-header .label-key-select:hover,
-  .floating-header .sort-mode-select:hover,
-  .floating-header .filter-input:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.3);
-  }
-  
-  .floating-header .group-mode-select option,
-  .floating-header .label-key-select option,
-  .floating-header .sort-mode-select option {
-    background: var(--color-primary, #171717);
-    color: var(--color-background, #f5f5f4);
-  }
-  
   .main-content {
     max-width: 1200px;
     margin: 0 auto;
@@ -840,6 +677,11 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.5rem;
+    position: sticky;
+    top: 0;
+    background: var(--color-background, #f5f5f4);
+    z-index: 50;
+    padding: 1rem 0;
   }
   
   .content-header h2 {
@@ -973,59 +815,6 @@
     
     .content-header h2 {
       font-size: 1.5rem;
-    }
-
-    /* Floating header mobile responsive - smaller and more compact buttons */
-    .floating-header {
-      padding: 1rem;
-      gap: 0.5rem;
-    }
-
-    .floating-header h2 {
-      font-size: 0.9rem;
-      flex-shrink: 0;
-    }
-
-    .floating-header .header-actions {
-      gap: 0.5rem;
-    }
-
-    .floating-header .mode-toggle,
-    .floating-header .refresh-button,
-    .floating-header .group-mode-select,
-    .floating-header .label-key-select,
-    .floating-header .sort-mode-select,
-    .floating-header .filter-input {
-      padding: 0.35rem 0.5rem;
-      font-size: 0.75rem;
-      min-width: auto;
-    }
-    
-    .floating-header .filter-input {
-      min-width: 120px;
-    }
-  }
-
-  /* Hide title on smaller screens to save space */
-  @media (max-width: 480px) {
-    .floating-header h2 {
-      display: none;
-    }
-  }
-
-  /* Hide button text on very small screens, show icons only */
-  @media (max-width: 400px) {
-    .floating-header .mode-toggle .mode-text {
-      display: none;
-    }
-
-    .floating-header .refresh-button {
-      font-size: 0;
-      gap: 0;
-    }
-
-    .floating-header .refresh-icon {
-      font-size: 1rem;
     }
   }
   
