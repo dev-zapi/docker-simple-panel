@@ -10,6 +10,7 @@
   let refreshing = false;
   let displayMode: 'compact' | 'standard' = 'standard';
   let groupMode: 'none' | 'compose' | 'label' | 'status-health' = 'none';
+  let sortMode: 'none' | 'name' | 'created' | 'state-health' | 'compose' = 'none';
   let actionError = '';
   let collapsedGroups: Set<string> = new Set();
   let selectedLabelKey: string = '';
@@ -38,7 +39,7 @@
     none: ''
   };
   
-  // Load display mode and group mode from localStorage
+  // Load display mode, group mode, and sort mode from localStorage
   onMount(() => {
     const savedMode = localStorage.getItem('displayMode');
     if (savedMode === 'compact' || savedMode === 'standard') {
@@ -51,6 +52,10 @@
       // Migrate old modes to new combined mode
       groupMode = 'status-health';
       localStorage.setItem('groupMode', 'status-health');
+    }
+    const savedSortMode = localStorage.getItem('sortMode');
+    if (savedSortMode === 'none' || savedSortMode === 'name' || savedSortMode === 'created' || savedSortMode === 'state-health' || savedSortMode === 'compose') {
+      sortMode = savedSortMode;
     }
     const savedSelectedLabelKey = localStorage.getItem('selectedLabelKey');
     if (savedSelectedLabelKey) {
@@ -107,6 +112,12 @@
     localStorage.setItem('groupMode', groupMode);
   }
   
+  function handleSortModeChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    sortMode = target.value as 'none' | 'name' | 'created' | 'state-health' | 'compose';
+    localStorage.setItem('sortMode', sortMode);
+  }
+  
   function handleFilterTextChange(event: Event) {
     const target = event.target as HTMLInputElement;
     filterText = target.value;
@@ -122,6 +133,53 @@
     }
     collapsedGroups = newCollapsedGroups;
     localStorage.setItem('collapsedGroups', JSON.stringify(Array.from(collapsedGroups)));
+  }
+  
+  // Sort containers based on selected sort mode
+  function sortContainers(containers: Container[]): Container[] {
+    if (sortMode === 'none') {
+      return containers;
+    }
+    
+    const sorted = [...containers];
+    
+    switch (sortMode) {
+      case 'name':
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'created':
+        // Sort by created timestamp, newest first
+        sorted.sort((a, b) => b.created - a.created);
+        break;
+      case 'state-health':
+        // Sort by state first, then by health
+        sorted.sort((a, b) => {
+          const stateCompare = a.state.localeCompare(b.state);
+          if (stateCompare !== 0) return stateCompare;
+          const healthA = a.health || 'none';
+          const healthB = b.health || 'none';
+          return healthA.localeCompare(healthB);
+        });
+        break;
+      case 'compose':
+        // Sort by compose project name, then by compose service, then by name
+        sorted.sort((a, b) => {
+          const composeA = a.compose_project || '';
+          const composeB = b.compose_project || '';
+          const composeCompare = composeA.localeCompare(composeB);
+          if (composeCompare !== 0) return composeCompare;
+          
+          const serviceA = a.compose_service || '';
+          const serviceB = b.compose_service || '';
+          const serviceCompare = serviceA.localeCompare(serviceB);
+          if (serviceCompare !== 0) return serviceCompare;
+          
+          return a.name.localeCompare(b.name);
+        });
+        break;
+    }
+    
+    return sorted;
   }
   
   // Filter containers by name
@@ -211,6 +269,12 @@
     return Array.from(keysSet).sort();
   }
   
+  // Derived filtered containers - updates when containers or filterText changes
+  $: filteredContainers = filterContainersByName(containers);
+  
+  // Derived sorted containers - updates when filteredContainers or sortMode changes
+  $: sortedContainers = sortContainers(filteredContainers);
+  
   // Update available label keys when containers change
   $: {
     availableLabelKeys = extractLabelKeys(containers);
@@ -225,9 +289,6 @@
       localStorage.setItem('selectedLabelKey', selectedLabelKey);
     }
   }
-  
-  // Filter containers by name
-  $: filteredContainers = filterContainersByName(containers);
   
   function handleLabelKeyChange(event: Event) {
     const target = event.target as HTMLSelectElement;
@@ -337,6 +398,18 @@
           {/each}
         </select>
       {/if}
+      <select 
+        class="sort-mode-select" 
+        value={sortMode} 
+        on:change={handleSortModeChange}
+        aria-label="选择排序方式"
+      >
+        <option value="none">不排序</option>
+        <option value="name">按名称</option>
+        <option value="created">按创建时间</option>
+        <option value="state-health">按状态和健康</option>
+        <option value="compose">按 Compose 名称</option>
+      </select>
       <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
         <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
         刷新
@@ -393,6 +466,18 @@
             {/each}
           </select>
         {/if}
+        <select 
+          class="sort-mode-select" 
+          value={sortMode} 
+          on:change={handleSortModeChange}
+          aria-label="选择排序方式"
+        >
+          <option value="none">不排序</option>
+          <option value="name">按名称</option>
+          <option value="created">按创建时间</option>
+          <option value="state-health">按状态和健康</option>
+          <option value="compose">按 Compose 名称</option>
+        </select>
         <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
           <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
           刷新
@@ -425,7 +510,7 @@
     {:else}
       {#if groupMode === 'compose'}
         <!-- Grouped by compose project -->
-        {@const { grouped, ungrouped } = groupContainersByCompose(filteredContainers)}
+        {@const { grouped, ungrouped } = groupContainersByCompose(sortedContainers)}
         
         <!-- Quick navigation sidebar -->
         {#if grouped.size > 0 || ungrouped.length > 0}
@@ -783,7 +868,7 @@
         {/if}
       {:else if groupMode === 'label' && selectedLabelKey}
         <!-- Grouped by selected label -->
-        {@const { grouped, ungrouped } = groupContainersByLabel(filteredContainers, selectedLabelKey)}
+        {@const { grouped, ungrouped } = groupContainersByLabel(sortedContainers, selectedLabelKey)}
         
         <!-- Quick navigation sidebar -->
         {#if grouped.size > 0 || ungrouped.length > 0}
@@ -1141,7 +1226,7 @@
         {/if}
       {:else if groupMode === 'status-health'}
         <!-- Grouped by combined status and health -->
-        {@const { grouped, ungrouped } = groupContainersByStatusHealth(filteredContainers)}
+        {@const { grouped, ungrouped } = groupContainersByStatusHealth(sortedContainers)}
         
         <!-- Quick navigation sidebar -->
         {#if grouped.size > 0}
@@ -1332,7 +1417,7 @@
       {:else}
         <!-- Ungrouped list -->
         <div class="container-list" class:compact={displayMode === 'compact'}>
-          {#each filteredContainers as container (container.id)}
+          {#each sortedContainers as container (container.id)}
           <div class="container-item" class:is-self={container.is_self}>
             {#if displayMode === 'compact'}
               <!-- Compact mode: single line -->
@@ -1530,6 +1615,7 @@
   .floating-header .refresh-button,
   .floating-header .group-mode-select,
   .floating-header .label-key-select,
+  .floating-header .sort-mode-select,
   .floating-header .filter-input {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -1546,13 +1632,15 @@
   .floating-header .refresh-button:hover:not(:disabled),
   .floating-header .group-mode-select:hover,
   .floating-header .label-key-select:hover,
+  .floating-header .sort-mode-select:hover,
   .floating-header .filter-input:hover {
     background: rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.3);
   }
   
   .floating-header .group-mode-select option,
-  .floating-header .label-key-select option {
+  .floating-header .label-key-select option,
+  .floating-header .sort-mode-select option {
     background: var(--color-primary, #171717);
     color: var(--color-background, #f5f5f4);
   }
@@ -1588,6 +1676,7 @@
   .refresh-button,
   .group-mode-select,
   .label-key-select,
+  .sort-mode-select,
   .filter-input {
     display: flex;
     align-items: center;
@@ -1617,6 +1706,7 @@
   .refresh-button:hover:not(:disabled),
   .group-mode-select:hover,
   .label-key-select:hover,
+  .sort-mode-select:hover,
   .filter-input:hover {
     background: var(--color-background, #f5f5f4);
     border-color: var(--color-primary, #171717);
@@ -2001,6 +2091,7 @@
     .floating-header .refresh-button,
     .floating-header .group-mode-select,
     .floating-header .label-key-select,
+    .floating-header .sort-mode-select,
     .floating-header .filter-input {
       padding: 0.35rem 0.5rem;
       font-size: 0.75rem;
