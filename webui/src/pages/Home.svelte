@@ -250,6 +250,9 @@
     return Array.from(keysSet).sort();
   }
   
+  // Derived sorted containers - updates when containers or sortMode changes
+  $: sortedContainers = sortContainers(containers);
+  
   // Update available label keys when containers change
   $: {
     availableLabelKeys = extractLabelKeys(containers);
@@ -1376,7 +1379,7 @@
       {:else}
         <!-- Ungrouped list -->
         <div class="container-list" class:compact={displayMode === 'compact'}>
-          {#each sortContainers(containers) as container (container.id)}
+          {#each sortedContainers as container (container.id)}
           <div class="container-item" class:is-self={container.is_self}>
             {#if displayMode === 'compact'}
               <!-- Compact mode: single line -->
