@@ -8,6 +8,7 @@
   --color-secondary: #525252;
   --color-accent: #991b1b;
   --color-background: #f5f5f4;
+  --color-background-blur: rgba(245, 245, 244, 0.8);
   --color-surface: #e7e5e4;
   --color-text: #0a0a0a;
   --color-muted: #78716c;
@@ -28,6 +29,7 @@
   --color-secondary: #1e3a8a;
   --color-accent: #facc15;
   --color-background: #0f172a;
+  --color-background-blur: rgba(15, 23, 42, 0.8);
   --color-surface: #1e293b;
   --color-text: #f1f5f9;
   --color-muted: #64748b;
