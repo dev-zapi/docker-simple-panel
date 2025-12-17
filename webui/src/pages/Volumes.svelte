@@ -578,45 +578,5 @@
       flex-direction: column;
       gap: 0.5rem;
     }
-
-    /* Floating header mobile responsive - smaller and more compact buttons */
-    .floating-header {
-      padding: 1rem;
-      gap: 0.5rem;
-    }
-
-    .floating-header h2 {
-      font-size: 0.9rem;
-      flex-shrink: 0;
-    }
-
-    .floating-header .header-actions {
-      gap: 0.5rem;
-    }
-
-    .floating-header .refresh-button {
-      padding: 0.35rem 0.5rem;
-      font-size: 0.75rem;
-      min-width: auto;
-    }
-  }
-
-  /* Hide title on smaller screens to save space */
-  @media (max-width: 480px) {
-    .floating-header h2 {
-      display: none;
-    }
-  }
-
-  /* Hide button text on very small screens, show icons only */
-  @media (max-width: 400px) {
-    .floating-header .refresh-button {
-      font-size: 0;
-      gap: 0;
-    }
-
-    .floating-header .refresh-icon {
-      font-size: 1rem;
-    }
   }
 </style>
