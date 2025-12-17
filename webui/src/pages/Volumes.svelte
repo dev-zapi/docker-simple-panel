@@ -261,7 +261,7 @@
     margin-bottom: 1.5rem;
     position: sticky;
     top: 0;
-    background: var(--color-background-blur, rgba(245, 245, 244, 0.8));
+    background: var(--color-background-blur);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     z-index: 50;
