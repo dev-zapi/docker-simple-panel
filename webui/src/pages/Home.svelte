@@ -20,6 +20,7 @@
   // Track if component has mounted to prevent reload during initial setup
   let isMounted = false;
   let filterDebounceTimer: number | null = null;
+  const FILTER_DEBOUNCE_DELAY = 500; // milliseconds to wait before reloading after filter text changes
   
   // Scroll-based header state
   let isScrolled = false;
@@ -316,10 +317,10 @@
   $: if (isMounted && filterText !== undefined) {
     // Clear existing timer
     clearTimeout(filterDebounceTimer);
-    // Set new timer to reload after 500ms of no typing
+    // Set new timer to reload after user stops typing
     filterDebounceTimer = setTimeout(() => {
       loadContainers();
-    }, 500);
+    }, FILTER_DEBOUNCE_DELAY);
   }
   
   function handleLabelKeyChange(event: Event) {
