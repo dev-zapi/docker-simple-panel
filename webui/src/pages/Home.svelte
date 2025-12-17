@@ -10,6 +10,7 @@
   let refreshing = false;
   let displayMode: 'compact' | 'standard' = 'standard';
   let groupMode: 'none' | 'compose' | 'label' | 'status-health' = 'none';
+  let sortMode: 'none' | 'name' | 'created' | 'state-health' | 'compose' = 'none';
   let actionError = '';
   let collapsedGroups: Set<string> = new Set();
   let selectedLabelKey: string = '';
@@ -37,7 +38,7 @@
     none: ''
   };
   
-  // Load display mode and group mode from localStorage
+  // Load display mode, group mode, and sort mode from localStorage
   onMount(() => {
     const savedMode = localStorage.getItem('displayMode');
     if (savedMode === 'compact' || savedMode === 'standard') {
@@ -50,6 +51,10 @@
       // Migrate old modes to new combined mode
       groupMode = 'status-health';
       localStorage.setItem('groupMode', 'status-health');
+    }
+    const savedSortMode = localStorage.getItem('sortMode');
+    if (savedSortMode === 'none' || savedSortMode === 'name' || savedSortMode === 'created' || savedSortMode === 'state-health' || savedSortMode === 'compose') {
+      sortMode = savedSortMode;
     }
     const savedSelectedLabelKey = localStorage.getItem('selectedLabelKey');
     if (savedSelectedLabelKey) {
@@ -102,6 +107,12 @@
     localStorage.setItem('groupMode', groupMode);
   }
   
+  function handleSortModeChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    sortMode = target.value as 'none' | 'name' | 'created' | 'state-health' | 'compose';
+    localStorage.setItem('sortMode', sortMode);
+  }
+  
   function toggleGroupCollapse(groupName: string) {
     const newCollapsedGroups = new Set(collapsedGroups);
     if (newCollapsedGroups.has(groupName)) {
@@ -113,12 +124,60 @@
     localStorage.setItem('collapsedGroups', JSON.stringify(Array.from(collapsedGroups)));
   }
   
+  // Sort containers based on selected sort mode
+  function sortContainers(containers: Container[]): Container[] {
+    if (sortMode === 'none') {
+      return containers;
+    }
+    
+    const sorted = [...containers];
+    
+    switch (sortMode) {
+      case 'name':
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'created':
+        // Sort by created timestamp, newest first
+        sorted.sort((a, b) => b.created - a.created);
+        break;
+      case 'state-health':
+        // Sort by state first, then by health
+        sorted.sort((a, b) => {
+          const stateCompare = a.state.localeCompare(b.state);
+          if (stateCompare !== 0) return stateCompare;
+          const healthA = a.health || 'none';
+          const healthB = b.health || 'none';
+          return healthA.localeCompare(healthB);
+        });
+        break;
+      case 'compose':
+        // Sort by compose project name, then by compose service, then by name
+        sorted.sort((a, b) => {
+          const composeA = a.compose_project || '';
+          const composeB = b.compose_project || '';
+          const composeCompare = composeA.localeCompare(composeB);
+          if (composeCompare !== 0) return composeCompare;
+          
+          const serviceA = a.compose_service || '';
+          const serviceB = b.compose_service || '';
+          const serviceCompare = serviceA.localeCompare(serviceB);
+          if (serviceCompare !== 0) return serviceCompare;
+          
+          return a.name.localeCompare(b.name);
+        });
+        break;
+    }
+    
+    return sorted;
+  }
+  
   // Group containers by compose project
   function groupContainersByCompose(containers: Container[]) {
+    const sorted = sortContainers(containers);
     const grouped = new Map<string, Container[]>();
     const ungrouped: Container[] = [];
     
-    for (const container of containers) {
+    for (const container of sorted) {
       if (container.compose_project) {
         const existing = grouped.get(container.compose_project) || [];
         existing.push(container);
@@ -133,10 +192,11 @@
   
   // Group containers by selected label
   function groupContainersByLabel(containers: Container[], labelKey: string) {
+    const sorted = sortContainers(containers);
     const grouped = new Map<string, Container[]>();
     const ungrouped: Container[] = [];
     
-    for (const container of containers) {
+    for (const container of sorted) {
       const labelValue = container.labels?.[labelKey];
       if (labelValue) {
         const existing = grouped.get(labelValue) || [];
@@ -152,9 +212,10 @@
   
   // Group containers by combined status and health
   function groupContainersByStatusHealth(containers: Container[]) {
+    const sorted = sortContainers(containers);
     const grouped = new Map<string, Container[]>();
     
-    for (const container of containers) {
+    for (const container of sorted) {
       const state = container.state;
       const health = container.health || 'none';
       // Create a combined key like "running-healthy" or "exited-none"
@@ -188,6 +249,9 @@
     }
     return Array.from(keysSet).sort();
   }
+  
+  // Derived sorted containers - updates when containers or sortMode changes
+  $: sortedContainers = sortContainers(containers);
   
   // Update available label keys when containers change
   $: {
@@ -304,6 +368,18 @@
           {/each}
         </select>
       {/if}
+      <select 
+        class="sort-mode-select" 
+        value={sortMode} 
+        on:change={handleSortModeChange}
+        aria-label="选择排序方式"
+      >
+        <option value="none">不排序</option>
+        <option value="name">按名称</option>
+        <option value="created">按创建时间</option>
+        <option value="state-health">按状态和健康</option>
+        <option value="compose">按 Compose 名称</option>
+      </select>
       <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
         <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
         刷新
@@ -352,6 +428,18 @@
             {/each}
           </select>
         {/if}
+        <select 
+          class="sort-mode-select" 
+          value={sortMode} 
+          on:change={handleSortModeChange}
+          aria-label="选择排序方式"
+        >
+          <option value="none">不排序</option>
+          <option value="name">按名称</option>
+          <option value="created">按创建时间</option>
+          <option value="state-health">按状态和健康</option>
+          <option value="compose">按 Compose 名称</option>
+        </select>
         <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
           <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
           刷新
@@ -1291,7 +1379,7 @@
       {:else}
         <!-- Ungrouped list -->
         <div class="container-list" class:compact={displayMode === 'compact'}>
-          {#each containers as container (container.id)}
+          {#each sortedContainers as container (container.id)}
           <div class="container-item" class:is-self={container.is_self}>
             {#if displayMode === 'compact'}
               <!-- Compact mode: single line -->
@@ -1488,7 +1576,8 @@
   .floating-header .mode-toggle,
   .floating-header .refresh-button,
   .floating-header .group-mode-select,
-  .floating-header .label-key-select {
+  .floating-header .label-key-select,
+  .floating-header .sort-mode-select {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: var(--color-background, #f5f5f4);
@@ -1499,13 +1588,15 @@
   .floating-header .mode-toggle:hover,
   .floating-header .refresh-button:hover:not(:disabled),
   .floating-header .group-mode-select:hover,
-  .floating-header .label-key-select:hover {
+  .floating-header .label-key-select:hover,
+  .floating-header .sort-mode-select:hover {
     background: rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.3);
   }
   
   .floating-header .group-mode-select option,
-  .floating-header .label-key-select option {
+  .floating-header .label-key-select option,
+  .floating-header .sort-mode-select option {
     background: var(--color-primary, #171717);
     color: var(--color-background, #f5f5f4);
   }
@@ -1540,7 +1631,8 @@
   .mode-toggle,
   .refresh-button,
   .group-mode-select,
-  .label-key-select {
+  .label-key-select,
+  .sort-mode-select {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -1558,7 +1650,8 @@
   .mode-toggle:hover,
   .refresh-button:hover:not(:disabled),
   .group-mode-select:hover,
-  .label-key-select:hover {
+  .label-key-select:hover,
+  .sort-mode-select:hover {
     background: var(--color-background, #f5f5f4);
     border-color: var(--color-primary, #171717);
   }
@@ -1941,7 +2034,8 @@
     .floating-header .mode-toggle,
     .floating-header .refresh-button,
     .floating-header .group-mode-select,
-    .floating-header .label-key-select {
+    .floating-header .label-key-select,
+    .floating-header .sort-mode-select {
       padding: 0.35rem 0.5rem;
       font-size: 0.75rem;
       min-width: auto;
