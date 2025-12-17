@@ -548,11 +548,10 @@
                           </button>
                         {:else if ['exited', 'created', 'dead'].includes(container.state)}
                           <button 
-                            class="action-btn start" 
+                            class="action-btn start"
                             on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                          
                           >
-            ▶️ 启动
+                            ▶️ 启动
                           </button>
                         {:else}
                           <button 
@@ -715,11 +714,10 @@
                         </button>
                       {:else if ['exited', 'created', 'dead'].includes(container.state)}
                         <button 
-                          class="action-btn start" 
-                          on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                        
-                        >
-            ▶️ 启动
+                          class="action-btn start"
+                            on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                          >
+                            ▶️ 启动
                         </button>
                       {:else}
                         <button 
@@ -908,11 +906,10 @@
                           </button>
                         {:else if ['exited', 'created', 'dead'].includes(container.state)}
                           <button 
-                            class="action-btn start" 
+                            class="action-btn start"
                             on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                          
                           >
-            ▶️ 启动
+                            ▶️ 启动
                           </button>
                         {:else}
                           <button 
@@ -1075,11 +1072,10 @@
                         </button>
                       {:else if ['exited', 'created', 'dead'].includes(container.state)}
                         <button 
-                          class="action-btn start" 
-                          on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                        
-                        >
-            ▶️ 启动
+                          class="action-btn start"
+                            on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                          >
+                            ▶️ 启动
                         </button>
                       {:else}
                         <button 
@@ -1265,11 +1261,10 @@
                           </button>
                         {:else if ['exited', 'created', 'dead'].includes(container.state)}
                           <button 
-                            class="action-btn start" 
+                            class="action-btn start"
                             on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                          
                           >
-            ▶️ 启动
+                            ▶️ 启动
                           </button>
                         {:else}
                           <button 
@@ -1418,11 +1413,10 @@
                   </button>
                 {:else if ['exited', 'created', 'dead'].includes(container.state)}
                   <button 
-                    class="action-btn start" 
-                    on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                  
-                  >
-            ▶️ 启动
+                    class="action-btn start"
+                            on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                          >
+                            ▶️ 启动
                   </button>
                 {:else}
                   <button 
