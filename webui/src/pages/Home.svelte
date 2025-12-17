@@ -314,11 +314,6 @@
     loadContainers();
   }
   
-  // Auto-reload containers when selected label key changes (after initial mount)
-  $: if (isMounted && selectedLabelKey !== undefined) {
-    loadContainers();
-  }
-  
   // Auto-reload containers when filter text changes with debouncing (after initial mount)
   $: if (isMounted && filterText !== undefined) {
     // Clear existing timer
@@ -335,6 +330,10 @@
     const target = event.target as HTMLSelectElement;
     selectedLabelKey = target.value;
     localStorage.setItem('selectedLabelKey', selectedLabelKey);
+    // Reload containers when user manually changes label key
+    if (isMounted) {
+      loadContainers();
+    }
   }
   
   function scrollToGroup(groupName: string) {
