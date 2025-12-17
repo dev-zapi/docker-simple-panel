@@ -679,7 +679,9 @@
     margin-bottom: 1.5rem;
     position: sticky;
     top: 0;
-    background: var(--color-background, #f5f5f4);
+    background: var(--color-background-blur);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     z-index: 50;
     padding: 1rem 0;
   }
@@ -695,6 +697,7 @@
   .header-actions {
     display: flex;
     gap: 0.75rem;
+    flex-wrap: wrap;
   }
   
   .mode-toggle,
