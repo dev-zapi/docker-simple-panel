@@ -17,6 +17,10 @@
   let availableLabelKeys: string[] = [];
   let filterText: string = '';
   
+  // Track if component has mounted to prevent reload during initial setup
+  let isMounted = false;
+  let filterDebounceTimer: number | null = null;
+  
   // Scroll-based header state
   let isScrolled = false;
   let contentHeaderRef: HTMLElement;
@@ -93,11 +97,18 @@
       );
       observer.observe(contentHeaderRef);
     }
+    
+    // Mark as mounted after initial load completes
+    isMounted = true;
   });
   
   onDestroy(() => {
     if (observer) {
       observer.disconnect();
+    }
+    // Clear debounce timer if it exists
+    if (filterDebounceTimer !== null) {
+      clearTimeout(filterDebounceTimer);
     }
   });
   
@@ -291,6 +302,33 @@
       selectedLabelKey = availableLabelKeys[0];
       localStorage.setItem('selectedLabelKey', selectedLabelKey);
     }
+  }
+  
+  // Auto-reload containers when sort mode changes (after initial mount)
+  $: if (isMounted && sortMode) {
+    loadContainers();
+  }
+  
+  // Auto-reload containers when group mode changes (after initial mount)
+  $: if (isMounted && groupMode) {
+    loadContainers();
+  }
+  
+  // Auto-reload containers when selected label key changes (after initial mount)
+  $: if (isMounted && selectedLabelKey !== undefined) {
+    loadContainers();
+  }
+  
+  // Auto-reload containers when filter text changes with debouncing (after initial mount)
+  $: if (isMounted && filterText !== undefined) {
+    // Clear existing timer
+    if (filterDebounceTimer !== null) {
+      clearTimeout(filterDebounceTimer);
+    }
+    // Set new timer to reload after 500ms of no typing
+    filterDebounceTimer = window.setTimeout(() => {
+      loadContainers();
+    }, 500);
   }
   
   function handleLabelKeyChange(event: Event) {
