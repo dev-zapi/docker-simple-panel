@@ -19,10 +19,7 @@
   let showDeleteConfirm = false;
   let deleteTimeoutId: number | null = null;
   
-  // Scroll-based header state
-  let isScrolled = false;
-  let contentHeaderRef: HTMLElement;
-  let observer: IntersectionObserver | null = null;
+
   
   onMount(() => {
     if (!volumeName) {
@@ -31,29 +28,6 @@
     }
     
     loadFiles();
-    
-    // Set up intersection observer
-    const HEADER_HEIGHT = 68;
-    if (contentHeaderRef) {
-      observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            isScrolled = !entry.isIntersecting;
-          });
-        },
-        { 
-          threshold: 0,
-          rootMargin: `-${HEADER_HEIGHT}px 0px 0px 0px`
-        }
-      );
-      observer.observe(contentHeaderRef);
-    }
-    
-    return () => {
-      if (observer) {
-        observer.disconnect();
-      }
-    };
   });
   
   async function loadFiles() {
@@ -170,23 +144,11 @@
   }
 </script>
 
-<div class="explorer-container" class:scrolled={isScrolled}>
+<div class="explorer-container">
   <Header />
   
-  <!-- Floating header -->
-  <div class="floating-header" class:visible={isScrolled}>
-    <h2>📦 {volumeName}</h2>
-    <div class="breadcrumb">
-      <button class="breadcrumb-btn" on:click={handleGoToRoot}>🏠</button>
-      {#if currentPath !== '/'}
-        <span class="separator">/</span>
-        <span class="path-text">{currentPath}</span>
-      {/if}
-    </div>
-  </div>
-  
   <main class="main-content">
-    <div class="content-header" bind:this={contentHeaderRef}>
+    <div class="content-header">
       <div class="header-top">
         <h2>📦 {volumeName}</h2>
         <div class="header-actions">
@@ -318,38 +280,6 @@
     background: var(--color-background, #f5f5f4);
   }
   
-  .floating-header {
-    position: fixed;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%) translateY(-100%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 2rem;
-    background: var(--color-primary, #171717);
-    color: var(--color-background, #f5f5f4);
-    z-index: 101;
-    opacity: 0;
-    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-    pointer-events: none;
-    border-radius: 0 0 var(--radius, 0.25rem) var(--radius, 0.25rem);
-  }
-  
-  .floating-header.visible {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-    pointer-events: auto;
-  }
-  
-  .floating-header h2 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin: 0;
-    font-family: var(--font-heading, "Playfair Display", serif);
-  }
-  
   .main-content {
     max-width: 1400px;
     margin: 0 auto;
@@ -358,6 +288,11 @@
   
   .content-header {
     margin-bottom: 1.5rem;
+    position: sticky;
+    top: 0;
+    background: var(--color-background, #f5f5f4);
+    z-index: 50;
+    padding: 1rem 0;
   }
   
   .header-top {
@@ -723,34 +658,6 @@
       flex-direction: column;
       gap: 1rem;
       align-items: flex-start;
-    }
-
-    /* Floating header mobile responsive - smaller and more compact */
-    .floating-header {
-      padding: 1rem;
-      gap: 0.5rem;
-    }
-
-    .floating-header h2 {
-      font-size: 0.9rem;
-      text-align: center;
-    }
-
-    .floating-header .breadcrumb {
-      font-size: 0.75rem;
-    }
-
-    .floating-header .breadcrumb-btn {
-      padding: 0.25rem 0.4rem;
-      font-size: 0.9rem;
-    }
-
-    .floating-header .path-text {
-      font-size: 0.75rem;
-      max-width: 150px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
   }
 </style>
