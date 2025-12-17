@@ -302,6 +302,15 @@
       return;
     }
     
+    // Show confirmation dialog
+    const actionText = action === 'start' ? '启动' : action === 'stop' ? '停止' : '重启';
+    const container = containers.find(c => c.id === containerId);
+    const containerName = container?.name || containerId;
+    
+    if (!confirm(`确定要${actionText}容器 "${containerName}" 吗？`)) {
+      return;
+    }
+    
     try {
       actionError = '';
       await containerApi.controlContainer({ containerId, action });
@@ -534,17 +543,17 @@
                               class="action-btn-compact stop" 
                               on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                               disabled={container.is_self}
-                              title={container.is_self ? '无法停止本应用容器' : '停止'}
+                              title={container.is_self ? "无法停止本应用容器" : "停止"}
                             >
-                              ⏸️
+              ⏸️
                             </button>
                             <button 
                               class="action-btn-compact restart" 
                               on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                               disabled={container.is_self}
-                              title={container.is_self ? '无法重启本应用容器' : '重启'}
+                              title={container.is_self ? "无法重启本应用容器" : "重启"}
                             >
-                              🔄
+              🔄
                             </button>
                           {:else if ['exited', 'created', 'dead'].includes(container.state)}
                             <button 
@@ -552,16 +561,16 @@
                               on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
                               title="启动"
                             >
-                              ▶️
+              ▶️
                             </button>
                           {:else}
                             <button 
                               class="action-btn-compact restart" 
                               on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                               disabled={container.is_self}
-                              title={container.is_self ? '无法重启本应用容器' : '重启'}
+                              title={container.is_self ? "无法重启本应用容器" : "重启"}
                             >
-                              🔄
+              🔄
                             </button>
                           {/if}
                           <a 
@@ -613,21 +622,21 @@
                             class="action-btn stop" 
                             on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? '无法停止本应用容器' : ''}
+                            title={container.is_self ? "无法停止本应用容器" : ""}
                           >
-                            ⏸️ 停止
+            ⏸️ 停止
                           </button>
                           <button 
                             class="action-btn restart" 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? '无法重启本应用容器' : ''}
+                            title={container.is_self ? "无法重启本应用容器" : ""}
                           >
-                            🔄 重启
+            🔄 重启
                           </button>
                         {:else if ['exited', 'created', 'dead'].includes(container.state)}
                           <button 
-                            class="action-btn start" 
+                            class="action-btn start"
                             on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
                           >
                             ▶️ 启动
@@ -637,9 +646,9 @@
                             class="action-btn restart" 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? '无法重启本应用容器' : ''}
+                            title={container.is_self ? "无法重启本应用容器" : ""}
                           >
-                            🔄 重启
+            🔄 重启
                           </button>
                         {/if}
                         <a 
@@ -703,17 +712,17 @@
                             class="action-btn-compact stop" 
                             on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? '无法停止本应用容器' : '停止'}
+                            title={container.is_self ? "无法停止本应用容器" : "停止"}
                           >
-                            ⏸️
+              ⏸️
                           </button>
                           <button 
                             class="action-btn-compact restart" 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? '无法重启本应用容器' : '重启'}
+                            title={container.is_self ? "无法重启本应用容器" : "重启"}
                           >
-                            🔄
+              🔄
                           </button>
                         {:else if ['exited', 'created', 'dead'].includes(container.state)}
                           <button 
@@ -721,16 +730,16 @@
                             on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
                             title="启动"
                           >
-                            ▶️
+              ▶️
                           </button>
                         {:else}
                           <button 
                             class="action-btn-compact restart" 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? '无法重启本应用容器' : '重启'}
+                            title={container.is_self ? "无法重启本应用容器" : "重启"}
                           >
-                            🔄
+              🔄
                           </button>
                         {/if}
                         <a 
@@ -779,33 +788,33 @@
                           class="action-btn stop" 
                           on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                           disabled={container.is_self}
-                          title={container.is_self ? '无法停止本应用容器' : ''}
+                          title={container.is_self ? "无法停止本应用容器" : ""}
                         >
-                          ⏸️ 停止
+            ⏸️ 停止
                         </button>
                         <button 
                           class="action-btn restart" 
                           on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                           disabled={container.is_self}
-                          title={container.is_self ? '无法重启本应用容器' : ''}
+                          title={container.is_self ? "无法重启本应用容器" : ""}
                         >
-                          🔄 重启
+            🔄 重启
                         </button>
                       {:else if ['exited', 'created', 'dead'].includes(container.state)}
                         <button 
-                          class="action-btn start" 
-                          on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                        >
-                          ▶️ 启动
+                          class="action-btn start"
+                            on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                          >
+                            ▶️ 启动
                         </button>
                       {:else}
                         <button 
                           class="action-btn restart" 
                           on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                           disabled={container.is_self}
-                          title={container.is_self ? '无法重启本应用容器' : ''}
+                          title={container.is_self ? "无法重启本应用容器" : ""}
                         >
-                          🔄 重启
+            🔄 重启
                         </button>
                       {/if}
                       <a 
@@ -892,17 +901,17 @@
                               class="action-btn-compact stop" 
                               on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                               disabled={container.is_self}
-                              title={container.is_self ? '无法停止本应用容器' : '停止'}
+                              title={container.is_self ? "无法停止本应用容器" : "停止"}
                             >
-                              ⏸️
+              ⏸️
                             </button>
                             <button 
                               class="action-btn-compact restart" 
                               on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                               disabled={container.is_self}
-                              title={container.is_self ? '无法重启本应用容器' : '重启'}
+                              title={container.is_self ? "无法重启本应用容器" : "重启"}
                             >
-                              🔄
+              🔄
                             </button>
                           {:else if ['exited', 'created', 'dead'].includes(container.state)}
                             <button 
@@ -910,16 +919,16 @@
                               on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
                               title="启动"
                             >
-                              ▶️
+              ▶️
                             </button>
                           {:else}
                             <button 
                               class="action-btn-compact restart" 
                               on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                               disabled={container.is_self}
-                              title={container.is_self ? '无法重启本应用容器' : '重启'}
+                              title={container.is_self ? "无法重启本应用容器" : "重启"}
                             >
-                              🔄
+              🔄
                             </button>
                           {/if}
                           <a 
@@ -971,21 +980,21 @@
                             class="action-btn stop" 
                             on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? '无法停止本应用容器' : ''}
+                            title={container.is_self ? "无法停止本应用容器" : ""}
                           >
-                            ⏸️ 停止
+            ⏸️ 停止
                           </button>
                           <button 
                             class="action-btn restart" 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? '无法重启本应用容器' : ''}
+                            title={container.is_self ? "无法重启本应用容器" : ""}
                           >
-                            🔄 重启
+            🔄 重启
                           </button>
                         {:else if ['exited', 'created', 'dead'].includes(container.state)}
                           <button 
-                            class="action-btn start" 
+                            class="action-btn start"
                             on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
                           >
                             ▶️ 启动
@@ -995,9 +1004,9 @@
                             class="action-btn restart" 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? '无法重启本应用容器' : ''}
+                            title={container.is_self ? "无法重启本应用容器" : ""}
                           >
-                            🔄 重启
+            🔄 重启
                           </button>
                         {/if}
                         <a 
@@ -1061,17 +1070,17 @@
                             class="action-btn-compact stop" 
                             on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? '无法停止本应用容器' : '停止'}
+                            title={container.is_self ? "无法停止本应用容器" : "停止"}
                           >
-                            ⏸️
+              ⏸️
                           </button>
                           <button 
                             class="action-btn-compact restart" 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? '无法重启本应用容器' : '重启'}
+                            title={container.is_self ? "无法重启本应用容器" : "重启"}
                           >
-                            🔄
+              🔄
                           </button>
                         {:else if ['exited', 'created', 'dead'].includes(container.state)}
                           <button 
@@ -1079,16 +1088,16 @@
                             on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
                             title="启动"
                           >
-                            ▶️
+              ▶️
                           </button>
                         {:else}
                           <button 
                             class="action-btn-compact restart" 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? '无法重启本应用容器' : '重启'}
+                            title={container.is_self ? "无法重启本应用容器" : "重启"}
                           >
-                            🔄
+              🔄
                           </button>
                         {/if}
                         <a 
@@ -1137,33 +1146,33 @@
                           class="action-btn stop" 
                           on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                           disabled={container.is_self}
-                          title={container.is_self ? '无法停止本应用容器' : ''}
+                          title={container.is_self ? "无法停止本应用容器" : ""}
                         >
-                          ⏸️ 停止
+            ⏸️ 停止
                         </button>
                         <button 
                           class="action-btn restart" 
                           on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                           disabled={container.is_self}
-                          title={container.is_self ? '无法重启本应用容器' : ''}
+                          title={container.is_self ? "无法重启本应用容器" : ""}
                         >
-                          🔄 重启
+            🔄 重启
                         </button>
                       {:else if ['exited', 'created', 'dead'].includes(container.state)}
                         <button 
-                          class="action-btn start" 
-                          on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                        >
-                          ▶️ 启动
+                          class="action-btn start"
+                            on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                          >
+                            ▶️ 启动
                         </button>
                       {:else}
                         <button 
                           class="action-btn restart" 
                           on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                           disabled={container.is_self}
-                          title={container.is_self ? '无法重启本应用容器' : ''}
+                          title={container.is_self ? "无法重启本应用容器" : ""}
                         >
-                          🔄 重启
+            🔄 重启
                         </button>
                       {/if}
                       <a 
@@ -1247,17 +1256,17 @@
                               class="action-btn-compact stop" 
                               on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                               disabled={container.is_self}
-                              title={container.is_self ? '无法停止本应用容器' : '停止'}
+                              title={container.is_self ? "无法停止本应用容器" : "停止"}
                             >
-                              ⏸️
+              ⏸️
                             </button>
                             <button 
                               class="action-btn-compact restart" 
                               on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                               disabled={container.is_self}
-                              title={container.is_self ? '无法重启本应用容器' : '重启'}
+                              title={container.is_self ? "无法重启本应用容器" : "重启"}
                             >
-                              🔄
+              🔄
                             </button>
                           {:else if ['exited', 'created', 'dead'].includes(container.state)}
                             <button 
@@ -1265,16 +1274,16 @@
                               on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
                               title="启动"
                             >
-                              ▶️
+              ▶️
                             </button>
                           {:else}
                             <button 
                               class="action-btn-compact restart" 
                               on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                               disabled={container.is_self}
-                              title={container.is_self ? '无法重启本应用容器' : '重启'}
+                              title={container.is_self ? "无法重启本应用容器" : "重启"}
                             >
-                              🔄
+              🔄
                             </button>
                           {/if}
                           <a 
@@ -1326,21 +1335,21 @@
                             class="action-btn stop" 
                             on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? '无法停止本应用容器' : ''}
+                            title={container.is_self ? "无法停止本应用容器" : ""}
                           >
-                            ⏸️ 停止
+            ⏸️ 停止
                           </button>
                           <button 
                             class="action-btn restart" 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? '无法重启本应用容器' : ''}
+                            title={container.is_self ? "无法重启本应用容器" : ""}
                           >
-                            🔄 重启
+            🔄 重启
                           </button>
                         {:else if ['exited', 'created', 'dead'].includes(container.state)}
                           <button 
-                            class="action-btn start" 
+                            class="action-btn start"
                             on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
                           >
                             ▶️ 启动
@@ -1350,9 +1359,9 @@
                             class="action-btn restart" 
                             on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                             disabled={container.is_self}
-                            title={container.is_self ? '无法重启本应用容器' : ''}
+                            title={container.is_self ? "无法重启本应用容器" : ""}
                           >
-                            🔄 重启
+            🔄 重启
                           </button>
                         {/if}
                         <a 
@@ -1402,17 +1411,17 @@
                       class="action-btn-compact stop" 
                       on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                       disabled={container.is_self}
-                      title={container.is_self ? '无法停止本应用容器' : '停止'}
+                      title={container.is_self ? "无法停止本应用容器" : "停止"}
                     >
-                      ⏸️
+              ⏸️
                     </button>
                     <button 
                       class="action-btn-compact restart" 
                       on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                       disabled={container.is_self}
-                      title={container.is_self ? '无法重启本应用容器' : '重启'}
+                      title={container.is_self ? "无法重启本应用容器" : "重启"}
                     >
-                      🔄
+              🔄
                     </button>
                   {:else if ['exited', 'created', 'dead'].includes(container.state)}
                     <button 
@@ -1420,16 +1429,16 @@
                       on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
                       title="启动"
                     >
-                      ▶️
+              ▶️
                     </button>
                   {:else}
                     <button 
                       class="action-btn-compact restart" 
                       on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                       disabled={container.is_self}
-                      title={container.is_self ? '无法重启本应用容器' : '重启'}
+                      title={container.is_self ? "无法重启本应用容器" : "重启"}
                     >
-                      🔄
+              🔄
                     </button>
                   {/if}
                   <a 
@@ -1478,33 +1487,33 @@
                     class="action-btn stop" 
                     on:click={() => handleAction(container.id, 'stop', container.is_self ?? false)}
                     disabled={container.is_self}
-                    title={container.is_self ? '无法停止本应用容器' : ''}
+                    title={container.is_self ? "无法停止本应用容器" : ""}
                   >
-                    ⏸️ 停止
+            ⏸️ 停止
                   </button>
                   <button 
                     class="action-btn restart" 
                     on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                     disabled={container.is_self}
-                    title={container.is_self ? '无法重启本应用容器' : ''}
+                    title={container.is_self ? "无法重启本应用容器" : ""}
                   >
-                    🔄 重启
+            🔄 重启
                   </button>
                 {:else if ['exited', 'created', 'dead'].includes(container.state)}
                   <button 
-                    class="action-btn start" 
-                    on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
-                  >
-                    ▶️ 启动
+                    class="action-btn start"
+                            on:click={() => handleAction(container.id, 'start', container.is_self ?? false)}
+                          >
+                            ▶️ 启动
                   </button>
                 {:else}
                   <button 
                     class="action-btn restart" 
                     on:click={() => handleAction(container.id, 'restart', container.is_self ?? false)}
                     disabled={container.is_self}
-                    title={container.is_self ? '无法重启本应用容器' : ''}
+                    title={container.is_self ? "无法重启本应用容器" : ""}
                   >
-                    🔄 重启
+            🔄 重启
                   </button>
                 {/if}
                 <a 
