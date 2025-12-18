@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { push } from 'svelte-spa-router';
   import Header from '../components/Header.svelte';
+  import PageLayout from '../components/PageLayout.svelte';
   import { containerApi } from '../services/api';
   import type { Container } from '../types';
   
@@ -84,13 +85,12 @@
 <div class="detail-container">
   <Header />
   
-  <main class="main-content">
-    <div class="content-header">
-      <button class="back-button" on:click={goBack}>
+  <PageLayout title="容器详情">
+    {#snippet actions()}
+      <button class="back-button" onclick={goBack}>
         ← 返回列表
       </button>
-      <h2>容器详情</h2>
-    </div>
+    {/snippet}
     
     {#if error}
       <div class="error-banner">
@@ -305,33 +305,13 @@
         <p>容器不存在</p>
       </div>
     {/if}
-  </main>
+  </PageLayout>
 </div>
 
 <style>
   .detail-container {
     min-height: 100vh;
     background: var(--color-background, #f5f5f4);
-  }
-  
-  .main-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-  }
-  
-  .content-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    position: sticky;
-    top: 0;
-    background: var(--color-background-blur);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    z-index: 50;
-    padding: 1rem 0;
   }
   
   .back-button {
@@ -349,14 +329,6 @@
   .back-button:hover {
     background: var(--color-background, #f5f5f4);
     border-color: var(--color-primary, #171717);
-  }
-  
-  .content-header h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--color-text, #0a0a0a);
-    margin: 0;
-    font-family: var(--font-heading, "Playfair Display", serif);
   }
   
   .error-banner {
@@ -694,10 +666,6 @@
   }
   
   @media (max-width: 640px) {
-    .main-content {
-      padding: 1rem;
-    }
-    
     .info-grid {
       grid-template-columns: 1fr;
     }

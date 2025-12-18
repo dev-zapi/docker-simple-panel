@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Header from '../components/Header.svelte';
+  import PageLayout from '../components/PageLayout.svelte';
   import { configApi } from '../services/api';
   import type { SystemConfig } from '../types';
   
@@ -90,10 +91,7 @@
 <div class="settings-container">
   <Header />
   
-  <main class="main-content">
-    <div class="content-header">
-      <h2>系统设置</h2>
-    </div>
+  <PageLayout title="系统设置">
     
     {#if error}
       <div class="error-banner">
@@ -195,47 +193,22 @@
         </div>
         
         <div class="form-actions">
-          <button class="btn-secondary" on:click={handleReset} disabled={saving}>
+          <button class="btn-secondary" onclick={handleReset} disabled={saving}>
             重置
           </button>
-          <button class="btn-primary" on:click={handleSave} disabled={saving}>
+          <button class="btn-primary" onclick={handleSave} disabled={saving}>
             {saving ? '保存中...' : '保存配置'}
           </button>
         </div>
       </div>
     {/if}
-  </main>
+  </PageLayout>
 </div>
 
 <style>
   .settings-container {
     min-height: 100vh;
     background: var(--color-background, #f5f5f4);
-  }
-  
-  .main-content {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem;
-  }
-  
-  .content-header {
-    margin-bottom: 1.5rem;
-    position: sticky;
-    top: 0;
-    background: var(--color-background-blur);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    z-index: 50;
-    padding: 1rem 0;
-  }
-  
-  .content-header h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--color-text, #0a0a0a);
-    margin: 0;
-    font-family: var(--font-heading, "Playfair Display", serif);
   }
   
   .error-banner {

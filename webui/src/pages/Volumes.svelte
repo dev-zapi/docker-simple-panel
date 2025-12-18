@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import Header from '../components/Header.svelte';
+  import PageLayout from '../components/PageLayout.svelte';
   import { volumeApi, containerApi } from '../services/api';
   import type { Volume, Container } from '../types';
   
@@ -135,16 +136,13 @@
 <div class="volumes-container">
   <Header />
   
-  <main class="main-content">
-    <div class="content-header">
-      <h2>卷列表</h2>
-      <div class="header-actions">
-        <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
-          <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
-          刷新
-        </button>
-      </div>
-    </div>
+  <PageLayout title="卷列表">
+    {#snippet actions()}
+      <button class="refresh-button" onclick={handleRefresh} disabled={refreshing}>
+        <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
+        刷新
+      </button>
+    {/snippet}
     
     {#if error}
       <div class="error-banner">
@@ -204,7 +202,7 @@
                 </div>
               {/if}
               <div class="volume-actions">
-                <button class="explore-button" on:click={() => window.location.hash = `/volumes/${volume.name}/explorer`}>
+                <button class="explore-button" onclick={() => window.location.hash = `/volumes/${volume.name}/explorer`}>
                   📂 浏览文件
                 </button>
               </div>
@@ -213,14 +211,14 @@
               {#if volumeToDelete === volume.name}
                 <button 
                   class="delete-button confirm" 
-                  on:click={() => handleDeleteClick(volume.name)}
+                  onclick={() => handleDeleteClick(volume.name)}
                   disabled={deletingVolume === volume.name}
                 >
                   {deletingVolume === volume.name ? '删除中...' : '确认删除'}
                 </button>
                 <button 
                   class="cancel-button" 
-                  on:click={cancelDelete}
+                  onclick={cancelDelete}
                   disabled={deletingVolume === volume.name}
                 >
                   取消
@@ -228,7 +226,7 @@
               {:else}
                 <button 
                   class="delete-button" 
-                  on:click={() => handleDeleteClick(volume.name)}
+                  onclick={() => handleDeleteClick(volume.name)}
                   disabled={deletingVolume !== null}
                 >
                   删除卷
@@ -239,47 +237,13 @@
         {/each}
       </div>
     {/if}
-  </main>
+  </PageLayout>
 </div>
 
 <style>
   .volumes-container {
     min-height: 100vh;
     background: var(--color-background, #f5f5f4);
-  }
-  
-  .main-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-  }
-  
-  .content-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    position: sticky;
-    top: 0;
-    background: var(--color-background-blur);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    z-index: 50;
-    padding: 1rem 0;
-  }
-  
-  .content-header h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--color-text, #0a0a0a);
-    margin: 0;
-    font-family: var(--font-heading, "Playfair Display", serif);
-  }
-  
-  .header-actions {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
   }
   
   .refresh-button {
@@ -564,19 +528,6 @@
   
   /* Mobile responsive styles */
   @media (max-width: 640px) {
-    .main-content {
-      padding: 1rem;
-    }
-    
-    .content-header {
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-    
-    .content-header h2 {
-      font-size: 1.5rem;
-    }
-    
     .volume-meta {
       flex-direction: column;
       gap: 0.5rem;

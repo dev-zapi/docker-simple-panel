@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { push } from 'svelte-spa-router';
   import Header from '../components/Header.svelte';
+  import PageLayout from '../components/PageLayout.svelte';
   import { volumeApi } from '../services/api';
   import type { VolumeFileInfo, VolumeFileContent } from '../types';
   
@@ -147,47 +148,42 @@
 <div class="explorer-container">
   <Header />
   
-  <main class="main-content">
-    <div class="content-header">
-      <div class="header-top">
-        <h2>📦 {volumeName}</h2>
-        <div class="header-actions">
-          {#if showDeleteConfirm}
-            <button 
-              class="delete-volume-button confirm" 
-              on:click={handleDeleteVolumeClick}
-              disabled={deletingVolume}
-            >
-              {deletingVolume ? '删除中...' : '确认删除卷'}
-            </button>
-            <button 
-              class="cancel-button" 
-              on:click={cancelDeleteVolume}
-              disabled={deletingVolume}
-            >
-              取消
-            </button>
-          {:else}
-            <button 
-              class="delete-volume-button" 
-              on:click={handleDeleteVolumeClick}
-              disabled={deletingVolume}
-            >
-              🗑️ 删除卷
-            </button>
-          {/if}
-          <button class="back-button" on:click={() => push('/volumes')}>
-            ← 返回卷列表
-          </button>
-        </div>
-      </div>
-      <div class="breadcrumb">
-        <button class="breadcrumb-btn" on:click={handleGoToRoot} title="根目录">🏠</button>
-        {#if currentPath !== '/'}
-          <span class="separator">/</span>
-          <span class="path-text">{currentPath}</span>
-        {/if}
-      </div>
+  <PageLayout title="📦 {volumeName}">
+    {#snippet actions()}
+      {#if showDeleteConfirm}
+        <button 
+          class="delete-volume-button confirm" 
+          onclick={handleDeleteVolumeClick}
+          disabled={deletingVolume}
+        >
+          {deletingVolume ? '删除中...' : '确认删除卷'}
+        </button>
+        <button 
+          class="cancel-button" 
+          onclick={cancelDeleteVolume}
+          disabled={deletingVolume}
+        >
+          取消
+        </button>
+      {:else}
+        <button 
+          class="delete-volume-button" 
+          onclick={handleDeleteVolumeClick}
+          disabled={deletingVolume}
+        >
+          🗑️ 删除卷
+        </button>
+      {/if}
+      <button class="back-button" onclick={() => push('/volumes')}>
+        ← 返回卷列表
+      </button>
+    {/snippet}
+    <div class="breadcrumb">
+      <button class="breadcrumb-btn" onclick={handleGoToRoot} title="根目录">🏠</button>
+      {#if currentPath !== '/'}
+        <span class="separator">/</span>
+        <span class="path-text">{currentPath}</span>
+      {/if}
     </div>
     
     {#if error}
@@ -212,7 +208,7 @@
         {:else}
           <div class="file-list">
             {#if currentPath !== '/'}
-              <button class="file-item directory" on:click={handleGoUp}>
+              <button class="file-item directory" onclick={handleGoUp}>
                 <span class="file-icon">📂</span>
                 <span class="file-name">..</span>
                 <span class="file-meta">返回上级</span>
@@ -220,7 +216,7 @@
             {/if}
             
             {#each files as file (file.path)}
-              <button class="file-item" class:directory={file.is_directory} on:click={() => handleNavigate(file)}>
+              <button class="file-item" class:directory={file.is_directory} onclick={() => handleNavigate(file)}>
                 <span class="file-icon">{file.is_directory ? '📁' : '📄'}</span>
                 <div class="file-info">
                   <span class="file-name">{file.name}</span>
@@ -247,7 +243,7 @@
               <span class="viewer-path">{selectedFile.path}</span>
               <span class="viewer-size">({formatFileSize(selectedFile.size)})</span>
             </div>
-            <button class="close-btn" on:click={closeFileViewer}>✕</button>
+            <button class="close-btn" onclick={closeFileViewer}>✕</button>
           </div>
           <div class="viewer-content">
             {#if loadingFile}
@@ -271,52 +267,13 @@
         {/if}
       </div>
     </div>
-  </main>
+  </PageLayout>
 </div>
 
 <style>
   .explorer-container {
     min-height: 100vh;
     background: var(--color-background, #f5f5f4);
-  }
-  
-  .main-content {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 2rem;
-  }
-  
-  .content-header {
-    margin-bottom: 1.5rem;
-    position: sticky;
-    top: 0;
-    background: var(--color-background-blur);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    z-index: 50;
-    padding: 1rem 0;
-  }
-  
-  .header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-  
-  .header-actions {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  
-  .content-header h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--color-text, #0a0a0a);
-    margin: 0;
-    font-family: var(--font-heading, "Playfair Display", serif);
   }
   
   .delete-volume-button {
@@ -404,6 +361,7 @@
     font-size: 0.95rem;
     color: var(--color-muted, #78716c);
     font-family: monospace;
+    margin-bottom: 1.5rem;
   }
   
   .breadcrumb-btn {
@@ -653,14 +611,5 @@
   }
   
   @media (max-width: 640px) {
-    .main-content {
-      padding: 1rem;
-    }
-    
-    .header-top {
-      flex-direction: column;
-      gap: 1rem;
-      align-items: flex-start;
-    }
   }
 </style>
