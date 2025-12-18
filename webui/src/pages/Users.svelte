@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import Header from '../components/Header.svelte';
+  import PageLayout from '../components/PageLayout.svelte';
   import ContentHeader from '../components/ContentHeader.svelte';
   import { userApi, authApi } from '../services/api';
   import type { User } from '../types';
@@ -93,7 +94,7 @@
 <div class="users-container">
   <Header />
   
-  <main class="main-content">
+  <PageLayout>
     <ContentHeader title="用户管理">
       <button class="add-button" on:click={openAddModal}>
         ➕ 添加用户
@@ -142,7 +143,7 @@
         </table>
       </div>
     {/if}
-  </main>
+  </PageLayout>
 </div>
 
 {#if showAddModal}
@@ -210,12 +211,6 @@
   .users-container {
     min-height: 100vh;
     background: var(--color-background, #f5f5f4);
-  }
-  
-  .main-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
   }
   
   .add-button {

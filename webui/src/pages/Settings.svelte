@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Header from '../components/Header.svelte';
+  import PageLayout from '../components/PageLayout.svelte';
   import ContentHeader from '../components/ContentHeader.svelte';
   import { configApi } from '../services/api';
   import type { SystemConfig } from '../types';
@@ -91,7 +92,7 @@
 <div class="settings-container">
   <Header />
   
-  <main class="main-content">
+  <PageLayout>
     <ContentHeader title="系统设置" />
     
     {#if error}
@@ -203,19 +204,13 @@
         </div>
       </div>
     {/if}
-  </main>
+  </PageLayout>
 </div>
 
 <style>
   .settings-container {
     min-height: 100vh;
     background: var(--color-background, #f5f5f4);
-  }
-  
-  .main-content {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem;
   }
   
   .error-banner {

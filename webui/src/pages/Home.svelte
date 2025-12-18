@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import Header from '../components/Header.svelte';
+  import PageLayout from '../components/PageLayout.svelte';
   import ContentHeader from '../components/ContentHeader.svelte';
   import ContainerList from '../components/ContainerList.svelte';
   import { containerApi } from '../services/api';
@@ -374,7 +375,7 @@
 <div class="home-container">
   <Header />
   
-  <main class="main-content">
+  <PageLayout>
     <ContentHeader title="容器列表">
       <input
         type="text"
@@ -654,20 +655,13 @@
         />
       {/if}
     {/if}
-  </main>
+  </PageLayout>
 </div>
 
 <style>
   .home-container {
     min-height: 100vh;
     background: var(--color-background, #f5f5f4);
-  }
-  
-  .main-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-    position: relative;
   }
   
   .mode-toggle,
@@ -773,13 +767,6 @@
   .empty-icon {
     font-size: 4rem;
     margin-bottom: 1rem;
-  }
-  
-  /* Mobile responsive styles */
-  @media (max-width: 640px) {
-    .main-content {
-      padding: 1rem;
-    }
   }
   
   /* Compose group styles */

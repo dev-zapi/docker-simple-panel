@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { push } from 'svelte-spa-router';
   import Header from '../components/Header.svelte';
+  import PageLayout from '../components/PageLayout.svelte';
   import ContentHeader from '../components/ContentHeader.svelte';
   import { containerApi } from '../services/api';
   import type { Container } from '../types';
@@ -85,7 +86,7 @@
 <div class="detail-container">
   <Header />
   
-  <main class="main-content">
+  <PageLayout>
     <ContentHeader title="容器详情">
       <button class="back-button" on:click={goBack}>
         ← 返回列表
@@ -305,19 +306,13 @@
         <p>容器不存在</p>
       </div>
     {/if}
-  </main>
+  </PageLayout>
 </div>
 
 <style>
   .detail-container {
     min-height: 100vh;
     background: var(--color-background, #f5f5f4);
-  }
-  
-  .main-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
   }
   
   .back-button {
@@ -672,10 +667,6 @@
   }
   
   @media (max-width: 640px) {
-    .main-content {
-      padding: 1rem;
-    }
-    
     .info-grid {
       grid-template-columns: 1fr;
     }

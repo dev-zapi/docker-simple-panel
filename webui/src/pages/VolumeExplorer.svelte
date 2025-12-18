@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { push } from 'svelte-spa-router';
   import Header from '../components/Header.svelte';
+  import PageLayout from '../components/PageLayout.svelte';
   import ContentHeader from '../components/ContentHeader.svelte';
   import { volumeApi } from '../services/api';
   import type { VolumeFileInfo, VolumeFileContent } from '../types';
@@ -148,7 +149,7 @@
 <div class="explorer-container">
   <Header />
   
-  <main class="main-content">
+  <PageLayout>
     <ContentHeader title="📦 {volumeName}">
       {#if showDeleteConfirm}
         <button 
@@ -267,19 +268,13 @@
         {/if}
       </div>
     </div>
-  </main>
+  </PageLayout>
 </div>
 
 <style>
   .explorer-container {
     min-height: 100vh;
     background: var(--color-background, #f5f5f4);
-  }
-  
-  .main-content {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 2rem;
   }
   
   .delete-volume-button {
@@ -617,8 +612,5 @@
   }
   
   @media (max-width: 640px) {
-    .main-content {
-      padding: 1rem;
-    }
   }
 </style>

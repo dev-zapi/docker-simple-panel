@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import Header from '../components/Header.svelte';
+  import PageLayout from '../components/PageLayout.svelte';
   import ContentHeader from '../components/ContentHeader.svelte';
   import { volumeApi, containerApi } from '../services/api';
   import type { Volume, Container } from '../types';
@@ -136,7 +137,7 @@
 <div class="volumes-container">
   <Header />
   
-  <main class="main-content">
+  <PageLayout>
     <ContentHeader title="卷列表">
       <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
         <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
@@ -237,19 +238,13 @@
         {/each}
       </div>
     {/if}
-  </main>
+  </PageLayout>
 </div>
 
 <style>
   .volumes-container {
     min-height: 100vh;
     background: var(--color-background, #f5f5f4);
-  }
-  
-  .main-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
   }
   
   .refresh-button {
@@ -534,10 +529,6 @@
   
   /* Mobile responsive styles */
   @media (max-width: 640px) {
-    .main-content {
-      padding: 1rem;
-    }
-    
     .volume-meta {
       flex-direction: column;
       gap: 0.5rem;

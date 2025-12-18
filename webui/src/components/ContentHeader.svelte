@@ -22,12 +22,12 @@
 
 <style>
   .content-header-wrapper {
-    /* Full screen width - breaking out of container */
+    /* Full screen width - breaking out of page layout container */
     position: sticky;
     top: 0;
     z-index: 50;
-    margin-left: calc(-50vw + 50%);
-    margin-right: calc(-50vw + 50%);
+    margin-left: -2rem;
+    margin-right: -2rem;
     margin-bottom: 1.5rem;
   }
 
@@ -38,7 +38,7 @@
     background: var(--color-background-blur);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
-    padding: 1rem max(1rem, calc((100vw - 80rem) / 2 + 2rem));
+    padding: 1rem 2rem;
     border-radius: 0.5rem;
   }
 
