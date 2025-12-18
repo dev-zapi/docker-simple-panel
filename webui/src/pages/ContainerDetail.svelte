@@ -87,7 +87,7 @@
   
   <PageLayout title="容器详情">
     {#snippet actions()}
-      <button class="back-button" on:click={goBack}>
+      <button class="back-button" onclick={goBack}>
         ← 返回列表
       </button>
     {/snippet}

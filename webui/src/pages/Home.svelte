@@ -381,12 +381,12 @@
         class="filter-input"
         placeholder="按名称筛选..."
         value={filterText}
-        on:input={handleFilterTextChange}
+        oninput={handleFilterTextChange}
         aria-label="按容器名称筛选"
       />
       <button 
         class="mode-toggle" 
-        on:click={toggleDisplayMode} 
+        onclick={toggleDisplayMode} 
         title={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}
         aria-label={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}
       >
@@ -401,7 +401,7 @@
       <select 
         class="group-mode-select" 
         value={groupMode} 
-        on:change={handleGroupModeChange}
+        onchange={handleGroupModeChange}
         aria-label="选择分组方式"
       >
         <option value="none">不分组</option>
@@ -413,7 +413,7 @@
         <select 
           class="label-key-select" 
           value={selectedLabelKey} 
-          on:change={handleLabelKeyChange}
+          onchange={handleLabelKeyChange}
           aria-label="选择标签"
         >
           {#each availableLabelKeys as labelKey}
@@ -424,7 +424,7 @@
       <select 
         class="sort-mode-select" 
         value={sortMode} 
-        on:change={handleSortModeChange}
+        onchange={handleSortModeChange}
         aria-label="选择排序方式"
       >
         <option value="none">不排序</option>
@@ -433,7 +433,7 @@
         <option value="state-health">按状态和健康</option>
         <option value="compose">按 Compose 名称</option>
       </select>
-      <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
+      <button class="refresh-button" onclick={handleRefresh} disabled={refreshing}>
         <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
         刷新
       </button>
@@ -471,12 +471,12 @@
           <div class="quick-nav-sidebar">
             <div class="quick-nav-title">快速跳转</div>
             {#each Array.from(grouped.keys()) as projectName}
-              <button class="quick-nav-item" on:click={() => scrollToGroup(projectName)}>
+              <button class="quick-nav-item" onclick={() => scrollToGroup(projectName)}>
                 {projectName}
               </button>
             {/each}
             {#if ungrouped.length > 0}
-              <button class="quick-nav-item" on:click={() => scrollToGroup('_ungrouped_')}>
+              <button class="quick-nav-item" onclick={() => scrollToGroup('_ungrouped_')}>
                 独立容器
               </button>
             {/if}
@@ -489,7 +489,7 @@
               <button 
                 class="compose-group-header" 
                 class:compact={displayMode === 'compact'}
-                on:click={() => toggleGroupCollapse(projectName)}
+                onclick={() => toggleGroupCollapse(projectName)}
                 aria-expanded={!collapsedGroups.has(projectName)}
                 aria-label={`${projectName} compose group, ${projectContainers.length} containers`}
               >
@@ -514,7 +514,7 @@
             <button 
               class="compose-group-header" 
               class:compact={displayMode === 'compact'}
-              on:click={() => toggleGroupCollapse('_ungrouped_')}
+              onclick={() => toggleGroupCollapse('_ungrouped_')}
               aria-expanded={!collapsedGroups.has('_ungrouped_')}
               aria-label={`独立容器 group, ${ungrouped.length} containers`}
             >
@@ -541,12 +541,12 @@
           <div class="quick-nav-sidebar">
             <div class="quick-nav-title">快速跳转</div>
             {#each Array.from(grouped.keys()) as groupName}
-              <button class="quick-nav-item" on:click={() => scrollToGroup(`label-${groupName}`)}>
+              <button class="quick-nav-item" onclick={() => scrollToGroup(`label-${groupName}`)}>
                 {groupName}
               </button>
             {/each}
             {#if ungrouped.length > 0}
-              <button class="quick-nav-item" on:click={() => scrollToGroup('_ungrouped_label_')}>
+              <button class="quick-nav-item" onclick={() => scrollToGroup('_ungrouped_label_')}>
                 未分组
               </button>
             {/if}
@@ -559,7 +559,7 @@
               <button 
                 class="compose-group-header" 
                 class:compact={displayMode === 'compact'}
-                on:click={() => toggleGroupCollapse(`label-${labelValue}`)}
+                onclick={() => toggleGroupCollapse(`label-${labelValue}`)}
                 aria-expanded={!collapsedGroups.has(`label-${labelValue}`)}
                 aria-label={`${labelValue} label group, ${labelContainers.length} containers`}
               >
@@ -584,7 +584,7 @@
             <button 
               class="compose-group-header" 
               class:compact={displayMode === 'compact'}
-              on:click={() => toggleGroupCollapse('_ungrouped_label_')}
+              onclick={() => toggleGroupCollapse('_ungrouped_label_')}
               aria-expanded={!collapsedGroups.has('_ungrouped_label_')}
               aria-label={`未分组容器, ${ungrouped.length} containers`}
             >
@@ -612,7 +612,7 @@
             <div class="quick-nav-title">快速跳转</div>
             {#each Array.from(grouped.keys()) as groupKey}
               {@const { stateEmoji, healthEmoji, displayName } = getStatusHealthDisplay(groupKey)}
-              <button class="quick-nav-item" on:click={() => scrollToGroup(`status-health-${groupKey}`)}>
+              <button class="quick-nav-item" onclick={() => scrollToGroup(`status-health-${groupKey}`)}>
                 {stateEmoji}{healthEmoji} {displayName}
               </button>
             {/each}
@@ -626,7 +626,7 @@
               <button 
                 class="compose-group-header" 
                 class:compact={displayMode === 'compact'}
-                on:click={() => toggleGroupCollapse(`status-health-${groupKey}`)}
+                onclick={() => toggleGroupCollapse(`status-health-${groupKey}`)}
                 aria-expanded={!collapsedGroups.has(`status-health-${groupKey}`)}
                 aria-label={`${displayName} group, ${groupContainers.length} containers`}
               >

@@ -138,7 +138,7 @@
   
   <PageLayout title="卷列表">
     {#snippet actions()}
-      <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
+      <button class="refresh-button" onclick={handleRefresh} disabled={refreshing}>
         <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
         刷新
       </button>
@@ -202,7 +202,7 @@
                 </div>
               {/if}
               <div class="volume-actions">
-                <button class="explore-button" on:click={() => window.location.hash = `/volumes/${volume.name}/explorer`}>
+                <button class="explore-button" onclick={() => window.location.hash = `/volumes/${volume.name}/explorer`}>
                   📂 浏览文件
                 </button>
               </div>
@@ -211,14 +211,14 @@
               {#if volumeToDelete === volume.name}
                 <button 
                   class="delete-button confirm" 
-                  on:click={() => handleDeleteClick(volume.name)}
+                  onclick={() => handleDeleteClick(volume.name)}
                   disabled={deletingVolume === volume.name}
                 >
                   {deletingVolume === volume.name ? '删除中...' : '确认删除'}
                 </button>
                 <button 
                   class="cancel-button" 
-                  on:click={cancelDelete}
+                  onclick={cancelDelete}
                   disabled={deletingVolume === volume.name}
                 >
                   取消
@@ -226,7 +226,7 @@
               {:else}
                 <button 
                   class="delete-button" 
-                  on:click={() => handleDeleteClick(volume.name)}
+                  onclick={() => handleDeleteClick(volume.name)}
                   disabled={deletingVolume !== null}
                 >
                   删除卷

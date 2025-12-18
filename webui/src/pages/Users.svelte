@@ -95,7 +95,7 @@
   
   <PageLayout title="用户管理">
     {#snippet actions()}
-      <button class="add-button" on:click={openAddModal}>
+      <button class="add-button" onclick={openAddModal}>
         ➕ 添加用户
       </button>
     {/snippet}
@@ -132,7 +132,7 @@
                 <td class="username">{user.username}</td>
                 <td class="nickname">{user.nickname}</td>
                 <td class="actions">
-                  <button class="delete-btn" on:click={() => handleDeleteUser(user.id, user.username)}>
+                  <button class="delete-btn" onclick={() => handleDeleteUser(user.id, user.username)}>
                     🗑️ 删除
                   </button>
                 </td>
@@ -148,16 +148,16 @@
 {#if showAddModal}
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div class="modal-overlay" on:click={closeAddModal}>
+  <div class="modal-overlay" onclick={closeAddModal}>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div class="modal" on:click|stopPropagation>
+    <div class="modal" onclick={(e) => e.stopPropagation()}>
       <div class="modal-header">
         <h3>添加新用户</h3>
-        <button class="close-btn" on:click={closeAddModal}>✕</button>
+        <button class="close-btn" onclick={closeAddModal}>✕</button>
       </div>
       
-      <form on:submit={handleAddUser} class="modal-form">
+      <form onsubmit={handleAddUser} class="modal-form">
         <div class="form-group">
           <label for="username">用户名 *</label>
           <input
@@ -194,7 +194,7 @@
         </div>
         
         <div class="modal-actions">
-          <button type="button" class="cancel-btn" on:click={closeAddModal} disabled={addingUser}>
+          <button type="button" class="cancel-btn" onclick={closeAddModal} disabled={addingUser}>
             取消
           </button>
           <button type="submit" class="submit-btn" disabled={addingUser}>

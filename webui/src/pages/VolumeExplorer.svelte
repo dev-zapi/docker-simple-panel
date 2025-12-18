@@ -153,14 +153,14 @@
       {#if showDeleteConfirm}
         <button 
           class="delete-volume-button confirm" 
-          on:click={handleDeleteVolumeClick}
+          onclick={handleDeleteVolumeClick}
           disabled={deletingVolume}
         >
           {deletingVolume ? '删除中...' : '确认删除卷'}
         </button>
         <button 
           class="cancel-button" 
-          on:click={cancelDeleteVolume}
+          onclick={cancelDeleteVolume}
           disabled={deletingVolume}
         >
           取消
@@ -168,18 +168,18 @@
       {:else}
         <button 
           class="delete-volume-button" 
-          on:click={handleDeleteVolumeClick}
+          onclick={handleDeleteVolumeClick}
           disabled={deletingVolume}
         >
           🗑️ 删除卷
         </button>
       {/if}
-      <button class="back-button" on:click={() => push('/volumes')}>
+      <button class="back-button" onclick={() => push('/volumes')}>
         ← 返回卷列表
       </button>
     {/snippet}
     <div class="breadcrumb">
-      <button class="breadcrumb-btn" on:click={handleGoToRoot} title="根目录">🏠</button>
+      <button class="breadcrumb-btn" onclick={handleGoToRoot} title="根目录">🏠</button>
       {#if currentPath !== '/'}
         <span class="separator">/</span>
         <span class="path-text">{currentPath}</span>
@@ -208,7 +208,7 @@
         {:else}
           <div class="file-list">
             {#if currentPath !== '/'}
-              <button class="file-item directory" on:click={handleGoUp}>
+              <button class="file-item directory" onclick={handleGoUp}>
                 <span class="file-icon">📂</span>
                 <span class="file-name">..</span>
                 <span class="file-meta">返回上级</span>
@@ -216,7 +216,7 @@
             {/if}
             
             {#each files as file (file.path)}
-              <button class="file-item" class:directory={file.is_directory} on:click={() => handleNavigate(file)}>
+              <button class="file-item" class:directory={file.is_directory} onclick={() => handleNavigate(file)}>
                 <span class="file-icon">{file.is_directory ? '📁' : '📄'}</span>
                 <div class="file-info">
                   <span class="file-name">{file.name}</span>
@@ -243,7 +243,7 @@
               <span class="viewer-path">{selectedFile.path}</span>
               <span class="viewer-size">({formatFileSize(selectedFile.size)})</span>
             </div>
-            <button class="close-btn" on:click={closeFileViewer}>✕</button>
+            <button class="close-btn" onclick={closeFileViewer}>✕</button>
           </div>
           <div class="viewer-content">
             {#if loadingFile}

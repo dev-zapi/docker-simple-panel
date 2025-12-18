@@ -193,10 +193,10 @@
         </div>
         
         <div class="form-actions">
-          <button class="btn-secondary" on:click={handleReset} disabled={saving}>
+          <button class="btn-secondary" onclick={handleReset} disabled={saving}>
             重置
           </button>
-          <button class="btn-primary" on:click={handleSave} disabled={saving}>
+          <button class="btn-primary" onclick={handleSave} disabled={saving}>
             {saving ? '保存中...' : '保存配置'}
           </button>
         </div>
