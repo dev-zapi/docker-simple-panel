@@ -8,58 +8,21 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/dev-zapi/docker-simple-panel/config"
-	"github.com/dev-zapi/docker-simple-panel/database"
 	"github.com/dev-zapi/docker-simple-panel/models"
 )
 
 // AuthHandler handles authentication-related requests
 type AuthHandler struct {
-	db            *database.DB
-	jwtSecret     string
 	configManager *config.Manager
+	jwtSecret     string
 }
 
 // NewAuthHandler creates a new AuthHandler
-func NewAuthHandler(db *database.DB, jwtSecret string, configManager *config.Manager) *AuthHandler {
+func NewAuthHandler(configManager *config.Manager, jwtSecret string) *AuthHandler {
 	return &AuthHandler{
-		db:            db,
-		jwtSecret:     jwtSecret,
 		configManager: configManager,
+		jwtSecret:     jwtSecret,
 	}
-}
-
-// Register handles user registration
-func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
-	// Check if registration is disabled from runtime config
-	if h.configManager.GetDisableRegistration() {
-		respondWithError(w, http.StatusForbidden, "Registration is disabled")
-		return
-	}
-
-	var req models.RegisterRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request body")
-		return
-	}
-
-	// Validate input
-	if req.Username == "" || req.Password == "" || req.Nickname == "" {
-		respondWithError(w, http.StatusBadRequest, "Username, password, and nickname are required")
-		return
-	}
-
-	// Create user
-	user, err := h.db.CreateUser(req.Username, req.Password, req.Nickname)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Failed to create user: "+err.Error())
-		return
-	}
-
-	respondWithJSON(w, http.StatusCreated, models.Response{
-		Success: true,
-		Message: "User registered successfully",
-		Data:    user,
-	})
 }
 
 // Login handles user login
@@ -76,15 +39,14 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate credentials
-	user, err := h.db.ValidateUser(req.Username, req.Password)
-	if err != nil {
+	// Validate credentials against config
+	if err := h.configManager.ValidateCredentials(req.Username, req.Password); err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Invalid credentials")
 		return
 	}
 
 	// Generate JWT token
-	token, err := h.generateToken(user.Username)
+	token, err := h.generateToken(req.Username)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Failed to generate token")
 		return
@@ -95,8 +57,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Message: "Login successful",
 		Data: models.LoginResponse{
 			Token:    token,
-			Username: user.Username,
-			Nickname: user.Nickname,
+			Username: req.Username,
 		},
 	})
 }

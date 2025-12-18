@@ -3,24 +3,20 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/dev-zapi/docker-simple-panel/config"
-	"github.com/dev-zapi/docker-simple-panel/database"
 	"github.com/dev-zapi/docker-simple-panel/models"
 )
 
 // ConfigHandler handles system configuration requests
 type ConfigHandler struct {
 	configManager *config.Manager
-	db            *database.DB
 }
 
 // NewConfigHandler creates a new ConfigHandler
-func NewConfigHandler(configManager *config.Manager, db *database.DB) *ConfigHandler {
+func NewConfigHandler(configManager *config.Manager) *ConfigHandler {
 	return &ConfigHandler{
 		configManager: configManager,
-		db:            db,
 	}
 }
 
@@ -34,28 +30,9 @@ func (h *ConfigHandler) GetConfig(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// PublicConfig represents the public configuration (no auth required)
-type PublicConfig struct {
-	DisableRegistration bool `json:"disable_registration"`
-}
-
-// GetPublicConfig retrieves public configuration (no auth required)
-// This endpoint only exposes the registration status for unauthenticated users
-func (h *ConfigHandler) GetPublicConfig(w http.ResponseWriter, r *http.Request) {
-	cfg := PublicConfig{
-		DisableRegistration: h.configManager.GetDisableRegistration(),
-	}
-
-	respondWithJSON(w, http.StatusOK, models.Response{
-		Success: true,
-		Data:    cfg,
-	})
-}
-
 // UpdateConfigRequest represents configuration update request
 type UpdateConfigRequest struct {
 	DockerSocket        *string `json:"docker_socket,omitempty"`
-	DisableRegistration *bool   `json:"disable_registration,omitempty"`
 	LogLevel            *string `json:"log_level,omitempty"`
 	VolumeExplorerImage *string `json:"volume_explorer_image,omitempty"`
 	SessionMaxTimeout   *int    `json:"session_max_timeout,omitempty"`
@@ -75,57 +52,29 @@ func (h *ConfigHandler) UpdateConfig(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusInternalServerError, "Failed to update Docker socket: "+err.Error())
 			return
 		}
-
-		// Persist to database
-		if err := h.db.SetConfig("docker_socket", *req.DockerSocket); err != nil {
-			respondWithError(w, http.StatusInternalServerError, "Failed to persist Docker socket config: "+err.Error())
-			return
-		}
-	}
-
-	// Update registration switch if provided
-	if req.DisableRegistration != nil {
-		h.configManager.SetDisableRegistration(*req.DisableRegistration)
-
-		// Persist to database
-		disableRegStr := strconv.FormatBool(*req.DisableRegistration)
-		if err := h.db.SetConfig("disable_registration", disableRegStr); err != nil {
-			respondWithError(w, http.StatusInternalServerError, "Failed to persist registration config: "+err.Error())
-			return
-		}
 	}
 
 	// Update log level if provided
 	if req.LogLevel != nil {
 		logLevel := config.ParseLogLevel(*req.LogLevel)
-		h.configManager.SetLogLevel(logLevel)
-
-		// Persist to database
-		if err := h.db.SetConfig("log_level", logLevel.String()); err != nil {
-			respondWithError(w, http.StatusInternalServerError, "Failed to persist log level config: "+err.Error())
+		if err := h.configManager.SetLogLevel(logLevel); err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to update log level: "+err.Error())
 			return
 		}
 	}
 
 	// Update volume explorer image if provided
 	if req.VolumeExplorerImage != nil {
-		h.configManager.SetVolumeExplorerImage(*req.VolumeExplorerImage)
-
-		// Persist to database
-		if err := h.db.SetConfig("volume_explorer_image", *req.VolumeExplorerImage); err != nil {
-			respondWithError(w, http.StatusInternalServerError, "Failed to persist volume explorer image config: "+err.Error())
+		if err := h.configManager.SetVolumeExplorerImage(*req.VolumeExplorerImage); err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to update volume explorer image: "+err.Error())
 			return
 		}
 	}
 
 	// Update session max timeout if provided
 	if req.SessionMaxTimeout != nil {
-		h.configManager.SetSessionMaxTimeout(*req.SessionMaxTimeout)
-
-		// Persist to database
-		sessionMaxTimeoutStr := strconv.Itoa(*req.SessionMaxTimeout)
-		if err := h.db.SetConfig("session_max_timeout", sessionMaxTimeoutStr); err != nil {
-			respondWithError(w, http.StatusInternalServerError, "Failed to persist session max timeout config: "+err.Error())
+		if err := h.configManager.SetSessionMaxTimeout(*req.SessionMaxTimeout); err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to update session max timeout: "+err.Error())
 			return
 		}
 	}

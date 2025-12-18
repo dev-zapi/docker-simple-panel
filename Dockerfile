@@ -33,14 +33,14 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=1 GOOS=linux go build -o docker-simple-panel .
+RUN CGO_ENABLED=0 GOOS=linux go build -o docker-simple-panel .
 
 # Runtime stage
 FROM debian:bookworm-slim
 
 # Install runtime dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates libsqlite3-0 && \
+    apt-get install -y --no-install-recommends ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -51,19 +51,15 @@ COPY --from=builder /app/docker-simple-panel .
 # Copy webui from webui-builder
 COPY --from=webui-builder /app/webui/dist /app/webui
 
-# Create directory for database
+# Create directory for config
 RUN mkdir -p /app/data
 
 # Set environment variables with defaults
-ENV SERVER_PORT=8080 \
-    DATABASE_PATH=/app/data/docker-panel.db \
-    DOCKER_SOCKET=/var/run/docker.sock \
-    DISABLE_REGISTRATION=false \
-    STATIC_PATH=/app/webui \
-    VOLUME_EXPLORER_IMAGE=ghcr.io/dev-zapi/docker-simple-panel:latest
+ENV CONFIG_PATH=/app/data/config.yaml \
+    STATIC_PATH=/app/webui
 
 # Expose port
-EXPOSE $SERVER_PORT
+EXPOSE 8080
 
 # Run the application
 CMD ["./docker-simple-panel"]

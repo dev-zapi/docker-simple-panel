@@ -1,0 +1,31 @@
+# Docker Simple Panel Configuration File
+# Copy this file to config.yaml and modify the values as needed
+
+# Authentication credentials
+# These credentials are used for login
+username: admin
+password: changeme
+
+# Server configuration
+server:
+  port: "8080"
+  # JWT secret for token signing (change in production)
+  jwt_secret: "your-secret-key-change-in-production"
+  # Session timeout in hours
+  session_max_timeout: 24
+
+# Docker configuration
+docker:
+  # Path to Docker socket
+  socket: "/var/run/docker.sock"
+  # Docker image used for volume exploration
+  volume_explorer_image: "ghcr.io/dev-zapi/docker-simple-panel:latest"
+
+# Logging configuration
+logging:
+  # Log level: error, warn, info, debug
+  level: "info"
+
+# Static files configuration (optional)
+# Path to serve static files from (empty for no static serving)
+static_path: ""
