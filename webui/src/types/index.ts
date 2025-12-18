@@ -114,10 +114,6 @@ export interface SystemConfig {
   username: string;
 }
 
-export interface PublicConfig {
-  disable_registration: boolean;
-}
-
 export interface UpdateConfigRequest {
   docker_socket?: string;
   log_level?: string;

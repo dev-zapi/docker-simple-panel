@@ -11,6 +11,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Bcrypt hash prefixes
+const (
+	bcryptPrefix2a = "$2a$"
+	bcryptPrefix2b = "$2b$"
+	bcryptPrefix2y = "$2y$"
+)
+
 // LogLevel represents the logging verbosity level
 type LogLevel int
 
@@ -133,8 +140,8 @@ func LoadConfig() (*Config, error) {
 	
 	// Hash password for validation
 	if cfg.Password != "" {
-		// Check if password is already hashed (bcrypt hashes start with $2a$, $2b$, or $2y$)
-		if !strings.HasPrefix(cfg.Password, "$2a$") && !strings.HasPrefix(cfg.Password, "$2b$") && !strings.HasPrefix(cfg.Password, "$2y$") {
+		// Check if password is already hashed
+		if !isBcryptHash(cfg.Password) {
 			// Password is in plain text, hash it
 			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(cfg.Password), bcrypt.DefaultCost)
 			if err != nil {
@@ -153,6 +160,13 @@ func LoadConfig() (*Config, error) {
 	}
 	
 	return &cfg, nil
+}
+
+// isBcryptHash checks if a string is a bcrypt hash
+func isBcryptHash(s string) bool {
+	return strings.HasPrefix(s, bcryptPrefix2a) ||
+		strings.HasPrefix(s, bcryptPrefix2b) ||
+		strings.HasPrefix(s, bcryptPrefix2y)
 }
 
 // Save saves the current configuration to YAML file

@@ -2,14 +2,12 @@ import type {
   User, 
   LoginCredentials, 
   LoginResponse,
-  RegisterRequest,
   Container, 
   ContainerAction,
   Volume,
   VolumeFileInfo,
   VolumeFileContent,
   SystemConfig,
-  PublicConfig,
   UpdateConfigRequest,
   ApiResponse,
   ApiErrorResponse
@@ -174,16 +172,6 @@ export const configApi = {
     });
     
     return handleApiResponse<SystemConfig>(response);
-  },
-  
-  // Public endpoint to check if registration is enabled (no auth required)
-  // Note: Callers should handle errors - consider defaulting to allow registration on failure
-  async getPublicConfig(): Promise<PublicConfig> {
-    const response = await fetch(`${API_BASE_URL}/config/public`, {
-      headers: { 'Content-Type': 'application/json' }
-    });
-    
-    return handleApiResponse<PublicConfig>(response);
   },
   
   async updateConfig(config: UpdateConfigRequest): Promise<SystemConfig> {
