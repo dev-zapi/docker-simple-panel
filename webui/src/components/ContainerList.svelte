@@ -103,14 +103,64 @@
     {:else}
       <!-- Standard mode: multi-line card -->
       <div class="container-info">
-        <div class="container-name">
-          <span class="name-text">{container.name}</span>
-          {#if container.is_self}
-            <span class="self-badge">本应用</span>
-          {/if}
-          {#if container.compose_service}
-            <span class="compose-service-badge">{container.compose_service}</span>
-          {/if}
+        <div class="container-header-row">
+          <div class="container-name">
+            <span class="name-text">{container.name}</span>
+            {#if container.is_self}
+              <span class="self-badge">本应用</span>
+            {/if}
+            {#if container.compose_service}
+              <span class="compose-service-badge">{container.compose_service}</span>
+            {/if}
+          </div>
+          <div class="container-actions">
+            {#if container.state === 'running'}
+              <button 
+                class="action-btn stop" 
+                onclick={() => onAction(container.id, 'stop', container.is_self ?? false)}
+                disabled={container.is_self}
+                title={container.is_self ? "无法停止本应用容器" : ""}
+              >
+                ⏸️ 停止
+              </button>
+              <button 
+                class="action-btn restart" 
+                onclick={() => onAction(container.id, 'restart', container.is_self ?? false)}
+                disabled={container.is_self}
+                title={container.is_self ? "无法重启本应用容器" : ""}
+              >
+                🔄 重启
+              </button>
+            {:else if ['exited', 'created', 'dead'].includes(container.state)}
+              <button 
+                class="action-btn start"
+                onclick={() => onAction(container.id, 'start', container.is_self ?? false)}
+              >
+                ▶️ 启动
+              </button>
+            {:else}
+              <button 
+                class="action-btn restart" 
+                onclick={() => onAction(container.id, 'restart', container.is_self ?? false)}
+                disabled={container.is_self}
+                title={container.is_self ? "无法重启本应用容器" : ""}
+              >
+                🔄 重启
+              </button>
+            {/if}
+            <a 
+              class="action-btn logs" 
+              href={`#/logs/${container.id}`}
+            >
+              📋 日志
+            </a>
+            <a 
+              class="action-btn details" 
+              href={`#/container/${container.id}`}
+            >
+              ℹ️ 详情
+            </a>
+          </div>
         </div>
         <div class="container-image">{container.image}</div>
         <div class="container-meta">
@@ -125,55 +175,6 @@
             </span>
           {/if}
         </div>
-      </div>
-      
-      <div class="container-actions">
-        {#if container.state === 'running'}
-          <button 
-            class="action-btn stop" 
-            onclick={() => onAction(container.id, 'stop', container.is_self ?? false)}
-            disabled={container.is_self}
-            title={container.is_self ? "无法停止本应用容器" : ""}
-          >
-            ⏸️ 停止
-          </button>
-          <button 
-            class="action-btn restart" 
-            onclick={() => onAction(container.id, 'restart', container.is_self ?? false)}
-            disabled={container.is_self}
-            title={container.is_self ? "无法重启本应用容器" : ""}
-          >
-            🔄 重启
-          </button>
-        {:else if ['exited', 'created', 'dead'].includes(container.state)}
-          <button 
-            class="action-btn start"
-            onclick={() => onAction(container.id, 'start', container.is_self ?? false)}
-          >
-            ▶️ 启动
-          </button>
-        {:else}
-          <button 
-            class="action-btn restart" 
-            onclick={() => onAction(container.id, 'restart', container.is_self ?? false)}
-            disabled={container.is_self}
-            title={container.is_self ? "无法重启本应用容器" : ""}
-          >
-            🔄 重启
-          </button>
-        {/if}
-        <a 
-          class="action-btn logs" 
-          href={`#/logs/${container.id}`}
-        >
-          📋 日志
-        </a>
-        <a 
-          class="action-btn details" 
-          href={`#/container/${container.id}`}
-        >
-          ℹ️ 详情
-        </a>
       </div>
     {/if}
   </div>
@@ -220,6 +221,15 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    min-width: 0; /* Allow flex children to shrink */
+  }
+  
+  .container-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-width: 0; /* Allow flex children to shrink */
   }
   
   .container-name {
@@ -230,6 +240,14 @@
     align-items: center;
     gap: 0.5rem;
     font-family: var(--font-heading, "Playfair Display", serif);
+    flex: 0 1 auto;
+    min-width: 0; /* Allow flex children to shrink */
+  }
+  
+  .name-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   
   .self-badge {
@@ -431,17 +449,14 @@
   
   /* Mobile responsive styles */
   @media (max-width: 640px) {
-    /* Standard mode mobile: action buttons wrap to new line */
-    .container-list:not(.compact) .container-item {
+    /* Standard mode mobile: wrap header row and move actions to new line */
+    .container-header-row {
       flex-wrap: wrap;
     }
     
     .container-list:not(.compact) .container-actions {
-      width: 100%;
-      margin-top: 0.75rem;
-      padding-top: 0.75rem;
       border-top: 1px solid rgba(0, 0, 0, 0.1);
-      justify-content: flex-start;
+      justify-content: flex-end;
     }
     
     /* Compact mode mobile: actions float on right side above content */
@@ -471,6 +486,31 @@
       transform: translateY(-50%);
       background: linear-gradient(to right, transparent, var(--color-surface, #e7e5e4) 20%);
       padding-left: 1rem;
+    }
+  }
+  
+  /* Compact mode: Progressive hiding of elements as screen width decreases */
+  @media (max-width: 900px) {
+    .compact-state {
+      display: none;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .compose-service-badge {
+      display: none;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .compact-image {
+      display: none;
+    }
+  }
+  
+  @media (max-width: 500px) {
+    .compact-name {
+      max-width: 120px;
     }
   }
 </style>
