@@ -3,7 +3,6 @@
   import { push } from 'svelte-spa-router';
   import Header from '../components/Header.svelte';
   import PageLayout from '../components/PageLayout.svelte';
-  import ContentHeader from '../components/ContentHeader.svelte';
   import { volumeApi } from '../services/api';
   import type { VolumeFileInfo, VolumeFileContent } from '../types';
   
@@ -149,8 +148,8 @@
 <div class="explorer-container">
   <Header />
   
-  <PageLayout>
-    <ContentHeader title="📦 {volumeName}">
+  <PageLayout title="📦 {volumeName}">
+    {#snippet actions()}
       {#if showDeleteConfirm}
         <button 
           class="delete-volume-button confirm" 
@@ -178,7 +177,7 @@
       <button class="back-button" on:click={() => push('/volumes')}>
         ← 返回卷列表
       </button>
-    </ContentHeader>
+    {/snippet}
     <div class="breadcrumb">
       <button class="breadcrumb-btn" on:click={handleGoToRoot} title="根目录">🏠</button>
       {#if currentPath !== '/'}

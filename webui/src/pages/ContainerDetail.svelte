@@ -3,7 +3,6 @@
   import { push } from 'svelte-spa-router';
   import Header from '../components/Header.svelte';
   import PageLayout from '../components/PageLayout.svelte';
-  import ContentHeader from '../components/ContentHeader.svelte';
   import { containerApi } from '../services/api';
   import type { Container } from '../types';
   
@@ -86,12 +85,12 @@
 <div class="detail-container">
   <Header />
   
-  <PageLayout>
-    <ContentHeader title="容器详情">
+  <PageLayout title="容器详情">
+    {#snippet actions()}
       <button class="back-button" on:click={goBack}>
         ← 返回列表
       </button>
-    </ContentHeader>
+    {/snippet}
     
     {#if error}
       <div class="error-banner">

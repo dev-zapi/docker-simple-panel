@@ -2,7 +2,6 @@
   import { onMount, onDestroy } from 'svelte';
   import Header from '../components/Header.svelte';
   import PageLayout from '../components/PageLayout.svelte';
-  import ContentHeader from '../components/ContentHeader.svelte';
   import { volumeApi, containerApi } from '../services/api';
   import type { Volume, Container } from '../types';
   
@@ -137,13 +136,13 @@
 <div class="volumes-container">
   <Header />
   
-  <PageLayout>
-    <ContentHeader title="卷列表">
+  <PageLayout title="卷列表">
+    {#snippet actions()}
       <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
         <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
         刷新
       </button>
-    </ContentHeader>
+    {/snippet}
     
     {#if error}
       <div class="error-banner">

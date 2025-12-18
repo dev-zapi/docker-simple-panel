@@ -2,7 +2,6 @@
   import { onMount, onDestroy } from 'svelte';
   import Header from '../components/Header.svelte';
   import PageLayout from '../components/PageLayout.svelte';
-  import ContentHeader from '../components/ContentHeader.svelte';
   import { userApi, authApi } from '../services/api';
   import type { User } from '../types';
   
@@ -94,12 +93,12 @@
 <div class="users-container">
   <Header />
   
-  <PageLayout>
-    <ContentHeader title="用户管理">
+  <PageLayout title="用户管理">
+    {#snippet actions()}
       <button class="add-button" on:click={openAddModal}>
         ➕ 添加用户
       </button>
-    </ContentHeader>
+    {/snippet}
     
     {#if error}
       <div class="error-banner">

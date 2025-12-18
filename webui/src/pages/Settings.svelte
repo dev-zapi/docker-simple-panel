@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import Header from '../components/Header.svelte';
   import PageLayout from '../components/PageLayout.svelte';
-  import ContentHeader from '../components/ContentHeader.svelte';
   import { configApi } from '../services/api';
   import type { SystemConfig } from '../types';
   
@@ -92,8 +91,7 @@
 <div class="settings-container">
   <Header />
   
-  <PageLayout>
-    <ContentHeader title="系统设置" />
+  <PageLayout title="系统设置">
     
     {#if error}
       <div class="error-banner">

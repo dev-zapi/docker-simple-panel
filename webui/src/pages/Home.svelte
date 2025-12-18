@@ -2,7 +2,6 @@
   import { onMount, onDestroy } from 'svelte';
   import Header from '../components/Header.svelte';
   import PageLayout from '../components/PageLayout.svelte';
-  import ContentHeader from '../components/ContentHeader.svelte';
   import ContainerList from '../components/ContainerList.svelte';
   import { containerApi } from '../services/api';
   import type { Container } from '../types';
@@ -375,8 +374,8 @@
 <div class="home-container">
   <Header />
   
-  <PageLayout>
-    <ContentHeader title="容器列表">
+  <PageLayout title="容器列表">
+    {#snippet actions()}
       <input
         type="text"
         class="filter-input"
@@ -438,7 +437,7 @@
         <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
         刷新
       </button>
-    </ContentHeader>
+    {/snippet}
     
     {#if error}
       <div class="error-banner">
