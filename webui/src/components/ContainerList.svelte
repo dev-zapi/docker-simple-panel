@@ -240,7 +240,7 @@
     align-items: center;
     gap: 0.5rem;
     font-family: var(--font-heading, "Playfair Display", serif);
-    flex: 1;
+    flex: 0 1 auto;
     min-width: 0; /* Allow flex children to shrink */
   }
   
