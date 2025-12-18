@@ -12,9 +12,8 @@ export interface ApiErrorResponse {
 
 // User types
 export interface User {
-  id: number;
+  id?: number;
   username: string;
-  nickname: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -27,13 +26,6 @@ export interface LoginCredentials {
 export interface LoginResponse {
   token: string;
   username: string;
-  nickname: string;
-}
-
-export interface RegisterRequest {
-  username: string;
-  password: string;
-  nickname: string;
 }
 
 // Docker container types
@@ -116,10 +108,10 @@ export interface ContainerAction {
 // Config types
 export interface SystemConfig {
   docker_socket: string;
-  disable_registration: boolean;
   log_level: string;
   volume_explorer_image: string;
   session_max_timeout: number;
+  username: string;
 }
 
 export interface PublicConfig {
@@ -128,7 +120,6 @@ export interface PublicConfig {
 
 export interface UpdateConfigRequest {
   docker_socket?: string;
-  disable_registration?: boolean;
   log_level?: string;
   volume_explorer_image?: string;
   session_max_timeout?: number;

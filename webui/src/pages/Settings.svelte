@@ -13,10 +13,10 @@
   
   // Form fields
   let dockerSocket = '';
-  let disableRegistration = false;
   let logLevel = 'info';
   let volumeExplorerImage = 'ghcr.io/dev-zapi/docker-simple-panel:latest';
   let sessionMaxTimeout = 24;
+  let username = '';
   
   const logLevelOptions = [
     { value: 'error', label: '错误 (Error)' },
@@ -30,10 +30,10 @@
       error = '';
       config = await configApi.getConfig();
       dockerSocket = config.docker_socket;
-      disableRegistration = config.disable_registration;
       logLevel = config.log_level || 'info';
       volumeExplorerImage = config.volume_explorer_image || 'ghcr.io/dev-zapi/docker-simple-panel:latest';
       sessionMaxTimeout = config.session_max_timeout || 24;
+      username = config.username || '';
     } catch (err) {
       error = '获取配置失败';
       console.error('Failed to load config:', err);
@@ -50,7 +50,6 @@
     try {
       const updatedConfig = await configApi.updateConfig({
         docker_socket: dockerSocket,
-        disable_registration: disableRegistration,
         log_level: logLevel,
         volume_explorer_image: volumeExplorerImage,
         session_max_timeout: sessionMaxTimeout
@@ -74,10 +73,10 @@
   function handleReset() {
     if (config) {
       dockerSocket = config.docker_socket;
-      disableRegistration = config.disable_registration;
       logLevel = config.log_level || 'info';
       volumeExplorerImage = config.volume_explorer_image || 'ghcr.io/dev-zapi/docker-simple-panel:latest';
       sessionMaxTimeout = config.session_max_timeout || 24;
+      username = config.username || '';
     }
     error = '';
     successMessage = '';
@@ -129,18 +128,18 @@
         </div>
         
         <div class="form-section">
-          <h3>用户注册</h3>
+          <h3>用户信息</h3>
           
-          <div class="form-group checkbox-group">
-            <label class="checkbox-label">
-              <input
-                type="checkbox"
-                bind:checked={disableRegistration}
-                disabled={saving}
-              />
-              <span class="checkbox-text">禁用用户注册</span>
-            </label>
-            <p class="form-help">启用后，新用户将无法通过注册页面创建账户</p>
+          <div class="form-group">
+            <label for="username">用户名</label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              disabled
+              readonly
+            />
+            <p class="form-help">当前登录的用户名（只读，需在配置文件中修改）</p>
           </div>
         </div>
         
