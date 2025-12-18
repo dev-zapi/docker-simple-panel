@@ -3,31 +3,19 @@
   import { push } from 'svelte-spa-router';
   import { authStore } from '../stores/authStore';
   import { themeStore, getThemeIcon } from '../stores/themeStore';
-  import { authApi, configApi } from '../services/api';
+  import { authApi } from '../services/api';
   
   let username = '';
   let password = '';
   let error = '';
   let sessionExpiredMessage = '';
   let loading = false;
-  let registrationEnabled = false;
-  let configLoading = true;
   
   onMount(async () => {
     // Check if session expired
     if (localStorage.getItem('sessionExpired') === 'true') {
       sessionExpiredMessage = '会话已过期，请重新登录';
       localStorage.removeItem('sessionExpired');
-    }
-    
-    try {
-      const config = await configApi.getPublicConfig();
-      registrationEnabled = !config.disable_registration;
-    } catch (err) {
-      // Default to showing registration link if config check fails
-      registrationEnabled = true;
-    } finally {
-      configLoading = false;
     }
   });
   
@@ -47,10 +35,6 @@
     } finally {
       loading = false;
     }
-  }
-  
-  function goToRegister() {
-    push('/register');
   }
   
   function toggleTheme() {
@@ -121,12 +105,6 @@
       <button type="submit" class="login-button" disabled={loading}>
         {loading ? '登录中...' : '登录'}
       </button>
-      
-      {#if !configLoading && registrationEnabled}
-        <div class="register-link">
-          没有账户？<button type="button" on:click={goToRegister} class="link-button">立即注册</button>
-        </div>
-      {/if}
     </form>
   </div>
 </div>

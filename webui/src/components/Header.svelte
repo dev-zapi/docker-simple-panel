@@ -14,16 +14,6 @@
     push('/login');
   }
   
-  function goToUserManagement() {
-    showMenu = false;
-    push('/users');
-  }
-  
-  function goToProfile() {
-    showMenu = false;
-    push('/profile');
-  }
-  
   function goToSettings() {
     showMenu = false;
     push('/settings');
@@ -89,7 +79,7 @@
       
       <div class="user-menu">
         <button class="user-button" on:click={toggleMenu}>
-          <span class="user-name">{$authStore.user.nickname || $authStore.user.username}</span>
+          <span class="user-name">{$authStore.user.username}</span>
           <span class="menu-icon">▼</span>
         </button>
         
@@ -100,12 +90,6 @@
             </button>
             <button class="menu-item" on:click={goToVolumes}>
               💾 卷管理
-            </button>
-            <button class="menu-item" on:click={goToProfile}>
-              👤 编辑个人信息
-            </button>
-            <button class="menu-item" on:click={goToUserManagement}>
-              👥 用户管理
             </button>
             <button class="menu-item" on:click={goToSettings}>
               ⚙️ 系统设置

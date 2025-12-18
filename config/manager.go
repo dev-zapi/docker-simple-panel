@@ -7,22 +7,14 @@ import (
 // Manager handles runtime configuration updates
 type Manager struct {
 	mu                   sync.RWMutex
-	dockerSocket         string
-	disableRegistration  bool
-	logLevel             LogLevel
-	volumeExplorerImage  string
-	sessionMaxTimeout    int
+	config               *Config
 	onDockerSocketChange func(string) error
 }
 
 // NewManager creates a new configuration manager
-func NewManager(dockerSocket string, disableRegistration bool, logLevel LogLevel, volumeExplorerImage string, sessionMaxTimeout int) *Manager {
+func NewManager(cfg *Config) *Manager {
 	return &Manager{
-		dockerSocket:        dockerSocket,
-		disableRegistration: disableRegistration,
-		logLevel:            logLevel,
-		volumeExplorerImage: volumeExplorerImage,
-		sessionMaxTimeout:   sessionMaxTimeout,
+		config: cfg,
 	}
 }
 
@@ -30,7 +22,7 @@ func NewManager(dockerSocket string, disableRegistration bool, logLevel LogLevel
 func (m *Manager) GetDockerSocket() string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	return m.dockerSocket
+	return m.config.Docker.Socket
 }
 
 // SetDockerSocket updates the Docker socket path and triggers Docker client restart
@@ -47,52 +39,45 @@ func (m *Manager) SetDockerSocket(socketPath string) error {
 	}
 
 	m.mu.Lock()
-	m.dockerSocket = socketPath
+	m.config.Docker.Socket = socketPath
 	m.mu.Unlock()
 
-	return nil
-}
-
-// GetDisableRegistration returns whether registration is disabled
-func (m *Manager) GetDisableRegistration() bool {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	return m.disableRegistration
-}
-
-// SetDisableRegistration updates the registration disabled flag
-func (m *Manager) SetDisableRegistration(disabled bool) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.disableRegistration = disabled
+	// Save to config file
+	return m.config.Save()
 }
 
 // GetLogLevel returns the current log level
 func (m *Manager) GetLogLevel() LogLevel {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	return m.logLevel
+	return m.config.GetLogLevel()
 }
 
 // SetLogLevel updates the log level
-func (m *Manager) SetLogLevel(level LogLevel) {
+func (m *Manager) SetLogLevel(level LogLevel) error {
 	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.logLevel = level
+	m.config.Logging.Level = level.String()
+	m.mu.Unlock()
+
+	// Save to config file
+	return m.config.Save()
 }
 
 // GetVolumeExplorerImage returns the volume explorer image
 func (m *Manager) GetVolumeExplorerImage() string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	return m.volumeExplorerImage
+	return m.config.Docker.VolumeExplorerImage
 }
 
 // SetVolumeExplorerImage updates the volume explorer image
-func (m *Manager) SetVolumeExplorerImage(image string) {
+func (m *Manager) SetVolumeExplorerImage(image string) error {
 	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.volumeExplorerImage = image
+	m.config.Docker.VolumeExplorerImage = image
+	m.mu.Unlock()
+
+	// Save to config file
+	return m.config.Save()
 }
 
 // SetDockerSocketChangeCallback sets the callback for Docker socket changes
@@ -106,23 +91,38 @@ func (m *Manager) SetDockerSocketChangeCallback(callback func(string) error) {
 func (m *Manager) GetSessionMaxTimeout() int {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	return m.sessionMaxTimeout
+	return m.config.Server.SessionMaxTimeout
 }
 
 // SetSessionMaxTimeout updates the session max timeout
-func (m *Manager) SetSessionMaxTimeout(timeout int) {
+func (m *Manager) SetSessionMaxTimeout(timeout int) error {
 	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.sessionMaxTimeout = timeout
+	m.config.Server.SessionMaxTimeout = timeout
+	m.mu.Unlock()
+
+	// Save to config file
+	return m.config.Save()
+}
+
+// GetUsername returns the configured username
+func (m *Manager) GetUsername() string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.config.Username
+}
+
+// ValidateCredentials validates username and password
+func (m *Manager) ValidateCredentials(username, password string) error {
+	return m.config.ValidateCredentials(username, password)
 }
 
 // SystemConfig represents the system configuration
 type SystemConfig struct {
 	DockerSocket        string `json:"docker_socket"`
-	DisableRegistration bool   `json:"disable_registration"`
 	LogLevel            string `json:"log_level"`
 	VolumeExplorerImage string `json:"volume_explorer_image"`
 	SessionMaxTimeout   int    `json:"session_max_timeout"`
+	Username            string `json:"username"`
 }
 
 // GetSystemConfig returns the current system configuration
@@ -130,10 +130,10 @@ func (m *Manager) GetSystemConfig() SystemConfig {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return SystemConfig{
-		DockerSocket:        m.dockerSocket,
-		DisableRegistration: m.disableRegistration,
-		LogLevel:            m.logLevel.String(),
-		VolumeExplorerImage: m.volumeExplorerImage,
-		SessionMaxTimeout:   m.sessionMaxTimeout,
+		DockerSocket:        m.config.Docker.Socket,
+		LogLevel:            m.config.Logging.Level,
+		VolumeExplorerImage: m.config.Docker.VolumeExplorerImage,
+		SessionMaxTimeout:   m.config.Server.SessionMaxTimeout,
+		Username:            m.config.Username,
 	}
 }

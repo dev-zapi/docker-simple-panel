@@ -2,14 +2,12 @@ import type {
   User, 
   LoginCredentials, 
   LoginResponse,
-  RegisterRequest,
   Container, 
   ContainerAction,
   Volume,
   VolumeFileInfo,
   VolumeFileContent,
   SystemConfig,
-  PublicConfig,
   UpdateConfigRequest,
   ApiResponse,
   ApiErrorResponse
@@ -84,11 +82,8 @@ export const authApi = USE_MOCK_API ? mockAuthApi : {
     const loginResponse = await handleApiResponse<LoginResponse>(response);
     
     // Convert LoginResponse to expected format with User object
-    // Backend doesn't return user ID in login response, using -1 as placeholder
     const user: User = {
-      id: -1,
-      username: loginResponse.username,
-      nickname: loginResponse.nickname
+      username: loginResponse.username
     };
     
     return {
@@ -97,58 +92,9 @@ export const authApi = USE_MOCK_API ? mockAuthApi : {
     };
   },
   
-  async register(data: RegisterRequest): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    
-    return handleApiResponse<User>(response);
-  },
-  
   async logout(): Promise<void> {
     // Backend doesn't have logout endpoint
     // Just clear local storage
-  }
-};
-
-// User API - Backend has user management endpoints at /api/users
-export const userApi = USE_MOCK_API ? mockUserApi : {
-  async getUsers(): Promise<User[]> {
-    const response = await fetch(`${API_BASE_URL}/users`, {
-      headers: getAuthHeaders()
-    });
-    
-    return handleApiResponse<User[]>(response);
-  },
-  
-  async createUser(user: Omit<User, 'id'> & { password: string }): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/users`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({
-        username: user.username,
-        password: user.password,
-        nickname: user.nickname
-      })
-    });
-    
-    return handleApiResponse<User>(response);
-  },
-  
-  async deleteUser(userId: string | number): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
-      method: 'DELETE',
-      headers: getAuthHeaders()
-    });
-    
-    await handleApiResponse<void>(response);
-  },
-  
-  async updateUser(userId: string | number, user: Partial<User>): Promise<User> {
-    // Backend doesn't support user updates yet
-    throw new Error('User update not supported by backend');
   }
 };
 
@@ -226,16 +172,6 @@ export const configApi = {
     });
     
     return handleApiResponse<SystemConfig>(response);
-  },
-  
-  // Public endpoint to check if registration is enabled (no auth required)
-  // Note: Callers should handle errors - consider defaulting to allow registration on failure
-  async getPublicConfig(): Promise<PublicConfig> {
-    const response = await fetch(`${API_BASE_URL}/config/public`, {
-      headers: { 'Content-Type': 'application/json' }
-    });
-    
-    return handleApiResponse<PublicConfig>(response);
   },
   
   async updateConfig(config: UpdateConfigRequest): Promise<SystemConfig> {

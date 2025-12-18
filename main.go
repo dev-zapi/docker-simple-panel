@@ -7,75 +7,33 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/gorilla/mux"
 
 	"github.com/dev-zapi/docker-simple-panel/config"
-	"github.com/dev-zapi/docker-simple-panel/database"
 	"github.com/dev-zapi/docker-simple-panel/docker"
 	"github.com/dev-zapi/docker-simple-panel/handlers"
 	"github.com/dev-zapi/docker-simple-panel/middleware"
 )
 
 func main() {
-	// Load configuration from environment
-	cfg := config.LoadConfig()
-
-	// Initialize database
-	db, err := database.NewDB(cfg.DatabasePath)
+	// Load configuration from YAML file
+	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		log.Fatalf("Failed to load configuration: %v", err)
 	}
-	defer db.Close()
-	log.Println("Database connected successfully")
-
-	// Helper function to load config from database or use default
-	loadConfigString := func(key, defaultValue string) string {
-		if value, err := db.GetConfig(key); err == nil && value != "" {
-			log.Printf("Loaded %s from database: %s", key, value)
-			return value
-		}
-		return defaultValue
-	}
-
-	loadConfigBool := func(key string, defaultValue bool) bool {
-		if value, err := db.GetConfig(key); err == nil && value != "" {
-			result := value == "true"
-			log.Printf("Loaded %s from database: %v", key, result)
-			return result
-		}
-		return defaultValue
-	}
-
-	loadConfigInt := func(key string, defaultValue int) int {
-		if value, err := db.GetConfig(key); err == nil && value != "" {
-			if intValue, err := strconv.Atoi(value); err == nil {
-				log.Printf("Loaded %s from database: %d", key, intValue)
-				return intValue
-			} else {
-				log.Printf("Warning: Invalid integer value in database for %s: %s, using default: %d", key, value, defaultValue)
-			}
-		}
-		return defaultValue
-	}
-
-	// Load persisted configs from database or use environment defaults
-	dockerSocket := loadConfigString("docker_socket", cfg.DockerSocket)
-	disableRegistration := loadConfigBool("disable_registration", cfg.DisableRegistration)
-	logLevel := config.ParseLogLevel(loadConfigString("log_level", cfg.LogLevel.String()))
-	volumeExplorerImage := loadConfigString("volume_explorer_image", cfg.VolumeExplorerImage)
-	sessionMaxTimeout := loadConfigInt("session_max_timeout", cfg.SessionMaxTimeout)
+	log.Println("Configuration loaded successfully")
 
 	// Initialize configuration manager
-	configManager := config.NewManager(dockerSocket, disableRegistration, logLevel, volumeExplorerImage, sessionMaxTimeout)
-	log.Printf("Log level set to: %s", logLevel.String())
-	log.Printf("Session max timeout set to: %d hours", sessionMaxTimeout)
+	configManager := config.NewManager(cfg)
+	log.Printf("Log level set to: %s", cfg.Logging.Level)
+	log.Printf("Session max timeout set to: %d hours", cfg.Server.SessionMaxTimeout)
+	log.Printf("Username configured: %s", cfg.Username)
 
 	// Initialize Docker manager
-	dockerManager, err := docker.NewManager(dockerSocket)
+	dockerManager, err := docker.NewManager(cfg.Docker.Socket)
 	if err != nil {
 		log.Fatalf("Failed to create Docker manager: %v", err)
 	}
@@ -96,10 +54,9 @@ func main() {
 	})
 
 	// Initialize handlers
-	authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret, configManager)
+	authHandler := handlers.NewAuthHandler(configManager, cfg.Server.JWTSecret)
 	dockerHandler := handlers.NewDockerHandler(dockerManager, configManager)
-	configHandler := handlers.NewConfigHandler(configManager, db)
-	userHandler := handlers.NewUserHandler(db)
+	configHandler := handlers.NewConfigHandler(configManager)
 
 	// Setup router
 	router := mux.NewRouter()
@@ -133,15 +90,11 @@ func main() {
 		}
 	}).Methods("GET")
 
-	router.HandleFunc("/api/auth/register", authHandler.Register).Methods("POST")
 	router.HandleFunc("/api/auth/login", authHandler.Login).Methods("POST")
-
-	// Public config endpoint (no auth required) - returns only registration status
-	router.HandleFunc("/api/config/public", configHandler.GetPublicConfig).Methods("GET")
 
 	// Protected routes - require JWT authentication
 	protected := router.PathPrefix("/api").Subrouter()
-	protected.Use(middleware.JWTAuth(cfg.JWTSecret))
+	protected.Use(middleware.JWTAuth(cfg.Server.JWTSecret))
 
 	// Docker container routes
 	protected.HandleFunc("/containers", dockerHandler.ListContainers).Methods("GET")
@@ -162,11 +115,6 @@ func main() {
 	protected.HandleFunc("/config", configHandler.GetConfig).Methods("GET")
 	protected.HandleFunc("/config", configHandler.UpdateConfig).Methods("PUT", "PATCH")
 
-	// User management routes
-	protected.HandleFunc("/users", userHandler.ListUsers).Methods("GET")
-	protected.HandleFunc("/users", userHandler.CreateUser).Methods("POST")
-	protected.HandleFunc("/users/{id}", userHandler.DeleteUser).Methods("DELETE")
-
 	// Static file serving (if configured)
 	if cfg.StaticPath != "" {
 		// Check if the static path exists
@@ -181,7 +129,7 @@ func main() {
 
 	// Create HTTP server
 	server := &http.Server{
-		Addr:         ":" + cfg.ServerPort,
+		Addr:         ":" + cfg.Server.Port,
 		Handler:      router,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
@@ -190,7 +138,7 @@ func main() {
 
 	// Start server in a goroutine
 	go func() {
-		log.Printf("Server starting on port %s", cfg.ServerPort)
+		log.Printf("Server starting on port %s", cfg.Server.Port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to start server: %v", err)
 		}

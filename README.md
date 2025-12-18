@@ -2,12 +2,11 @@
 A simple docker containers dashboard.
 
 ## Overview
-This is a Go backend application that provides a REST API for managing Docker containers. It includes user authentication, container status monitoring, and container operations.
+This is a Go backend application that provides a REST API for managing Docker containers. It includes authentication with a single user account configured via YAML, container status monitoring, and container operations.
 
 ## Features
-- User authentication with JWT tokens
-- User registration and login
-- SQLite database for user management
+- Single-user authentication with JWT tokens
+- YAML-based configuration management
 - Docker container listing with health status
 - Container operations: start, stop, restart
 - Real-time container log streaming via WebSocket (with 30-minute history)
@@ -19,7 +18,6 @@ This is a Go backend application that provides a REST API for managing Docker co
 ## Requirements
 - Go 1.21 or higher (for building from source)
 - Docker daemon running
-- SQLite3 (for building from source)
 
 ## Quick Start with Docker
 
@@ -35,17 +33,22 @@ docker run -d \
   -p 8080:8080 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v ./data:/app/data \
-  -e JWT_SECRET=CHANGE_ME_STRONG_SECRET \
   ghcr.io/dev-zapi/docker-simple-panel:latest
 
 # Check if the service is running
 curl http://localhost:8080/api/health
 ```
 
-**Important Security Notes**:
+**Default Credentials**:
+- Username: `admin`
+- Password: `changeme`
+
+**Important**: Change the default password by editing `/app/data/config.yaml` inside the container or mount a custom config file.
+
+**Security Notes**:
 - The Docker socket (`/var/run/docker.sock`) must be mounted for the application to manage containers.
-- **Always change the JWT_SECRET** to a strong, random value in production.
-- Consider disabling registration after creating initial users with `-e DISABLE_REGISTRATION=true`.
+- **Always change the default password** in the configuration file.
+- **Always change the JWT secret** in production for security.
 
 ## Installing as a PWA
 
@@ -129,44 +132,65 @@ docker run -d \
   -p 8080:8080 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v ./data:/app/data \
-  -e JWT_SECRET=CHANGE_ME_STRONG_SECRET \
   docker-simple-panel:local
 ```
 
 ## Configuration
 
-The application can be configured using environment variables:
+The application uses a YAML configuration file located at `./config.yaml` (or path specified by `CONFIG_PATH` environment variable).
 
-- `SERVER_PORT`: Server port (default: 8080)
-- `DATABASE_PATH`: Path to SQLite database file (default: ./docker-panel.db)
-- `JWT_SECRET`: Secret key for JWT token signing (default: your-secret-key-change-in-production)
-- `DOCKER_SOCKET`: Path to Docker socket (default: /var/run/docker.sock)
-- `DISABLE_REGISTRATION`: Disable user registration endpoint (default: false, set to "true", "1", or "yes" to disable)
-- `LOG_LEVEL`: Logging verbosity level (default: info). Available levels:
-  - `error`: Only log errors (5xx responses)
-  - `warn`: Log warnings and errors (4xx/5xx responses, slow requests >1s)
-  - `info`: Log basic request information (method, path, status, duration)
-  - `debug`: Log detailed request/response information (headers, body)
-- `VOLUME_EXPLORER_IMAGE`: Docker image used for volume file exploration (default: ghcr.io/dev-zapi/docker-simple-panel:latest)
+### Configuration File Example
+
+See `config.yaml.example` for a full example. The configuration file includes:
+
+```yaml
+# Authentication credentials
+username: admin
+password: changeme  # Will be automatically hashed with bcrypt
+
+# Server configuration
+server:
+  port: "8080"
+  jwt_secret: "your-secret-key-change-in-production"
+  session_max_timeout: 24  # Session timeout in hours
+
+# Docker configuration
+docker:
+  socket: "/var/run/docker.sock"
+  volume_explorer_image: "ghcr.io/dev-zapi/docker-simple-panel:latest"
+
+# Logging configuration
+logging:
+  level: "info"  # Options: error, warn, info, debug
+
+# Static files (optional)
+static_path: ""
+```
+
+### Environment Variables
+
+- `CONFIG_PATH`: Path to YAML configuration file (default: ./config.yaml)
 - `STATIC_PATH`: Path to static files directory for serving frontend (default: empty for local development; `/app/webui` in Docker image)
+
+### Password Management
+
+- When the application starts for the first time, it creates a default `config.yaml` with username `admin` and password `changeme`
+- The password is automatically hashed using bcrypt when saved to the config file
+- You can change the password by editing the config file with a plain text password, and it will be hashed on the next startup
+- **IMPORTANT**: Always change the default password in production
+
+### Configuration Updates
+
+Most configuration settings can be updated through the web UI Settings page or via the `/api/config` API endpoint. Changes are persisted to the YAML file.
 
 ## Running
 
 ```bash
-# Run with default settings
+# Run with default settings (uses ./config.yaml)
 ./docker-simple-panel
 
-# Run with custom configuration
-SERVER_PORT=3000 JWT_SECRET=my-secret-key ./docker-simple-panel
-
-# Run with registration disabled
-DISABLE_REGISTRATION=true ./docker-simple-panel
-
-# Run with custom docker socket path
-DOCKER_SOCKET=/custom/path/docker.sock ./docker-simple-panel
-
-# Run with debug logging
-LOG_LEVEL=debug ./docker-simple-panel
+# Run with custom config path
+CONFIG_PATH=/path/to/config.yaml ./docker-simple-panel
 
 # Run with static file serving
 STATIC_PATH=/path/to/frontend/dist ./docker-simple-panel
@@ -198,18 +222,6 @@ GET /api/health
 ```
 Returns server health status.
 
-#### Register User
-```
-POST /api/auth/register
-Content-Type: application/json
-
-{
-  "username": "admin",
-  "password": "password123",
-  "nickname": "Administrator"
-}
-```
-
 #### Login
 ```
 POST /api/auth/login
@@ -217,7 +229,7 @@ Content-Type: application/json
 
 {
   "username": "admin",
-  "password": "password123"
+  "password": "changeme"
 }
 ```
 
@@ -228,8 +240,7 @@ Response:
   "message": "Login successful",
   "data": {
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "username": "admin",
-    "nickname": "Administrator"
+    "username": "admin"
   }
 }
 ```
@@ -349,7 +360,7 @@ Response:
 GET /api/config
 ```
 
-Returns the current system configuration (Docker socket path and registration status).
+Returns the current system configuration.
 
 Response:
 ```json
@@ -357,7 +368,10 @@ Response:
   "success": true,
   "data": {
     "docker_socket": "/var/run/docker.sock",
-    "disable_registration": false
+    "log_level": "info",
+    "volume_explorer_image": "ghcr.io/dev-zapi/docker-simple-panel:latest",
+    "session_max_timeout": 24,
+    "username": "admin"
   }
 }
 ```
@@ -369,11 +383,13 @@ Content-Type: application/json
 
 {
   "docker_socket": "/custom/path/docker.sock",
-  "disable_registration": true
+  "log_level": "debug",
+  "volume_explorer_image": "alpine:latest",
+  "session_max_timeout": 48
 }
 ```
 
-Updates system configuration. Both fields are optional. When `docker_socket` is changed, the Docker client automatically restarts with the new socket path. Configuration persists across server restarts.
+Updates system configuration. All fields are optional. When `docker_socket` is changed, the Docker client automatically restarts with the new socket path. Configuration persists to the YAML file.
 
 Response:
 ```json
@@ -382,43 +398,21 @@ Response:
   "message": "Configuration updated successfully",
   "data": {
     "docker_socket": "/custom/path/docker.sock",
-    "disable_registration": true
+    "log_level": "debug",
+    "volume_explorer_image": "alpine:latest",
+    "session_max_timeout": 48,
+    "username": "admin"
   }
 }
 ```
 
-## Database Schema
-
-### Users Table
-```sql
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    nickname TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### Config Table
-```sql
-CREATE TABLE config (
-    key TEXT PRIMARY KEY,
-    value TEXT NOT NULL
-);
-```
-
-Stores system configuration that can be updated at runtime via API:
-- `docker_socket`: Docker socket path
-- `disable_registration`: Whether user registration is disabled
-
 ## Security Notes
 
-- Passwords are hashed using bcrypt before storage
-- JWT tokens expire after 24 hours
-- Change the default `JWT_SECRET` in production
+- Passwords are hashed using bcrypt before storage in the config file
+- JWT tokens expire after the configured session timeout (default: 24 hours)
+- Change the default password and JWT secret in production
 - The application requires access to `/var/run/docker.sock`
+- Only one user account is supported (configured in config.yaml)
 
 ## Development
 
@@ -431,12 +425,12 @@ go test ./...
 ```
 .
 ├── main.go              # Application entry point
-├── config/              # Configuration management
-├── database/            # Database operations
+├── config/              # Configuration management (YAML-based)
 ├── docker/              # Docker client wrapper
 ├── handlers/            # HTTP request handlers
-├── middleware/          # HTTP middleware (auth, cors)
-└── models/              # Data models
+├── middleware/          # HTTP middleware (auth, cors, logging)
+├── models/              # Data models
+└── webui/               # Frontend application (Svelte)
 ```
 
 ## Docker Image Building
