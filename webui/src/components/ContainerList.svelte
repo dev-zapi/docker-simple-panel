@@ -457,7 +457,7 @@
     .container-list:not(.compact) .container-actions {
       width: 100%;
       border-top: 1px solid rgba(0, 0, 0, 0.1);
-      justify-content: flex-start;
+      justify-content: flex-end;
     }
     
     /* Compact mode mobile: actions float on right side above content */
