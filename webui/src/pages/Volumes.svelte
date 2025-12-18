@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import Header from '../components/Header.svelte';
+  import ContentHeader from '../components/ContentHeader.svelte';
   import { volumeApi, containerApi } from '../services/api';
   import type { Volume, Container } from '../types';
   
@@ -136,15 +137,12 @@
   <Header />
   
   <main class="main-content">
-    <div class="content-header">
-      <h2>卷列表</h2>
-      <div class="header-actions">
-        <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
-          <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
-          刷新
-        </button>
-      </div>
-    </div>
+    <ContentHeader title="卷列表">
+      <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
+        <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
+        刷新
+      </button>
+    </ContentHeader>
     
     {#if error}
       <div class="error-banner">
@@ -252,34 +250,6 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
-  }
-  
-  .content-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    position: sticky;
-    top: 0;
-    background: var(--color-background-blur);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    z-index: 50;
-    padding: 1rem 0;
-  }
-  
-  .content-header h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--color-text, #0a0a0a);
-    margin: 0;
-    font-family: var(--font-heading, "Playfair Display", serif);
-  }
-  
-  .header-actions {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
   }
   
   .refresh-button {
@@ -566,15 +536,6 @@
   @media (max-width: 640px) {
     .main-content {
       padding: 1rem;
-    }
-    
-    .content-header {
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-    
-    .content-header h2 {
-      font-size: 1.5rem;
     }
     
     .volume-meta {

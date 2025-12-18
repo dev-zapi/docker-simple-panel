@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { push } from 'svelte-spa-router';
   import Header from '../components/Header.svelte';
+  import ContentHeader from '../components/ContentHeader.svelte';
   import { volumeApi } from '../services/api';
   import type { VolumeFileInfo, VolumeFileContent } from '../types';
   
@@ -148,46 +149,41 @@
   <Header />
   
   <main class="main-content">
-    <div class="content-header">
-      <div class="header-top">
-        <h2>📦 {volumeName}</h2>
-        <div class="header-actions">
-          {#if showDeleteConfirm}
-            <button 
-              class="delete-volume-button confirm" 
-              on:click={handleDeleteVolumeClick}
-              disabled={deletingVolume}
-            >
-              {deletingVolume ? '删除中...' : '确认删除卷'}
-            </button>
-            <button 
-              class="cancel-button" 
-              on:click={cancelDeleteVolume}
-              disabled={deletingVolume}
-            >
-              取消
-            </button>
-          {:else}
-            <button 
-              class="delete-volume-button" 
-              on:click={handleDeleteVolumeClick}
-              disabled={deletingVolume}
-            >
-              🗑️ 删除卷
-            </button>
-          {/if}
-          <button class="back-button" on:click={() => push('/volumes')}>
-            ← 返回卷列表
-          </button>
-        </div>
-      </div>
-      <div class="breadcrumb">
-        <button class="breadcrumb-btn" on:click={handleGoToRoot} title="根目录">🏠</button>
-        {#if currentPath !== '/'}
-          <span class="separator">/</span>
-          <span class="path-text">{currentPath}</span>
-        {/if}
-      </div>
+    <ContentHeader title="📦 {volumeName}">
+      {#if showDeleteConfirm}
+        <button 
+          class="delete-volume-button confirm" 
+          on:click={handleDeleteVolumeClick}
+          disabled={deletingVolume}
+        >
+          {deletingVolume ? '删除中...' : '确认删除卷'}
+        </button>
+        <button 
+          class="cancel-button" 
+          on:click={cancelDeleteVolume}
+          disabled={deletingVolume}
+        >
+          取消
+        </button>
+      {:else}
+        <button 
+          class="delete-volume-button" 
+          on:click={handleDeleteVolumeClick}
+          disabled={deletingVolume}
+        >
+          🗑️ 删除卷
+        </button>
+      {/if}
+      <button class="back-button" on:click={() => push('/volumes')}>
+        ← 返回卷列表
+      </button>
+    </ContentHeader>
+    <div class="breadcrumb">
+      <button class="breadcrumb-btn" on:click={handleGoToRoot} title="根目录">🏠</button>
+      {#if currentPath !== '/'}
+        <span class="separator">/</span>
+        <span class="path-text">{currentPath}</span>
+      {/if}
     </div>
     
     {#if error}
@@ -286,39 +282,6 @@
     padding: 2rem;
   }
   
-  .content-header {
-    margin-bottom: 1.5rem;
-    position: sticky;
-    top: 0;
-    background: var(--color-background-blur);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    z-index: 50;
-    padding: 1rem 0;
-  }
-  
-  .header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-  
-  .header-actions {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  
-  .content-header h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--color-text, #0a0a0a);
-    margin: 0;
-    font-family: var(--font-heading, "Playfair Display", serif);
-  }
-  
   .delete-volume-button {
     display: flex;
     align-items: center;
@@ -404,6 +367,7 @@
     font-size: 0.95rem;
     color: var(--color-muted, #78716c);
     font-family: monospace;
+    margin-bottom: 1.5rem;
   }
   
   .breadcrumb-btn {
@@ -655,12 +619,6 @@
   @media (max-width: 640px) {
     .main-content {
       padding: 1rem;
-    }
-    
-    .header-top {
-      flex-direction: column;
-      gap: 1rem;
-      align-items: flex-start;
     }
   }
 </style>

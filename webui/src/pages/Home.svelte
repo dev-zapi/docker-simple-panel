@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import Header from '../components/Header.svelte';
+  import ContentHeader from '../components/ContentHeader.svelte';
   import ContainerList from '../components/ContainerList.svelte';
   import { containerApi } from '../services/api';
   import type { Container } from '../types';
@@ -374,72 +375,69 @@
   <Header />
   
   <main class="main-content">
-    <div class="content-header">
-      <h2>容器列表</h2>
-      <div class="header-actions">
-        <input
-          type="text"
-          class="filter-input"
-          placeholder="按名称筛选..."
-          value={filterText}
-          on:input={handleFilterTextChange}
-          aria-label="按容器名称筛选"
-        />
-        <button 
-          class="mode-toggle" 
-          on:click={toggleDisplayMode} 
-          title={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}
-          aria-label={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}
-        >
-          {#if displayMode === 'compact'}
-            <span class="mode-icon">📋</span>
-            <span class="mode-text">标准</span>
-          {:else}
-            <span class="mode-icon">📑</span>
-            <span class="mode-text">紧凑</span>
-          {/if}
-        </button>
-        <select 
-          class="group-mode-select" 
-          value={groupMode} 
-          on:change={handleGroupModeChange}
-          aria-label="选择分组方式"
-        >
-          <option value="none">不分组</option>
-          <option value="compose">按 Compose 分组</option>
-          <option value="label">按标签分组</option>
-          <option value="status-health">按状态和健康分组</option>
-        </select>
-        {#if groupMode === 'label' && availableLabelKeys.length > 0}
-          <select 
-            class="label-key-select" 
-            value={selectedLabelKey} 
-            on:change={handleLabelKeyChange}
-            aria-label="选择标签"
-          >
-            {#each availableLabelKeys as labelKey}
-              <option value={labelKey}>{labelKey}</option>
-            {/each}
-          </select>
+    <ContentHeader title="容器列表">
+      <input
+        type="text"
+        class="filter-input"
+        placeholder="按名称筛选..."
+        value={filterText}
+        on:input={handleFilterTextChange}
+        aria-label="按容器名称筛选"
+      />
+      <button 
+        class="mode-toggle" 
+        on:click={toggleDisplayMode} 
+        title={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}
+        aria-label={displayMode === 'compact' ? '切换到标准模式' : '切换到紧凑模式'}
+      >
+        {#if displayMode === 'compact'}
+          <span class="mode-icon">📋</span>
+          <span class="mode-text">标准</span>
+        {:else}
+          <span class="mode-icon">📑</span>
+          <span class="mode-text">紧凑</span>
         {/if}
+      </button>
+      <select 
+        class="group-mode-select" 
+        value={groupMode} 
+        on:change={handleGroupModeChange}
+        aria-label="选择分组方式"
+      >
+        <option value="none">不分组</option>
+        <option value="compose">按 Compose 分组</option>
+        <option value="label">按标签分组</option>
+        <option value="status-health">按状态和健康分组</option>
+      </select>
+      {#if groupMode === 'label' && availableLabelKeys.length > 0}
         <select 
-          class="sort-mode-select" 
-          value={sortMode} 
-          on:change={handleSortModeChange}
-          aria-label="选择排序方式"
+          class="label-key-select" 
+          value={selectedLabelKey} 
+          on:change={handleLabelKeyChange}
+          aria-label="选择标签"
         >
-          <option value="none">不排序</option>
-          <option value="name">按名称</option>
-          <option value="created">按创建时间</option>
-          <option value="state-health">按状态和健康</option>
-          <option value="compose">按 Compose 名称</option>
+          {#each availableLabelKeys as labelKey}
+            <option value={labelKey}>{labelKey}</option>
+          {/each}
         </select>
-        <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
-          <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
-          刷新
-        </button>
-      </div>
-    </div>
+      {/if}
+      <select 
+        class="sort-mode-select" 
+        value={sortMode} 
+        on:change={handleSortModeChange}
+        aria-label="选择排序方式"
+      >
+        <option value="none">不排序</option>
+        <option value="name">按名称</option>
+        <option value="created">按创建时间</option>
+        <option value="state-health">按状态和健康</option>
+        <option value="compose">按 Compose 名称</option>
+      </select>
+      <button class="refresh-button" on:click={handleRefresh} disabled={refreshing}>
+        <span class="refresh-icon" class:spinning={refreshing}>🔄</span>
+        刷新
+      </button>
+    </ContentHeader>
     
     {#if error}
       <div class="error-banner">
@@ -672,34 +670,6 @@
     position: relative;
   }
   
-  .content-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    position: sticky;
-    top: 0;
-    background: var(--color-background-blur);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    z-index: 50;
-    padding: 1rem 0;
-  }
-  
-  .content-header h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--color-text, #0a0a0a);
-    margin: 0;
-    font-family: var(--font-heading, "Playfair Display", serif);
-  }
-  
-  .header-actions {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-  
   .mode-toggle,
   .refresh-button,
   .group-mode-select,
@@ -809,15 +779,6 @@
   @media (max-width: 640px) {
     .main-content {
       padding: 1rem;
-    }
-    
-    .content-header {
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-    
-    .content-header h2 {
-      font-size: 1.5rem;
     }
   }
   

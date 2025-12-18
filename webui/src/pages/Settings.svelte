@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Header from '../components/Header.svelte';
+  import ContentHeader from '../components/ContentHeader.svelte';
   import { configApi } from '../services/api';
   import type { SystemConfig } from '../types';
   
@@ -91,9 +92,7 @@
   <Header />
   
   <main class="main-content">
-    <div class="content-header">
-      <h2>系统设置</h2>
-    </div>
+    <ContentHeader title="系统设置" />
     
     {#if error}
       <div class="error-banner">
@@ -217,25 +216,6 @@
     max-width: 800px;
     margin: 0 auto;
     padding: 2rem;
-  }
-  
-  .content-header {
-    margin-bottom: 1.5rem;
-    position: sticky;
-    top: 0;
-    background: var(--color-background-blur);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    z-index: 50;
-    padding: 1rem 0;
-  }
-  
-  .content-header h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--color-text, #0a0a0a);
-    margin: 0;
-    font-family: var(--font-heading, "Playfair Display", serif);
   }
   
   .error-banner {

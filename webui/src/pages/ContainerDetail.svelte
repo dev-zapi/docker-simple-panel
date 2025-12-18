@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { push } from 'svelte-spa-router';
   import Header from '../components/Header.svelte';
+  import ContentHeader from '../components/ContentHeader.svelte';
   import { containerApi } from '../services/api';
   import type { Container } from '../types';
   
@@ -85,12 +86,11 @@
   <Header />
   
   <main class="main-content">
-    <div class="content-header">
+    <ContentHeader title="容器详情">
       <button class="back-button" on:click={goBack}>
         ← 返回列表
       </button>
-      <h2>容器详情</h2>
-    </div>
+    </ContentHeader>
     
     {#if error}
       <div class="error-banner">
@@ -320,20 +320,6 @@
     padding: 2rem;
   }
   
-  .content-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    position: sticky;
-    top: 0;
-    background: var(--color-background-blur);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    z-index: 50;
-    padding: 1rem 0;
-  }
-  
   .back-button {
     background: var(--color-surface, #e7e5e4);
     border: 1px solid rgba(0, 0, 0, 0.1);
@@ -349,14 +335,6 @@
   .back-button:hover {
     background: var(--color-background, #f5f5f4);
     border-color: var(--color-primary, #171717);
-  }
-  
-  .content-header h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--color-text, #0a0a0a);
-    margin: 0;
-    font-family: var(--font-heading, "Playfair Display", serif);
   }
   
   .error-banner {

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import Header from '../components/Header.svelte';
+  import ContentHeader from '../components/ContentHeader.svelte';
   import { userApi, authApi } from '../services/api';
   import type { User } from '../types';
   
@@ -93,12 +94,11 @@
   <Header />
   
   <main class="main-content">
-    <div class="content-header">
-      <h2>用户管理</h2>
+    <ContentHeader title="用户管理">
       <button class="add-button" on:click={openAddModal}>
         ➕ 添加用户
       </button>
-    </div>
+    </ContentHeader>
     
     {#if error}
       <div class="error-banner">
@@ -216,28 +216,6 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
-  }
-  
-  .content-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    position: sticky;
-    top: 0;
-    background: var(--color-background-blur);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    z-index: 50;
-    padding: 1rem 0;
-  }
-  
-  .content-header h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--color-text, #0a0a0a);
-    margin: 0;
-    font-family: var(--font-heading, "Playfair Display", serif);
   }
   
   .add-button {
