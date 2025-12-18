@@ -5,10 +5,19 @@
 ### Overview
 This workflow builds a Docker image and pushes it to GitHub Container Registry (ghcr.io).
 
-### Trigger
-The workflow is manually triggered via `workflow_dispatch`.
+### Triggers
 
-### Usage
+The workflow is triggered in two ways:
+
+1. **Automatically**: When a pull request is merged to the `main` branch
+   - The image is automatically built and tagged as `latest`
+   - Also includes a SHA-based tag with branch prefix
+
+2. **Manually**: Via `workflow_dispatch` in the GitHub Actions UI
+   - Allows specifying a custom tag
+   - Default tag is `latest` if not specified
+
+### Manual Usage
 
 1. Go to the "Actions" tab in the GitHub repository
 2. Select "Build and Push Docker Image" from the workflows list
@@ -17,7 +26,7 @@ The workflow is manually triggered via `workflow_dispatch`.
 5. Click "Run workflow" to start the build
 
 ### Parameters
-- **tag**: Docker image tag (e.g., `v1.0.0`, `latest`, `dev`). Default: `latest`
+- **tag**: Docker image tag (e.g., `v1.0.0`, `latest`, `dev`). Default: `latest` (only for manual triggers)
 
 ### Features
 - Multi-platform builds (linux/amd64, linux/arm64)
