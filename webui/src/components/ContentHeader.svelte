@@ -34,7 +34,7 @@
   .content-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     background: var(--color-background-blur);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
@@ -56,6 +56,7 @@
     display: flex;
     gap: 0.75rem;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: flex-start;
+    justify-content: flex-end;
   }
 </style>
