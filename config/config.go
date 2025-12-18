@@ -138,6 +138,11 @@ func LoadConfig() (*Config, error) {
 	
 	cfg.configPath = configPath
 	
+	// If static path is blank in config, try to read from environment variable
+	if cfg.StaticPath == "" {
+		cfg.StaticPath = os.Getenv("STATIC_PATH")
+	}
+	
 	// Hash password for validation
 	if cfg.Password != "" {
 		// Check if password is already hashed
