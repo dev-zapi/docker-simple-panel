@@ -48,7 +48,6 @@
     color: var(--color-text, #0a0a0a);
     margin: 0;
     font-family: var(--font-heading, "Playfair Display", serif);
-    width: 12rem;
     flex-shrink: 0;
   }
 
