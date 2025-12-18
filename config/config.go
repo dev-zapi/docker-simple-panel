@@ -102,6 +102,15 @@ func LoadConfig() (*Config, error) {
 		log.Printf("Config file not found at %s, creating default config", configPath)
 		cfg := getDefaultConfig()
 		cfg.configPath = configPath
+		
+		// Hash the default password
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(cfg.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, fmt.Errorf("failed to hash password: %w", err)
+		}
+		cfg.Password = string(hashedPassword)
+		cfg.hashedPassword = string(hashedPassword)
+		
 		if err := cfg.Save(); err != nil {
 			return nil, fmt.Errorf("failed to create default config: %w", err)
 		}
