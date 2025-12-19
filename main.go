@@ -125,6 +125,8 @@ func main() {
 			fs := http.FileServer(http.Dir(cfg.StaticPath))
 			router.PathPrefix("/").Handler(fs)
 		}
+	} else {
+		log.Println("Info: Static path not configured, static file serving disabled")
 	}
 
 	// Create HTTP server
