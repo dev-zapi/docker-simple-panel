@@ -239,10 +239,6 @@
 </div>
 
 <style>
-  :root {
-    --spinner-duration: 0.6s;
-  }
-  
   .container-list {
     display: flex;
     flex-direction: column;
@@ -407,7 +403,7 @@
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-top: 2px solid white;
     border-radius: 50%;
-    animation: spin var(--spinner-duration, 0.6s) linear infinite;
+    animation: spin 0.6s linear infinite;
   }
   
   .action-btn.logs {
@@ -519,7 +515,7 @@
     border: 2px solid rgba(0, 0, 0, 0.2);
     border-top: 2px solid rgba(0, 0, 0, 0.6);
     border-radius: 50%;
-    animation: spin var(--spinner-duration, 0.6s) linear infinite;
+    animation: spin 0.6s linear infinite;
   }
   
   /* Keyframe animation for spinners */
