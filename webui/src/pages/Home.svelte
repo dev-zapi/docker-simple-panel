@@ -26,6 +26,7 @@
   let isMounted = false;
   let filterDebounceTimer: number | undefined = undefined;
   const FILTER_DEBOUNCE_DELAY = 500; // milliseconds to wait before reloading after filter text changes
+  const REFRESH_DELAY = 200; // milliseconds to wait after action before refreshing
   
 
   
@@ -359,8 +360,8 @@
       
       await containerApi.controlContainer({ containerId, action });
       
-      // Wait 200ms before refreshing
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Wait before refreshing to allow container state to stabilize
+      await new Promise(resolve => setTimeout(resolve, REFRESH_DELAY));
       
       await loadContainers();
     } catch (err) {
