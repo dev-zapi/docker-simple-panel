@@ -5,9 +5,10 @@
     containers: Container[];
     displayMode: 'compact' | 'standard';
     onAction: (containerId: string, action: 'start' | 'stop' | 'restart', isSelf: boolean) => void;
+    loadingActions: Map<string, 'start' | 'stop' | 'restart'>;
   }
   
-  let { containers, displayMode, onAction }: Props = $props();
+  let { containers, displayMode, onAction, loadingActions }: Props = $props();
   
   const stateEmojis: Record<string, string> = {
     created: '🆕',
@@ -25,6 +26,16 @@
     starting: '🔄',
     none: ''
   };
+  
+  // Helper function to check if a specific action is loading for a container
+  function isActionLoading(containerId: string, action: 'start' | 'stop' | 'restart'): boolean {
+    return loadingActions.get(containerId) === action;
+  }
+  
+  // Helper function to check if any action is loading for a container
+  function isContainerLoading(containerId: string): boolean {
+    return loadingActions.has(containerId);
+  }
 </script>
 
 <div class="container-list" class:compact={displayMode === 'compact'}>
@@ -52,36 +63,57 @@
           {#if container.state === 'running'}
             <button 
               class="action-btn-compact stop" 
+              class:loading={isActionLoading(container.id, 'stop')}
               onclick={() => onAction(container.id, 'stop', container.is_self ?? false)}
-              disabled={container.is_self}
+              disabled={container.is_self || isContainerLoading(container.id)}
               title={container.is_self ? "无法停止本应用容器" : "停止"}
             >
-              ⏸️
+              {#if isActionLoading(container.id, 'stop')}
+                <span class="spinner-compact"></span>
+              {:else}
+                ⏸️
+              {/if}
             </button>
             <button 
               class="action-btn-compact restart" 
+              class:loading={isActionLoading(container.id, 'restart')}
               onclick={() => onAction(container.id, 'restart', container.is_self ?? false)}
-              disabled={container.is_self}
+              disabled={container.is_self || isContainerLoading(container.id)}
               title={container.is_self ? "无法重启本应用容器" : "重启"}
             >
-              🔄
+              {#if isActionLoading(container.id, 'restart')}
+                <span class="spinner-compact"></span>
+              {:else}
+                🔄
+              {/if}
             </button>
           {:else if ['exited', 'created', 'dead'].includes(container.state)}
             <button 
               class="action-btn-compact start" 
+              class:loading={isActionLoading(container.id, 'start')}
               onclick={() => onAction(container.id, 'start', container.is_self ?? false)}
+              disabled={isContainerLoading(container.id)}
               title="启动"
             >
-              ▶️
+              {#if isActionLoading(container.id, 'start')}
+                <span class="spinner-compact"></span>
+              {:else}
+                ▶️
+              {/if}
             </button>
           {:else}
             <button 
               class="action-btn-compact restart" 
+              class:loading={isActionLoading(container.id, 'restart')}
               onclick={() => onAction(container.id, 'restart', container.is_self ?? false)}
-              disabled={container.is_self}
+              disabled={container.is_self || isContainerLoading(container.id)}
               title={container.is_self ? "无法重启本应用容器" : "重启"}
             >
-              🔄
+              {#if isActionLoading(container.id, 'restart')}
+                <span class="spinner-compact"></span>
+              {:else}
+                🔄
+              {/if}
             </button>
           {/if}
           <a 
@@ -117,35 +149,60 @@
             {#if container.state === 'running'}
               <button 
                 class="action-btn stop" 
+                class:loading={isActionLoading(container.id, 'stop')}
                 onclick={() => onAction(container.id, 'stop', container.is_self ?? false)}
-                disabled={container.is_self}
+                disabled={container.is_self || isContainerLoading(container.id)}
                 title={container.is_self ? "无法停止本应用容器" : ""}
               >
-                ⏸️ 停止
+                {#if isActionLoading(container.id, 'stop')}
+                  <span class="spinner"></span>
+                {:else}
+                  ⏸️
+                {/if}
+                停止
               </button>
               <button 
                 class="action-btn restart" 
+                class:loading={isActionLoading(container.id, 'restart')}
                 onclick={() => onAction(container.id, 'restart', container.is_self ?? false)}
-                disabled={container.is_self}
+                disabled={container.is_self || isContainerLoading(container.id)}
                 title={container.is_self ? "无法重启本应用容器" : ""}
               >
-                🔄 重启
+                {#if isActionLoading(container.id, 'restart')}
+                  <span class="spinner"></span>
+                {:else}
+                  🔄
+                {/if}
+                重启
               </button>
             {:else if ['exited', 'created', 'dead'].includes(container.state)}
               <button 
                 class="action-btn start"
+                class:loading={isActionLoading(container.id, 'start')}
                 onclick={() => onAction(container.id, 'start', container.is_self ?? false)}
+                disabled={isContainerLoading(container.id)}
               >
-                ▶️ 启动
+                {#if isActionLoading(container.id, 'start')}
+                  <span class="spinner"></span>
+                {:else}
+                  ▶️
+                {/if}
+                启动
               </button>
             {:else}
               <button 
                 class="action-btn restart" 
+                class:loading={isActionLoading(container.id, 'restart')}
                 onclick={() => onAction(container.id, 'restart', container.is_self ?? false)}
-                disabled={container.is_self}
+                disabled={container.is_self || isContainerLoading(container.id)}
                 title={container.is_self ? "无法重启本应用容器" : ""}
               >
-                🔄 重启
+                {#if isActionLoading(container.id, 'restart')}
+                  <span class="spinner"></span>
+                {:else}
+                  🔄
+                {/if}
+                重启
               </button>
             {/if}
             <a 
@@ -333,6 +390,22 @@
     cursor: not-allowed;
   }
   
+  .action-btn.loading {
+    opacity: 0.8;
+    position: relative;
+  }
+  
+  /* Spinner for standard mode buttons */
+  .spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  
   .action-btn.logs {
     background: var(--color-secondary, #525252);
     color: white;
@@ -428,6 +501,27 @@
   .action-btn-compact:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+  }
+  
+  .action-btn-compact.loading {
+    opacity: 0.8;
+  }
+  
+  /* Spinner for compact mode buttons */
+  .spinner-compact {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-top: 2px solid rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  
+  /* Keyframe animation for spinners */
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
   
   .action-btn-compact.logs {

@@ -19,9 +19,12 @@
   let availableLabelKeys: string[] = [];
   let filterText: string = '';
   
+  // Track loading state for individual container actions
+  let loadingActions = new Map<string, 'start' | 'stop' | 'restart'>();
+  
   // Track if component has mounted to prevent reload during initial setup
   let isMounted = false;
-  let filterDebounceTimer: number | null = null;
+  let filterDebounceTimer: number | undefined = undefined;
   const FILTER_DEBOUNCE_DELAY = 500; // milliseconds to wait before reloading after filter text changes
   
 
@@ -351,7 +354,14 @@
     
     try {
       actionError = '';
+      // Set loading state for this specific action
+      loadingActions = new Map(loadingActions).set(containerId, action);
+      
       await containerApi.controlContainer({ containerId, action });
+      
+      // Wait 200ms before refreshing
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       await loadContainers();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '未知错误';
@@ -362,6 +372,11 @@
       }
       console.error('Container action failed:', err);
       setTimeout(() => { actionError = ''; }, 3000);
+    } finally {
+      // Clear loading state for this container
+      const newLoadingActions = new Map(loadingActions);
+      newLoadingActions.delete(containerId);
+      loadingActions = newLoadingActions;
     }
   }
   
@@ -503,6 +518,7 @@
                 containers={projectContainers}
                 displayMode={displayMode}
                 onAction={handleAction}
+                loadingActions={loadingActions}
               />
               {/if}
             </div>
@@ -528,6 +544,7 @@
               containers={ungrouped}
               displayMode={displayMode}
               onAction={handleAction}
+              loadingActions={loadingActions}
             />
             {/if}
           </div>
@@ -573,6 +590,7 @@
                 containers={labelContainers}
                 displayMode={displayMode}
                 onAction={handleAction}
+                loadingActions={loadingActions}
               />
               {/if}
             </div>
@@ -598,6 +616,7 @@
               containers={ungrouped}
               displayMode={displayMode}
               onAction={handleAction}
+              loadingActions={loadingActions}
             />
             {/if}
           </div>
@@ -640,6 +659,7 @@
                 containers={groupContainers}
                 displayMode={displayMode}
                 onAction={handleAction}
+                loadingActions={loadingActions}
               />
               {/if}
             </div>
@@ -651,6 +671,7 @@
           containers={sortedContainers}
           displayMode={displayMode}
           onAction={handleAction}
+          loadingActions={loadingActions}
         />
       {/if}
     {/if}
