@@ -855,14 +855,17 @@
   
   /* Quick navigation sidebar */
   .quick-nav-sidebar {
+    /* Responsive width: clamp between 140px and 200px based on available space */
+    --sidebar-width: clamp(140px, 15vw, 200px);
+    --sidebar-gap: 8px;
+    
     position: sticky;
     top: 5rem;
     float: left;
-    /* Responsive width: clamp between 140px and 200px based on available space */
-    width: clamp(140px, 15vw, 200px);
+    width: var(--sidebar-width);
     /* Position close to main content with minimal gap */
-    margin-left: calc(-1 * clamp(140px, 15vw, 200px) - 8px);
-    margin-right: 8px;
+    margin-left: calc(-1 * var(--sidebar-width) - var(--sidebar-gap));
+    margin-right: var(--sidebar-gap);
     background: var(--color-surface, #e7e5e4);
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: var(--radius, 0.25rem);
@@ -917,8 +920,7 @@
   /* Extra large screens: slightly larger sidebar */
   @media (min-width: 1600px) {
     .quick-nav-sidebar {
-      width: clamp(180px, 12vw, 220px);
-      margin-left: calc(-1 * clamp(180px, 12vw, 220px) - 8px);
+      --sidebar-width: clamp(180px, 12vw, 220px);
       padding: 0.75rem;
     }
     
