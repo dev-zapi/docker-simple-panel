@@ -855,30 +855,29 @@
   
   /* Quick navigation sidebar */
   .quick-nav-sidebar {
+    /* Responsive width: clamp between 140px and 200px based on available space */
+    --sidebar-width: clamp(140px, 15vw, 200px);
+    --sidebar-gap: 8px;
+    
     position: sticky;
     top: 5rem;
     float: left;
-    margin-left: -260px;
-    margin-right: 20px;
+    width: var(--sidebar-width);
+    /* Position close to main content with minimal gap */
+    margin-left: calc(-1 * var(--sidebar-width) - var(--sidebar-gap));
+    margin-right: var(--sidebar-gap);
     background: var(--color-surface, #e7e5e4);
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: var(--radius, 0.25rem);
-    padding: 0.75rem;
+    padding: 0.5rem;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     max-height: calc(100vh - 6rem);
     overflow-y: auto;
     z-index: 50;
   }
   
-  /* Desktop: sidebar with fixed width when floating */
-  @media (min-width: 1025px) {
-    .quick-nav-sidebar {
-      max-width: 240px;
-    }
-  }
-  
   .quick-nav-title {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: var(--color-text, #0a0a0a);
     margin-bottom: 0.5rem;
@@ -891,12 +890,12 @@
     display: block;
     width: 100%;
     text-align: left;
-    padding: 0.5rem 0.75rem;
-    margin-bottom: 0.25rem;
+    padding: 0.4rem 0.5rem;
+    margin-bottom: 0.15rem;
     border: none;
     background: transparent;
     color: var(--color-text, #0a0a0a);
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-family: var(--font-body, "Merriweather", serif);
     border-radius: var(--radius, 0.25rem);
     cursor: pointer;
@@ -911,35 +910,27 @@
     color: var(--color-background, #f5f5f4);
   }
   
-  /* Mobile responsive adjustments for quick nav */
-  @media (max-width: 1024px) {
+  /* Hide sidebar on medium screens (no space for floating sidebar) */
+  @media (max-width: 1280px) {
     .quick-nav-sidebar {
-      position: static;
-      float: none;
-      margin-left: 0;
-      margin-right: 0;
-      margin-bottom: 1.5rem;
-      max-width: 100%;
-      max-height: none;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      align-items: center;
-      padding: 1rem;
+      display: none;
+    }
+  }
+  
+  /* Extra large screens: slightly larger sidebar */
+  @media (min-width: 1600px) {
+    .quick-nav-sidebar {
+      --sidebar-width: clamp(180px, 12vw, 220px);
+      padding: 0.75rem;
     }
     
     .quick-nav-title {
-      width: 100%;
-      margin-bottom: 0.5rem;
-      padding-bottom: 0.5rem;
+      font-size: 0.85rem;
     }
     
     .quick-nav-item {
-      width: auto;
-      flex: 0 0 auto;
-      margin-bottom: 0;
-      padding: 0.4rem 0.75rem;
       font-size: 0.8rem;
+      padding: 0.5rem 0.6rem;
     }
   }
 </style>
