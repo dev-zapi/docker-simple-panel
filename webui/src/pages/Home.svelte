@@ -840,6 +840,7 @@
   
   .compose-group-header.compact {
     padding: 0.5rem 0.75rem;
+    margin-bottom: 0.5rem;
   }
   
   .compose-icon {
