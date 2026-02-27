@@ -812,6 +812,11 @@
     transition: background 0.2s, color 0.2s;
   }
   
+  .compose-group-header[aria-expanded="false"] {
+    border-radius: var(--radius, 0.25rem);
+    margin-bottom: 0;
+  }
+
   .compose-group-header:hover {
     background: #2a2a2a;
     color: var(--color-text, #0a0a0a);
@@ -857,7 +862,7 @@
   .quick-nav-sidebar {
     /* Responsive width: clamp between 140px and 200px based on available space */
     --sidebar-width: clamp(140px, 15vw, 200px);
-    --sidebar-gap: 8px;
+    --sidebar-gap: 2rem;
     
     position: sticky;
     top: 5rem;
