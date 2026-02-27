@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
+  import { slide } from 'svelte/transition';
   import Header from '../components/Header.svelte';
   import PageLayout from '../components/PageLayout.svelte';
   import ContainerList from '../components/ContainerList.svelte';
@@ -515,12 +516,14 @@
                 <span class="collapse-icon" aria-hidden="true">{collapsedGroups.has(projectName) ? '▶' : '▼'}</span>
               </button>
               {#if !collapsedGroups.has(projectName)}
-              <ContainerList
-                containers={projectContainers}
-                displayMode={displayMode}
-                onAction={handleAction}
-                loadingActions={loadingActions}
-              />
+              <div class="group-content" transition:slide={{ duration: 300 }}>
+                <ContainerList
+                  containers={projectContainers}
+                  displayMode={displayMode}
+                  onAction={handleAction}
+                  loadingActions={loadingActions}
+                />
+              </div>
               {/if}
             </div>
           {/each}
@@ -541,12 +544,14 @@
               <span class="collapse-icon" aria-hidden="true">{collapsedGroups.has('_ungrouped_') ? '▶' : '▼'}</span>
             </button>
             {#if !collapsedGroups.has('_ungrouped_')}
-            <ContainerList
-              containers={ungrouped}
-              displayMode={displayMode}
-              onAction={handleAction}
-              loadingActions={loadingActions}
-            />
+            <div class="group-content" transition:slide={{ duration: 300 }}>
+              <ContainerList
+                containers={ungrouped}
+                displayMode={displayMode}
+                onAction={handleAction}
+                loadingActions={loadingActions}
+              />
+            </div>
             {/if}
           </div>
         {/if}
@@ -587,12 +592,14 @@
                 <span class="collapse-icon" aria-hidden="true">{collapsedGroups.has(`label-${labelValue}`) ? '▶' : '▼'}</span>
               </button>
               {#if !collapsedGroups.has(`label-${labelValue}`)}
-              <ContainerList
-                containers={labelContainers}
-                displayMode={displayMode}
-                onAction={handleAction}
-                loadingActions={loadingActions}
-              />
+              <div class="group-content" transition:slide={{ duration: 300 }}>
+                <ContainerList
+                  containers={labelContainers}
+                  displayMode={displayMode}
+                  onAction={handleAction}
+                  loadingActions={loadingActions}
+                />
+              </div>
               {/if}
             </div>
           {/each}
@@ -613,12 +620,14 @@
               <span class="collapse-icon" aria-hidden="true">{collapsedGroups.has('_ungrouped_label_') ? '▶' : '▼'}</span>
             </button>
             {#if !collapsedGroups.has('_ungrouped_label_')}
-            <ContainerList
-              containers={ungrouped}
-              displayMode={displayMode}
-              onAction={handleAction}
-              loadingActions={loadingActions}
-            />
+            <div class="group-content" transition:slide={{ duration: 300 }}>
+              <ContainerList
+                containers={ungrouped}
+                displayMode={displayMode}
+                onAction={handleAction}
+                loadingActions={loadingActions}
+              />
+            </div>
             {/if}
           </div>
         {/if}
@@ -656,12 +665,14 @@
                 <span class="collapse-icon" aria-hidden="true">{collapsedGroups.has(`status-health-${groupKey}`) ? '▶' : '▼'}</span>
               </button>
               {#if !collapsedGroups.has(`status-health-${groupKey}`)}
-              <ContainerList
-                containers={groupContainers}
-                displayMode={displayMode}
-                onAction={handleAction}
-                loadingActions={loadingActions}
-              />
+              <div class="group-content" transition:slide={{ duration: 300 }}>
+                <ContainerList
+                  containers={groupContainers}
+                  displayMode={displayMode}
+                  onAction={handleAction}
+                  loadingActions={loadingActions}
+                />
+              </div>
               {/if}
             </div>
           {/each}
@@ -803,18 +814,23 @@
     background: var(--color-primary, #171717);
     color: var(--color-background, #f5f5f4);
     border-radius: var(--radius, 0.25rem) var(--radius, 0.25rem) 0 0;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0;
     width: 100%;
     border: none;
     cursor: pointer;
     text-align: left;
     font-family: inherit;
-    transition: background 0.2s, color 0.2s;
+    transition: background 0.2s, color 0.2s, border-radius 0.2s ease 0s, margin-bottom 0.2s ease 0s;
   }
   
   .compose-group-header[aria-expanded="false"] {
     border-radius: var(--radius, 0.25rem);
     margin-bottom: 0;
+    transition: background 0.2s, color 0.2s, border-radius 0.2s ease 0.15s, margin-bottom 0.2s ease 0.15s;
+  }
+
+  .group-content {
+    overflow: hidden;
   }
 
   .compose-group-header:hover {
