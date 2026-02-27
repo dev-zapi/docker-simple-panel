@@ -814,7 +814,7 @@
     background: var(--color-primary, #171717);
     color: var(--color-background, #f5f5f4);
     border-radius: var(--radius, 0.25rem) var(--radius, 0.25rem) 0 0;
-    margin-bottom: 0;
+    margin-bottom: 1rem;
     width: 100%;
     border: none;
     cursor: pointer;
