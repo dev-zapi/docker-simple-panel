@@ -1,30 +1,52 @@
-# docker-simple-panel
-A simple docker containers dashboard.
+# Docker Simple Panel
 
-## Overview
-This is a Go backend application that provides a REST API for managing Docker containers. It includes authentication with a single user account configured via YAML, container status monitoring, and container operations.
+<div align="center">
 
-## Features
-- Single-user authentication with JWT tokens
-- YAML-based configuration management
-- Docker container listing with health status
-- Container operations: start, stop, restart
-- Real-time container log streaming via WebSocket (with 30-minute history)
-- Docker volume management with container associations
-- Docker daemon connectivity via `/var/run/docker.sock`
-- **Progressive Web App (PWA) support** - Install as an app on iPhone, Android, and desktop
-- Offline support with service worker caching
+![Docker Simple Panel](https://img.shields.io/badge/Docker-Simple_Panel-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?style=for-the-badge&logo=go&logoColor=white)
+![Svelte](https://img.shields.io/badge/Svelte-5-FF3E00?style=for-the-badge&logo=svelte&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)
 
-## Requirements
-- Go 1.21 or higher (for building from source)
-- Docker daemon running
+**A modern, lightweight dashboard for managing Docker containers**
 
-## Quick Start with Docker
+[![Quick Start](https://img.shields.io/badge/Quick_Start-Docker-2496ED?style=for-the-badge&logo=docker)](#quick-start-with-docker)
+[![Documentation](https://img.shields.io/badge/Documentation-API-8A2BE2?style=for-the-badge)](#api-endpoints)
+[![PWA](https://img.shields.io/badge/PWA-Supported-FF5722?style=for-the-badge)](#installing-as-a-pwa)
 
-The easiest way to run docker-simple-panel is using the pre-built Docker image:
+</div>
+
+---
+
+## 🌟 Overview
+
+Docker Simple Panel is a sleek web application that provides a REST API and intuitive UI for managing Docker containers. Built with a Go backend and Svelte frontend, it offers authentication, real-time monitoring, and comprehensive container operations.
+
+## ✨ Features
+
+| Feature | Description |
+|---------|-------------|
+| 🔐 **Authentication** | Single-user JWT-based authentication with configurable session timeout |
+| 📦 **Container Management** | List, start, stop, restart containers with health status |
+| 📊 **Real-time Logs** | WebSocket-powered log streaming with 30-minute history |
+| 💾 **Volume Management** | View and manage Docker volumes with container associations |
+| 📱 **PWA Support** | Install on iPhone, Android, and desktop with offline capabilities |
+| ⚙️ **Configuration** | YAML-based config with web UI updates |
+| 🐳 **Docker Integration** | Direct Docker daemon access via socket |
+
+## 📋 Requirements
+
+- **Go** 1.21+ (for building from source)
+- **Docker** daemon running
+- **Node.js** 18+ (for frontend development)
+
+---
+
+## 🚀 Quick Start with Docker
+
+The easiest way to run Docker Simple Panel is using the pre-built Docker image:
 
 ```bash
-# Pull the image from GitHub Container Registry
+# Pull the latest image
 docker pull ghcr.io/dev-zapi/docker-simple-panel:latest
 
 # Run the container
@@ -35,98 +57,94 @@ docker run -d \
   -v ./data:/app/data \
   ghcr.io/dev-zapi/docker-simple-panel:latest
 
-# Check if the service is running
+# Verify it's running
 curl http://localhost:8080/api/health
 ```
 
-**Default Credentials**:
-- Username: `admin`
-- Password: `changeme`
+### 🔑 Default Credentials
 
-**Important**: Change the default password by editing `/app/data/config.yaml` inside the container or mount a custom config file.
+| Username | Password |
+|----------|----------|
+| `admin` | `changeme` |
 
-**Security Notes**:
-- The Docker socket (`/var/run/docker.sock`) must be mounted for the application to manage containers.
-- **Always change the default password** in the configuration file.
-- **Always change the JWT secret** in production for security.
+> ⚠️ **Important**: Change the default password immediately! Edit `/app/data/config.yaml` inside the container.
 
-## Installing as a PWA
+### 🔒 Security Best Practices
 
-Docker Simple Panel supports Progressive Web App (PWA) installation, allowing you to use it as a native app on iPhone, Android, and desktop devices.
+- 🛡️ Mount Docker socket only when necessary
+- 🔑 Change default password on first use
+- 🔐 Set a strong `JWT_SECRET` in production
 
-### iPhone/iPad Installation
+---
 
-1. Open the application in Safari (http://your-server:8080)
-2. Tap the **Share** button (square with arrow pointing up)
-3. Scroll down and tap **"Add to Home Screen"**
-4. Customize the name if desired and tap **"Add"**
-5. The app will now appear on your home screen like a native app
+## 📱 Installing as a PWA
 
-### Android Installation
+Docker Simple Panel is a fully-featured Progressive Web App. Install it on any device for an app-like experience!
 
-1. Open the application in Chrome (http://your-server:8080)
-2. Tap the menu (three dots) in the top-right corner
-3. Tap **"Add to Home screen"** or **"Install app"**
-4. Follow the prompts to install
-5. The app will appear in your app drawer and home screen
+### 🍎 iPhone/iPad
 
-### Desktop Installation
+1. Open in **Safari**: `http://your-server:8080`
+2. Tap **Share** button (📤)
+3. Select **"Add to Home Screen"**
+4. Tap **"Add"** to confirm
+
+### 🤖 Android
+
+1. Open in **Chrome**: `http://your-server:8080`
+2. Tap **Menu** (⋮) → **"Add to Home screen"** or **"Install app"**
+3. Follow the prompts
+
+### 💻 Desktop
 
 #### Chrome/Edge/Brave
-1. Open the application in your browser
-2. Look for the install icon in the address bar (plus sign or computer icon)
-3. Click the install button
-4. The app will open in its own window and appear in your applications
+1. Look for the install icon (➕) in the address bar
+2. Click to install
 
 #### Safari (macOS)
-1. Open the application in Safari
-2. Go to **File** → **Add to Dock**
-3. The app will appear in your Dock
+1. **File** → **Add to Dock**
 
-### PWA Features
-- **Offline Support**: The app caches resources for offline access
-- **Fast Loading**: Instant loading from cache
-- **App-like Experience**: Runs in standalone mode without browser UI
-- **Home Screen Icon**: Custom Docker-themed icon
-- **Auto-updates**: Service worker automatically updates the app
+### PWA Benefits
 
-## Development with Dev Container
+- ⚡ Instant loading from cache
+- 📶 Works offline
+- 🏠 Home screen icon
+- 🔄 Auto-updates
+- 🚫 No browser UI clutter
 
-For Windows developers or those who prefer containerized development environments, this project includes VS Code Dev Container configuration:
+---
+
+## 💻 Development
+
+### Dev Container (Recommended)
+
+Use VS Code Dev Containers for a consistent development environment:
 
 ```bash
-# Prerequisites
-# 1. Install VS Code and Docker Desktop
-# 2. Install "Dev Containers" extension in VS Code
-# 3. Open project in VS Code
-# 4. Press F1 -> "Dev Containers: Reopen in Container"
+# Prerequisites: VS Code + Docker Desktop + Dev Containers extension
+# Open project → Press F1 → "Dev Containers: Reopen in Container"
 ```
 
-See [.devcontainer/README.md](.devcontainer/README.md) for detailed instructions.
-
-## Installation
+See [.devcontainer/README.md](.devcontainer/README.md) for details.
 
 ### Building from Source
 
 ```bash
-# Clone the repository
+# Clone repository
 git clone https://github.com/dev-zapi/docker-simple-panel.git
 cd docker-simple-panel
 
 # Install dependencies
 go mod download
 
-# Build the application
+# Build
 go build -o docker-simple-panel .
 ```
 
 ### Building Docker Image Locally
 
 ```bash
-# Build the Docker image
 docker build -t docker-simple-panel:local .
 
-# Run the container
 docker run -d \
   --name docker-simple-panel \
   -p 8080:8080 \
@@ -135,33 +153,33 @@ docker run -d \
   docker-simple-panel:local
 ```
 
-## Configuration
+---
 
-The application uses a YAML configuration file located at `./config.yaml` (or path specified by `CONFIG_PATH` environment variable).
+## ⚙️ Configuration
 
-### Configuration File Example
+Configuration is managed via YAML file (default: `./config.yaml` or `CONFIG_PATH` env var).
 
-See `config.yaml.example` for a full example. The configuration file includes:
+### Example Configuration
 
 ```yaml
-# Authentication credentials
+# Authentication
 username: admin
-password: changeme  # Will be automatically hashed with bcrypt
+password: changeme  # Auto-hashed with bcrypt
 
-# Server configuration
+# Server settings
 server:
   port: "8080"
   jwt_secret: "your-secret-key-change-in-production"
-  session_max_timeout: 24  # Session timeout in hours
+  session_max_timeout: 24  # hours
 
-# Docker configuration
+# Docker settings
 docker:
   socket: "/var/run/docker.sock"
   volume_explorer_image: "ghcr.io/dev-zapi/docker-simple-panel:latest"
 
-# Logging configuration
+# Logging
 logging:
-  level: "info"  # Options: error, warn, info, debug
+  level: "info"  # error, warn, info, debug
 
 # Static files (optional)
 static_path: ""
@@ -169,61 +187,54 @@ static_path: ""
 
 ### Environment Variables
 
-- `CONFIG_PATH`: Path to YAML configuration file (default: ./config.yaml)
-- `STATIC_PATH`: Path to static files directory for serving frontend (default: empty for local development; `/app/webui` in Docker image)
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CONFIG_PATH` | `./config.yaml` | Path to YAML config file |
+| `STATIC_PATH` | (empty) | Frontend static files directory |
+| `SERVER_PORT` | `8080` | Server port |
+| `JWT_SECRET` | (required in prod) | JWT signing secret |
+| `DOCKER_SOCKET` | `/var/run/docker.sock` | Docker socket path |
+| `DISABLE_REGISTRATION` | `false` | Disable user registration |
+| `LOG_LEVEL` | `info` | Logging level |
+| `VOLUME_EXPLORER_IMAGE` | (see above) | Volume explorer Docker image |
 
-### Password Management
+### 🔑 Password Management
 
-- When the application starts for the first time, it creates a default `config.yaml` with username `admin` and password `changeme`
-- The password is automatically hashed using bcrypt when saved to the config file
-- You can change the password by editing the config file with a plain text password, and it will be hashed on the next startup
-- **IMPORTANT**: Always change the default password in production
+- First startup: Creates default config with `admin`/`changeme`
+- Password auto-hashed with bcrypt on save
+- Change via web UI Settings page or edit config file
+- **Critical**: Always change default password in production!
 
-### Configuration Updates
+---
 
-Most configuration settings can be updated through the web UI Settings page or via the `/api/config` API endpoint. Changes are persisted to the YAML file.
-
-## Running
+## ▶️ Running
 
 ```bash
-# Run with default settings (uses ./config.yaml)
+# Default (uses ./config.yaml)
 ./docker-simple-panel
 
-# Run with custom config path
+# Custom config
 CONFIG_PATH=/path/to/config.yaml ./docker-simple-panel
 
-# Run with static file serving
+# With static files
 STATIC_PATH=/path/to/frontend/dist ./docker-simple-panel
 ```
 
-## API Endpoints
+---
 
-### API Documentation
+## 📡 API Endpoints
 
-The API is fully documented using OpenAPI v3 specification. You can access the OpenAPI JSON documentation at:
-
-```
-GET /api/openapi.json
-```
-
-This endpoint returns a complete OpenAPI v3 formatted JSON specification that includes:
-- All API endpoints with detailed descriptions
-- Request/response schemas
-- Authentication requirements
-- Example values
-
-You can use tools like [Swagger UI](https://swagger.io/tools/swagger-ui/) or [Swagger Editor](https://editor.swagger.io/) to visualize and interact with the API documentation. Simply load the OpenAPI JSON from `http://localhost:8080/api/openapi.json`.
+Full OpenAPI v3 specification available at `GET /api/openapi.json`. Import into [Swagger UI](https://swagger.io/tools/swagger-ui/) for interactive documentation!
 
 ### Public Endpoints
 
 #### Health Check
-```
+```http
 GET /api/health
 ```
-Returns server health status.
 
 #### Login
-```
+```http
 POST /api/auth/login
 Content-Type: application/json
 
@@ -233,7 +244,7 @@ Content-Type: application/json
 }
 ```
 
-Response:
+**Response:**
 ```json
 {
   "success": true,
@@ -245,74 +256,41 @@ Response:
 }
 ```
 
-### Protected Endpoints (Require JWT Token)
+### Protected Endpoints (Require JWT)
 
-All protected endpoints require the `Authorization` header:
-```
-Authorization: Bearer <token>
-```
+Include header: `Authorization: Bearer <token>`
 
 #### List Containers
-```
+```http
 GET /api/containers
 ```
 
-Returns a list of all Docker containers with their status and health information.
+Returns all containers with status and health info.
 
-Response:
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "abc123def456",
-      "name": "my-container",
-      "image": "nginx:latest",
-      "state": "running",
-      "status": "Up 2 hours",
-      "health": "healthy",
-      "created": 1699876543
-    }
-  ]
-}
-```
+#### Container Operations
 
-#### Get Container Details
-```
-GET /api/containers/{id}
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/containers/{id}` | Get container details |
+| `POST` | `/api/containers/{id}/start` | Start container |
+| `POST` | `/api/containers/{id}/stop` | Stop container |
+| `POST` | `/api/containers/{id}/restart` | Restart container |
+| `GET` | `/api/containers/{id}/logs/stream` | WebSocket log stream |
 
-#### Start Container
-```
-POST /api/containers/{id}/start
-```
+#### WebSocket Log Streaming
 
-#### Stop Container
-```
-POST /api/containers/{id}/stop
-```
-
-#### Restart Container
-```
-POST /api/containers/{id}/restart
-```
-
-#### Stream Container Logs (WebSocket)
-```
+```http
 GET /api/containers/{id}/logs/stream
 ```
 
-Establishes a WebSocket connection to stream container logs in real-time. The endpoint:
-- Requires JWT authentication via the `Authorization: Bearer <token>` header
-- Starts streaming from logs generated in the past 30 minutes
-- Continues streaming new logs as they are generated
-- Includes timestamps for each log line
-- Automatically handles both stdout and stderr streams
+Real-time log streaming with:
+- ✅ JWT authentication (header or query param)
+- ✅ 30-minute history
+- ✅ Timestamps included
+- ✅ stdout + stderr support
 
-Example using JavaScript:
+**Example:**
 ```javascript
-const token = "your-jwt-token";
-const containerId = "abc123def456";
 const ws = new WebSocket(
   `ws://localhost:8080/api/containers/${containerId}/logs/stream`,
   [],
@@ -320,139 +298,107 @@ const ws = new WebSocket(
 );
 
 ws.onmessage = (event) => {
-  console.log(event.data); // Each log line with timestamp
+  console.log(event.data);
 };
 ```
 
-#### Docker Health Check
-```
+#### Docker Health
+```http
 GET /api/docker/health
 ```
 
-Checks if the Docker daemon is accessible.
+#### Volume Management
 
-#### List Volumes
-```
-GET /api/volumes
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/volumes` | List volumes with containers |
+| `DELETE` | `/api/volumes/{name}` | Delete volume |
 
-Returns a list of all Docker volumes with their associated containers.
+#### Configuration
 
-Response:
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "name": "my-volume",
-      "driver": "local",
-      "mountpoint": "/var/lib/docker/volumes/my-volume/_data",
-      "created_at": "2025-12-04T02:48:54Z",
-      "scope": "local",
-      "containers": ["abc123def456"]
-    }
-  ]
-}
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/config` | Get current config |
+| `PUT` | `/api/config` | Update config |
 
-#### Get System Configuration
-```
-GET /api/config
-```
-
-Returns the current system configuration.
-
-Response:
-```json
-{
-  "success": true,
-  "data": {
-    "docker_socket": "/var/run/docker.sock",
-    "log_level": "info",
-    "volume_explorer_image": "ghcr.io/dev-zapi/docker-simple-panel:latest",
-    "session_max_timeout": 24,
-    "username": "admin"
-  }
-}
-```
-
-#### Update System Configuration
-```
+**Update Example:**
+```http
 PUT /api/config
 Content-Type: application/json
 
 {
   "docker_socket": "/custom/path/docker.sock",
   "log_level": "debug",
-  "volume_explorer_image": "alpine:latest",
   "session_max_timeout": 48
 }
 ```
 
-Updates system configuration. All fields are optional. When `docker_socket` is changed, the Docker client automatically restarts with the new socket path. Configuration persists to the YAML file.
+---
 
-Response:
-```json
-{
-  "success": true,
-  "message": "Configuration updated successfully",
-  "data": {
-    "docker_socket": "/custom/path/docker.sock",
-    "log_level": "debug",
-    "volume_explorer_image": "alpine:latest",
-    "session_max_timeout": 48,
-    "username": "admin"
-  }
-}
-```
+## 🔒 Security
 
-## Security Notes
+- 🔐 **Bcrypt** password hashing
+- ⏰ JWT tokens expire (default: 24h)
+- 🚫 Single-user authentication only
+- ⚠️ Docker socket access grants full control
+- 🔑 **Must change** default password & JWT secret in production
 
-- Passwords are hashed using bcrypt before storage in the config file
-- JWT tokens expire after the configured session timeout (default: 24 hours)
-- Change the default password and JWT secret in production
-- The application requires access to `/var/run/docker.sock`
-- Only one user account is supported (configured in config.yaml)
+---
 
-## Development
+## 🧪 Development
 
-### Running Tests
+### Run Tests
 ```bash
 go test ./...
 ```
 
 ### Project Structure
+
 ```
 .
-├── main.go              # Application entry point
-├── config/              # Configuration management (YAML-based)
+├── main.go              # Entry point
+├── config/              # YAML config management
+├── database/            # SQLite operations
 ├── docker/              # Docker client wrapper
-├── handlers/            # HTTP request handlers
-├── middleware/          # HTTP middleware (auth, cors, logging)
+├── handlers/            # HTTP handlers
+├── middleware/          # Auth, CORS, logging
 ├── models/              # Data models
-└── webui/               # Frontend application (Svelte)
+├── webui/               # Svelte frontend
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── services/
+│   │   └── stores/
+│   └── package.json
+└── openapi.json         # API specification
 ```
 
-## Docker Image Building
+---
 
-### Automated Builds with GitHub Actions
+## 🐳 Docker Image Building
 
-The project includes a GitHub Actions workflow for building and pushing Docker images to GitHub Container Registry.
+### GitHub Actions (Automated)
 
-**To trigger a build:**
-1. Go to the "Actions" tab in the GitHub repository
-2. Select "Build and Push Docker Image"
-3. Click "Run workflow"
-4. Optionally specify a custom tag (default: `latest`)
-5. Click "Run workflow"
+1. Go to **Actions** tab
+2. Select **"Build and Push Docker Image"**
+3. Click **"Run workflow"**
+4. Optionally specify custom tag
+5. Builds multi-platform (amd64, arm64)
 
-The workflow will:
-- Build multi-platform images (linux/amd64, linux/arm64)
-- Push to `ghcr.io/dev-zapi/docker-simple-panel`
-- Use build caching for faster builds
-- Generate image attestations
+See [.github/workflows/README.md](.github/workflows/README.md) for details.
 
-See [.github/workflows/README.md](.github/workflows/README.md) for more details.
+---
 
-## License
-MIT
+## 📄 License
+
+MIT License - See LICENSE file for details.
+
+---
+
+<div align="center">
+
+**Built with ❤️ using Go and Svelte**
+
+[Report Issue](https://github.com/dev-zapi/docker-simple-panel/issues) • [Request Feature](https://github.com/dev-zapi/docker-simple-panel/issues) • [Discussions](https://github.com/dev-zapi/docker-simple-panel/discussions)
+
+</div>
