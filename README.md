@@ -11,7 +11,6 @@
 
 [![Quick Start](https://img.shields.io/badge/Quick_Start-Docker-2496ED?style=for-the-badge&logo=docker)](#quick-start-with-docker)
 [![Documentation](https://img.shields.io/badge/Documentation-API-8A2BE2?style=for-the-badge)](#api-endpoints)
-[![PWA](https://img.shields.io/badge/PWA-Supported-FF5722?style=for-the-badge)](#installing-as-a-pwa)
 
 </div>
 
@@ -74,42 +73,6 @@ curl http://localhost:8080/api/health
 - 🛡️ Mount Docker socket only when necessary
 - 🔑 Change default password on first use
 - 🔐 Set a strong `JWT_SECRET` in production
-
----
-
-## 📱 Installing as a PWA
-
-Docker Simple Panel is a fully-featured Progressive Web App. Install it on any device for an app-like experience!
-
-### 🍎 iPhone/iPad
-
-1. Open in **Safari**: `http://your-server:8080`
-2. Tap **Share** button (📤)
-3. Select **"Add to Home Screen"**
-4. Tap **"Add"** to confirm
-
-### 🤖 Android
-
-1. Open in **Chrome**: `http://your-server:8080`
-2. Tap **Menu** (⋮) → **"Add to Home screen"** or **"Install app"**
-3. Follow the prompts
-
-### 💻 Desktop
-
-#### Chrome/Edge/Brave
-1. Look for the install icon (➕) in the address bar
-2. Click to install
-
-#### Safari (macOS)
-1. **File** → **Add to Dock**
-
-### PWA Benefits
-
-- ⚡ Instant loading from cache
-- 📶 Works offline
-- 🏠 Home screen icon
-- 🔄 Auto-updates
-- 🚫 No browser UI clutter
 
 ---
 
