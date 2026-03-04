@@ -1,13 +1,13 @@
+<div align="center">
+
 # Docker Simple Panel
 
-<div align="center">
+**A modern, lightweight dashboard for managing Docker containers**
 
 ![Docker Simple Panel](https://img.shields.io/badge/Docker-Simple_Panel-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?style=for-the-badge&logo=go&logoColor=white)
 ![Svelte](https://img.shields.io/badge/Svelte-5-FF3E00?style=for-the-badge&logo=svelte&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)
-
-**A modern, lightweight dashboard for managing Docker containers**
 
 [![Quick Start](https://img.shields.io/badge/Quick_Start-Docker-2496ED?style=for-the-badge&logo=docker)](#quick-start-with-docker)
 [![Documentation](https://img.shields.io/badge/Documentation-API-8A2BE2?style=for-the-badge)](#api-endpoints)
